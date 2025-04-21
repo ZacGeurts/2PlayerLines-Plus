@@ -1,5 +1,6 @@
-# Lines Plus
-A 2 player (controllers) line game.<BR />
+# 2PlayerLines-Plus
+My full version. If you want to make your own with AI then go to [2PleayerLines](https://github.com/ZacGeurts/2playerLines) and have the AI update main.cpp.
+
 <BR />
 Survivor gets 3 points.<BR />
 Squares are worth 1 point.<BR />
