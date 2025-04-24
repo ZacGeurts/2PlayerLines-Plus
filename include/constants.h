@@ -1,21 +1,26 @@
+// constants.h
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
-const float PLAYER_SPEED = 200.0f;
-const float CIRCLE_SPEED = 300.0f;
-const float TURN_SPEED = 2.0f * M_PI;
-const int PLAYER_SIZE = 4;
-const int TRAIL_SIZE = 2;
-const int CIRCLE_RADIUS = 45;
-const float COLLECTIBLE_SIZE = CIRCLE_RADIUS * 2;
-const float BLACK_CIRCLE_SIZE = COLLECTIBLE_SIZE * 2;
-const float BLACK_SQUARE_SIZE = COLLECTIBLE_SIZE * 2;
-const int COLLISION_CHECK_SIZE = 5;
-const int EXPLOSION_DURATION = 1;
-const int EXPLOSION_PARTICLES = 50;
-const float EXPLOSION_MAX_RADIUS = 100.0f;
-const float BOOP_DURATION = 0.1f;
+#include <cmath>
+
+struct GameConfig {
+    int WIDTH = 1920;
+    int HEIGHT = 1080;
+    float PLAYER_SPEED = 200.0f;
+    float TURN_SPEED = 2.0f * M_PI;
+    float CIRCLE_SPEED = 100.0f;
+    float CIRCLE_RADIUS = 40.0f;
+    float COLLISION_CHECK_SIZE = 10.0f;
+    float BOOP_DURATION = 0.5f;
+    float EXPLOSION_DURATION = 1.0f;
+    float LASER_ZAP_DURATION = 0.5f;
+    float BLACK_SQUARE_SIZE = 80.0f;
+    float COLLECTIBLE_SIZE = 40.0f;
+    float BLACK_CIRCLE_SIZE = 60.0f;
+    float EXPLOSION_MAX_RADIUS = 20.0f;
+    float PLAYER_SIZE = 10.0f;
+    float TRAIL_SIZE = 5.0f;
+};
 
 #endif // CONSTANTS_H

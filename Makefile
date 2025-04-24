@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -O2 -Iinclude
+CFLAGS = -Wall -O3 -Iinclude
 LDFLAGS = -lSDL2 -lGL -lSDL2_image
 SRC_DIR = src
 INCLUDE_DIR = include

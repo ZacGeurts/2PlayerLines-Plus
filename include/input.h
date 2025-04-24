@@ -6,6 +6,14 @@
 // Forward declaration to avoid including game.h
 class Game;
 
-bool handleInput(SDL_GameController* controllers[], int controllerCount, bool gameOverScreen, bool& paused, SDL_AudioDeviceID boopAudioDevice, bool& isSplashScreen, Game* game);
+class InputManager {
+public:
+    InputManager();
+    bool handleInput(SDL_GameController* controllers[], int controllerCount, bool gameOverScreen, bool& isSplashScreen, bool& paused, Game* game);
+
+private:
+    bool lastFrameButtons[2][SDL_CONTROLLER_BUTTON_MAX]; // Track controller button states
+    bool lastFrameKeys[SDL_NUM_SCANCODES];              // Track keyboard key states
+};
 
 #endif // INPUT_H
