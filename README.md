@@ -6,7 +6,6 @@ Squares are worth 1 point.<BR />
 Do not collide with lines or circles with your head.<BR />
 Bouncing circles erase lines and another appears every 5 seconds.<BR />
 You are invincible until first move unless you hit the wall.<BR />
-Controller buttons pause.<BR />
 F switches to fullscreen<BR />
 Steer with controller triggers.<BR />
 You get one short invincibility per round by pressing A (X).<BR />
