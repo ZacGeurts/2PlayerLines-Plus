@@ -9,8 +9,11 @@ You are invincible until first move unless you hit the wall.<BR />
 Controller buttons pause.<BR />
 F switches to fullscreen<BR />
 Steer with controller triggers.<BR />
+You get one short invincibility per round by pressing A (X).<BR />
+B X Y or circle square triangle pauses during gameplay.<BR />
 Q or ESC quits<BR />
 Currently no win condition and scores accumulate.<BR />
+There is a game.ini to modify settings.<BR />
 <BR />
 MIT license.<BR />
 <BR />
