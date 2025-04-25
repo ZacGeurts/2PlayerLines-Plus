@@ -1,3 +1,4 @@
+// src/player.cpp
 #include "player.h"
 #include "game.h"
 #include <GL/gl.h>
@@ -38,13 +39,17 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
         if (!player->willDie) {
             if (nextPos.x < 0 || nextPos.x > config.WIDTH || nextPos.y < 0 || nextPos.y > config.HEIGHT) {
                 player->willDie = true;
+                explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, currentTimeSec));
+                audio.playExplosion(currentTimeSec);
+                game->deathTime = currentTimeSec;
+                SDL_Log("Player %s hit edge at (%f, %f), explosion triggered", player == &player1 ? "1" : "2", nextPos.x, nextPos.y);
             } else if (player->hasMoved) {
                 game->checkCollision(player, nextPos, currentTimeSec);
             }
-        } else {
+        }
+        if (player->willDie) {
             player->alive = false;
             player->deathPos = player->pos;
-            // Explosion handled in checkCollision
             if (player == &player1 && player2.alive) {
                 score2 += 3;
                 roundScore2 += 3;

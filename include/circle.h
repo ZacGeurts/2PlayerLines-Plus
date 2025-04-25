@@ -3,7 +3,6 @@
 #define CIRCLE_H
 
 #include "types.h"
-#include "constants.h"
 #include <random>
 #include <vector>
 #include <chrono> // Added for std::chrono

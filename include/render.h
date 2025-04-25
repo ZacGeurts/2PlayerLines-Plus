@@ -4,7 +4,6 @@
 
 #include <GL/gl.h>
 #include "types.h"
-#include "constants.h"
 #include <string>
 
 // Forward declaration of Game struct

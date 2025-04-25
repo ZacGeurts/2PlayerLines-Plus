@@ -1,6 +1,6 @@
 // src/main.cpp
 #include "game.h"
-#include "constants.h"
+#include "types.h" // Include types.h for GameConfig definition
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <fstream>

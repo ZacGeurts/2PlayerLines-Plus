@@ -3,7 +3,6 @@
 #define PLAYER_H
 
 #include "types.h"
-#include "constants.h"
 #include "audio.h"
 #include "collectible.h"
 #include "collision.h"

@@ -1,6 +1,5 @@
 // src/collectible.cpp
 #include "collectible.h"
-#include "constants.h"
 #include <cmath>
 
 CollectibleManager::CollectibleManager(const GameConfig& config) : config(config) {}

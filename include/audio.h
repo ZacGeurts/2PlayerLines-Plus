@@ -2,7 +2,6 @@
 #define AUDIO_H
 
 #include <SDL2/SDL.h>
-#include "constants.h"
 #include "types.h"
 
 class AudioManager {

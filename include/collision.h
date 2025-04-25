@@ -3,7 +3,6 @@
 #define COLLISION_H
 
 #include "types.h"
-#include "constants.h"
 
 class CollisionManager {
 public:

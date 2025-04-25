@@ -3,7 +3,6 @@
 #define EXPLOSION_H
 
 #include "types.h"
-#include "constants.h"
 #include <random>
 #include <vector>
 
