@@ -9,6 +9,7 @@
 #include "circle.h"
 #include "explosion.h"
 #include "input.h"
+#include "ai.h"
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
 #include <random>
@@ -16,9 +17,9 @@
 #include <chrono>
 
 // Forward declaration for PlayerManager
-class PlayerManager; // Resolves undefined type
+class PlayerManager;
 
-#include "player.h" // Provides full PlayerManager definition
+#include "player.h"
 
 struct Game {
     SDL_Window* window;
@@ -31,6 +32,7 @@ struct Game {
     ExplosionManager explosionManager;
     InputManager inputManager;
     PlayerManager playerManager;
+    AI ai;
     GLuint splashTexture;
     bool isSplashScreen;
     bool paused;
@@ -45,13 +47,16 @@ struct Game {
     float lastBoopTime;
     int score1, score2;
     int roundScore1, roundScore2;
+    int setScore1, setScore2;
     bool gameOver;
     bool gameOverScreen;
+    bool winnerDeclared; // Added for winner state
     bool firstFrame;
     std::chrono::steady_clock::time_point lastCircleSpawn;
     std::chrono::steady_clock::time_point gameOverTime;
+    float lastWinnerVoiceTime; // Added for winner voice timing
     GameConfig config;
-    float deathTime; // Added to track last death time
+    float deathTime;
 
     Game(const GameConfig& config);
     ~Game();
@@ -62,6 +67,7 @@ struct Game {
     void reset();
     void activateNoCollision(Player* player, float currentTimeSec);
     void toggleFullscreen();
+    void resumeAfterWinner(); // Added for resuming after winner
 };
 
 #endif // GAME_H

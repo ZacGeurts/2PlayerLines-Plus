@@ -50,7 +50,7 @@ void RenderManager::drawText(const std::string& text, float x, float y, float sq
                 }
             }
         }
-        currentX += 6 * squareSize; // Character width + 1 pixel spacing
+        currentX += 6 * squareSize; // Fixed-width: 5 pixels + 1 pixel spacing
     }
 }
 
@@ -119,56 +119,80 @@ void RenderManager::renderGame(const Game& game, float currentTimeSec) const {
     if (!game.player2.isInvincible) drawTrail(game.player2);
     drawPlayer(game.player1);
     drawPlayer(game.player2);
+
     if (game.paused) {
-        float squareSize = 10.0f;
-        std::string scoreText = std::to_string(game.score1) + "-" + std::to_string(game.score2);
-        float textWidth = scoreText.size() * squareSize * 6;
-        drawText(scoreText, (config.WIDTH - textWidth) / 2, config.HEIGHT / 2 - 25, squareSize, {255, 255, 255, 255});
-        drawText("Paused", (config.WIDTH - 6 * squareSize * 6) / 2, config.HEIGHT / 2, squareSize, {255, 255, 255, 255});
+        float squareSize = 8.0f;
+        // Center "PAUSED" (6 chars), moved up 10 pixels
+        drawText("PAUSED", config.WIDTH / 2 - 6 * 6 * squareSize / 2, config.HEIGHT / 2 - 50, squareSize, {255, 255, 255, 255});
+        // Center total score (e.g., "10-5")
+        std::string totalText = std::to_string(game.score1) + "-" + std::to_string(game.score2);
+        float totalTextWidth = totalText.size() * 6 * squareSize;
+        drawText(totalText, config.WIDTH / 2 - totalTextWidth / 2, config.HEIGHT / 2, squareSize, {255, 255, 255, 255});
+        // Set scores
+        drawText("W:" + std::to_string(game.setScore1), 10, 10, squareSize, {0, 0, 255, 255});
+        // Right-align P2 set score
+        std::string setScore2Text = "W:" + std::to_string(game.setScore2);
+        float setScore2Width = setScore2Text.size() * 6 * squareSize;
+        drawText(setScore2Text, config.WIDTH - setScore2Width - 10, 10, squareSize, {255, 0, 0, 255});
     }
 }
 
 void RenderManager::renderGameOver(const Game& game) const {
     float currentTimeSec = std::chrono::duration<float>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
-    // Render explosions to continue effect during game over
     for (const auto& explosion : game.explosions) {
         drawExplosion(explosion, currentTimeSec);
     }
 
-    float squareSize = 10.0f;
-    float verticalSpacing = 20.0f;
+    float squareSize = 8.0f;
+    // Set scores
+    drawText("W:" + std::to_string(game.setScore1), 10, 10, squareSize, {0, 0, 255, 255});
+    std::string setScore2Text = "W:" + std::to_string(game.setScore2);
+    float setScore2Width = setScore2Text.size() * 6 * squareSize;
+    drawText(setScore2Text, config.WIDTH - setScore2Width - 10, 10, squareSize, {255, 0, 0, 255});
 
+    // Win text
     std::string winText;
     SDL_Color winColor = {255, 255, 255, 255};
     if (game.score1 >= 100 && game.score2 >= 100) {
-        winText = "Draw!";
+        winText = "DRAW!";
     } else if (game.score1 >= 100) {
-        winText = "Player 1 Wins!";
+        winText = "P1 WIN";
         winColor = {0, 0, 255, 255};
     } else if (game.score2 >= 100) {
-        winText = "Player 2 Wins!";
+        winText = "P2 WIN";
         winColor = {255, 0, 0, 255};
+    } else if (!game.player1.alive && !game.player2.alive) {
+        winText = "DRAW!";
+    } else if (!game.player1.alive) {
+        winText = "P2 WIN";
+        winColor = {255, 0, 0, 255};
+    } else if (!game.player2.alive) {
+        winText = "P1 WIN";
+        winColor = {0, 0, 255, 255};
     }
-    float winTextWidth = winText.size() * squareSize * 6;
+    float winTextWidth = winText.size() * 6 * squareSize;
     float winTextY = config.HEIGHT / 2 - 60;
-    drawText(winText, (config.WIDTH - winTextWidth) / 2, winTextY, squareSize, winColor);
+    drawText(winText, config.WIDTH / 2 - winTextWidth / 2, winTextY, squareSize, winColor);
 
-    std::string scoreText = std::to_string(game.score1) + "-" + std::to_string(game.score2);
-    float scoreTextWidth = scoreText.size() * squareSize * 6;
-    float scoreTextY = winTextY + squareSize * 5 + verticalSpacing;
-    drawText(scoreText, (config.WIDTH - scoreTextWidth) / 2, scoreTextY, squareSize, {255, 255, 255, 255});
+    // Total score text
+    std::string totalText = std::to_string(game.score1) + "-" + std::to_string(game.score2);
+    float totalTextWidth = totalText.size() * 6 * squareSize;
+    float totalTextY = winTextY + squareSize * 5 + 20;
+    drawText(totalText, config.WIDTH / 2 - totalTextWidth / 2, totalTextY, squareSize, {255, 255, 255, 255});
 
+    // Round score text
     std::string roundText = "+" + std::to_string(game.roundScore1) + " - +" + std::to_string(game.roundScore2);
-    float roundTextWidth = roundText.size() * squareSize * 6;
-    float roundTextY = scoreTextY + squareSize * 5 + verticalSpacing;
-    drawText(roundText, (config.WIDTH - roundTextWidth) / 2, roundTextY, squareSize, {255, 255, 255, 255});
+    float roundTextWidth = roundText.size() * 6 * squareSize;
+    float roundTextY = totalTextY + squareSize * 5 + 20;
+    drawText(roundText, config.WIDTH / 2 - roundTextWidth / 2, roundTextY, squareSize, {255, 255, 255, 255});
 
+    // Countdown
     int countdown = 5 - static_cast<int>(std::chrono::duration<float>(std::chrono::steady_clock::now() - game.gameOverTime).count());
     if (countdown >= 0) {
         std::string countdownText = std::to_string(std::max(1, countdown));
-        float countdownWidth = countdownText.size() * squareSize * 6;
-        float countdownY = roundTextY + squareSize * 5 + verticalSpacing;
-        drawText(countdownText, (config.WIDTH - countdownWidth) / 2, countdownY, squareSize, {255, 255, 255, 255});
+        float countdownWidth = countdownText.size() * 6 * squareSize;
+        float countdownY = roundTextY + squareSize * 5 + 20;
+        drawText(countdownText, config.WIDTH / 2 - countdownWidth / 2, countdownY, squareSize, {255, 255, 255, 255});
     }
 }

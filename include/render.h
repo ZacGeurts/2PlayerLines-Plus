@@ -1,4 +1,3 @@
-// include/render.h
 #ifndef RENDER_H
 #define RENDER_H
 
@@ -17,11 +16,11 @@ public:
     void renderGameOver(const Game& game) const;
     void drawCircle(float x, float y, float radius, const SDL_Color& color) const;
     void drawTrail(const Player& player, int skipRecent = 0) const;
+    void drawText(const std::string& text, float x, float y, float squareSize, const SDL_Color& color) const; // Already present
 
 private:
     void drawSquare(float x, float y, float size, const SDL_Color& color) const;
     void drawExplosion(const Explosion& explosion, float currentTimeSec) const;
-    void drawText(const std::string& text, float x, float y, float squareSize, const SDL_Color& color) const;
     void drawPlayer(const Player& player) const;
     void drawCollectibleBlackSquare(const Collectible& collectible) const;
     void drawCollectibleBlackCircle(const Collectible& collectible) const;

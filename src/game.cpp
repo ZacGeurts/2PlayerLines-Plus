@@ -14,18 +14,53 @@
 #include "circle.h"
 #include "player.h"
 
-Game::Game(const GameConfig& config) : window(nullptr), glContext(nullptr), audio(config), collectibleManager(config), collisionManager(config), renderManager(config), circleManager(config), explosionManager(config), inputManager(), playerManager(config), splashTexture(0), isSplashScreen(true), paused(false), controllerCount(0), player1(), player2(), circles(), collectible(), explosions(), flashes(), rng(), lastBoopTime(0.0f), score1(0), score2(0), roundScore1(0), roundScore2(0), gameOver(false), gameOverScreen(false), firstFrame(true), lastCircleSpawn(), gameOverTime(), config(config), deathTime(0.0f) {
-    // Set high-DPI hint
+Game::Game(const GameConfig& config) 
+    : window(nullptr), 
+      glContext(nullptr), 
+      audio(config), 
+      collectibleManager(config), 
+      collisionManager(config), 
+      renderManager(config), 
+      circleManager(config), 
+      explosionManager(config), 
+      inputManager(), 
+      playerManager(config), 
+      ai(config), 
+      splashTexture(0), 
+      isSplashScreen(true), 
+      paused(false), 
+      controllers{nullptr, nullptr}, 
+      controllerCount(0), 
+      player1(), 
+      player2(), 
+      circles(), 
+      collectible(), 
+      explosions(), 
+      flashes(), 
+      rng(), 
+      lastBoopTime(0.0f), 
+      score1(0), 
+      score2(0), 
+      roundScore1(0), 
+      roundScore2(0), 
+      setScore1(0), 
+      setScore2(0), 
+      gameOver(false), 
+      gameOverScreen(false), 
+      winnerDeclared(false), 
+      firstFrame(true), 
+      lastCircleSpawn(std::chrono::steady_clock::now()), 
+      gameOverTime(std::chrono::steady_clock::now()), 
+      lastWinnerVoiceTime(0.0f), 
+      config(config), 
+      deathTime(0.0f) {
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
-
-    // Create window
     window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config.WIDTH, config.HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!window) {
         SDL_Log("Failed to create window: %s", SDL_GetError());
         throw std::runtime_error("Window creation failed");
     }
 
-    // Create OpenGL context
     glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
         SDL_Log("Failed to create GL context: %s", SDL_GetError());
@@ -34,7 +69,6 @@ Game::Game(const GameConfig& config) : window(nullptr), glContext(nullptr), audi
     }
     SDL_GL_SetSwapInterval(1);
 
-    // Set up OpenGL viewport and projection
     int windowWidth, windowHeight;
     SDL_GetWindowSize(window, &windowWidth, &windowHeight);
     glViewport(0, 0, windowWidth, windowHeight);
@@ -45,7 +79,6 @@ Game::Game(const GameConfig& config) : window(nullptr), glContext(nullptr), audi
     glLoadIdentity();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    // Load splash screen texture
     SDL_Surface* splashSurface = IMG_Load("splash.png");
     if (!splashSurface) {
         SDL_Log("Failed to load splash.png: %s", IMG_GetError());
@@ -59,7 +92,6 @@ Game::Game(const GameConfig& config) : window(nullptr), glContext(nullptr), audi
         SDL_FreeSurface(splashSurface);
     }
 
-    // Initialize game controllers
     for (int i = 0; i < SDL_NumJoysticks() && controllerCount < 2; ++i) {
         if (SDL_IsGameController(i)) {
             controllers[controllerCount] = SDL_GameControllerOpen(i);
@@ -67,11 +99,9 @@ Game::Game(const GameConfig& config) : window(nullptr), glContext(nullptr), audi
         }
     }
 
-    // Initialize random number generator
     std::random_device rd;
     rng = std::mt19937(rd());
 
-    // Initialize players
     player1.pos = Vec2(200, config.HEIGHT / 2);
     player1.direction = Vec2(1, 0);
     player1.color = {0, 0, 255, 255};
@@ -96,22 +126,29 @@ Game::Game(const GameConfig& config) : window(nullptr), glContext(nullptr), audi
     player2.isInvincible = false;
     player2.endFlash = nullptr;
 
-    // Initialize game state
     circleManager.spawnInitialCircle(rng, circles);
     collectible = collectibleManager.spawnCollectible(rng);
     lastBoopTime = 0.0f;
     score1 = score2 = roundScore1 = roundScore2 = 0;
-    gameOver = gameOverScreen = false;
+    setScore1 = setScore2 = 0;
+    gameOver = gameOverScreen = winnerDeclared = false;
     firstFrame = true;
     lastCircleSpawn = std::chrono::steady_clock::now();
-    gameOverTime = lastCircleSpawn;
+    gameOverTime = std::chrono::steady_clock::now();
+    lastWinnerVoiceTime = 0.0f;
+
+    audio.startTechnoLoop(std::chrono::duration<float>(std::chrono::steady_clock::now().time_since_epoch()).count());
+    SDL_Log("Techno loop started at game initialization");
 }
 
 Game::~Game() {
+    audio.stopTechnoLoop();
+    SDL_Log("Techno loop stopped at game exit");
+
     if (splashTexture) glDeleteTextures(1, &splashTexture);
     if (player1.endFlash) delete player1.endFlash;
     if (player2.endFlash) delete player2.endFlash;
-    for (auto& controller : controllers) if (controller) SDL_GameControllerClose(controller);
+    for (int i = 0; i < 2; ++i) if (controllers[i]) SDL_GameControllerClose(controllers[i]);
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
 }
@@ -144,7 +181,7 @@ void Game::checkCollision(Player* player, Vec2 nextPos, float currentTimeSec) {
         explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, currentTimeSec));
         audio.playExplosion(currentTimeSec);
         player->willDie = true;
-        deathTime = currentTimeSec; // Track death time
+        deathTime = currentTimeSec;
         SDL_Log("Player %s died at (%f, %f), explosion triggered", player == &player1 ? "1" : "2", nextPos.x, nextPos.y);
     }
 
@@ -165,11 +202,18 @@ void Game::run() {
         lastTime = currentTime;
 
         running = inputManager.handleInput(controllers, controllerCount, gameOverScreen, isSplashScreen, paused, this);
+        
         if (!isSplashScreen) {
-            if (!gameOverScreen && !gameOver && !paused) {
+            if (!gameOverScreen && !gameOver && !paused && !winnerDeclared) {
                 update(dt, currentTimeSec);
             } else if (gameOverScreen && std::chrono::duration<float>(currentTime - gameOverTime).count() > 5.0f) {
                 reset();
+            } else if (winnerDeclared) {
+                if (currentTimeSec - lastWinnerVoiceTime >= 1.5f) {
+                    audio.playWinnerVoice(currentTimeSec);
+                    lastWinnerVoiceTime = currentTimeSec;
+                    SDL_Log("Playing winner voice in winner state");
+                }
             }
         }
 
@@ -179,13 +223,24 @@ void Game::run() {
 }
 
 void Game::update(float dt, float currentTimeSec) {
+    if (ai.getDifficulty() != AI::Difficulty::OFF) {
+        ai.update(player2, player1, collectible, circles, dt, rng);
+    }
+
     playerManager.updatePlayers(controllers, controllerCount, player1, player2, collectible, explosions, flashes, score1, score2, roundScore1, roundScore2, rng, dt, currentTimeSec, audio, collectibleManager, explosionManager, circleManager, circles, lastCircleSpawn, this);
 
-    if (score1 >= 100 || score2 >= 100) {
-        gameOver = true;
-        gameOverScreen = true;
-        gameOverTime = std::chrono::steady_clock::now();
-        SDL_Log("Game over: score1=%d, score2=%d", score1, score2);
+    if (score1 >= 100) {
+        setScore1 += 1;
+        winnerDeclared = true;
+        audio.playWinnerVoice(currentTimeSec);
+        lastWinnerVoiceTime = currentTimeSec;
+        SDL_Log("Player 1 reached 100 points, setScore1=%d, winner declared", setScore1);
+    } else if (score2 >= 100) {
+        setScore2 += 1;
+        winnerDeclared = true;
+        audio.playWinnerVoice(currentTimeSec);
+        lastWinnerVoiceTime = currentTimeSec;
+        SDL_Log("Player 2 reached 100 points, setScore2=%d, winner declared", setScore2);
     } else if (!player1.alive || !player2.alive) {
         gameOver = true;
         gameOverScreen = true;
@@ -216,13 +271,19 @@ void Game::reset() {
     collectible = collectibleManager.spawnCollectible(rng);
     explosions.clear();
     flashes.clear();
-    roundScore1 = roundScore2 = 0;
-    gameOver = gameOverScreen = false;
+    roundScore1 = roundScore2 = 0; // Reset round scores every round
+    // Reset total scores only if a set point was awarded
+    if (score1 >= 100 || score2 >= 100) {
+        score1 = score2 = 0;
+        SDL_Log("Total scores reset due to set point: score1=%d, score2=%d", score1, score2);
+    }
+    gameOver = gameOverScreen = winnerDeclared = false;
     paused = false;
     lastCircleSpawn = std::chrono::steady_clock::now();
     lastBoopTime = 0.0f;
     deathTime = 0.0f;
-    SDL_Log("Game reset");
+    lastWinnerVoiceTime = 0.0f;
+    SDL_Log("Game reset, roundScore1=%d, roundScore2=%d, score1=%d, score2=%d", roundScore1, roundScore2, score1, score2);
 }
 
 void Game::activateNoCollision(Player* player, float currentTimeSec) {
@@ -294,4 +355,10 @@ void Game::toggleFullscreen() {
         glLoadIdentity();
         SDL_Log("Fullscreen viewport: 0,0,%dx%d, Ortho: 0,0,%fx%f", windowWidth, windowHeight, orthoWidth, orthoHeight);
     }
+}
+
+void Game::resumeAfterWinner() {
+    winnerDeclared = false;
+    reset();
+    SDL_Log("Resumed game after winner via A button press");
 }

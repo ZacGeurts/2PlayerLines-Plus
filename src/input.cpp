@@ -25,6 +25,12 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                 case SDLK_ESCAPE:
                     running = false;
                     break;
+                case SDLK_p:
+                    if (!isSplashScreen && !gameOverScreen && !game->winnerDeclared) {
+                        paused = !paused;
+                        SDL_Log("Game %s", paused ? "paused" : "unpaused");
+                    }
+                    break;
                 case SDLK_SPACE:
                     if (isSplashScreen) {
                         isSplashScreen = false;
@@ -32,6 +38,9 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                     } else if (gameOverScreen) {
                         game->reset();
                     }
+                    break;
+                default:
+                    handleAIDifficultyInput(event.key, game);
                     break;
             }
             lastFrameKeys[event.key.keysym.scancode] = true;
@@ -42,6 +51,13 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
             int controllerIndex = event.cbutton.which;
             lastFrameButtons[controllerIndex][button] = true;
 
+            if (game->winnerDeclared) {
+                if (button == SDL_CONTROLLER_BUTTON_A) {
+                    game->resumeAfterWinner();
+                }
+                continue;
+            }
+
             if (isSplashScreen) {
                 if (button == SDL_CONTROLLER_BUTTON_A || button == SDL_CONTROLLER_BUTTON_B ||
                     button == SDL_CONTROLLER_BUTTON_X || button == SDL_CONTROLLER_BUTTON_Y) {
@@ -49,12 +65,11 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                     game->firstFrame = true;
                 }
             } else if (!gameOverScreen) {
-                // Handle pause
                 if (button == SDL_CONTROLLER_BUTTON_X || button == SDL_CONTROLLER_BUTTON_Y ||
                     button == SDL_CONTROLLER_BUTTON_B) {
                     paused = !paused;
+                    SDL_Log("Game %s", paused ? "paused" : "unpaused");
                 }
-                // Handle no-collision ability
                 Player* player = nullptr;
                 if (controllerIndex == 0) player = &game->player1;
                 else if (controllerIndex == 1) player = &game->player2;
@@ -68,7 +83,6 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
         }
     }
 
-    // Update keyboard states for continuous checks
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
         if (!keyboardState[i]) {
             lastFrameKeys[i] = false;
@@ -76,4 +90,29 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
     }
 
     return running;
+}
+
+void InputManager::handleAIDifficultyInput(SDL_KeyboardEvent& keyEvent, Game* game) {
+    switch (keyEvent.keysym.sym) {
+        case SDLK_0:
+            game->ai.setDifficulty(AI::Difficulty::OFF);
+            SDL_Log("AI Difficulty set to OFF (Two-player mode)");
+            break;
+        case SDLK_1:
+            game->ai.setDifficulty(AI::Difficulty::EASY);
+            SDL_Log("AI Difficulty set to EASY");
+            break;
+        case SDLK_2:
+            game->ai.setDifficulty(AI::Difficulty::MEDIUM);
+            SDL_Log("AI Difficulty set to MEDIUM");
+            break;
+        case SDLK_3:
+            game->ai.setDifficulty(AI::Difficulty::HARD);
+            SDL_Log("AI Difficulty set to HARD");
+            break;
+        case SDLK_4:
+            game->ai.setDifficulty(AI::Difficulty::EXPERT);
+            SDL_Log("AI Difficulty set to EXPERT");
+            break;
+    }
 }

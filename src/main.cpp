@@ -36,12 +36,15 @@ GameConfig loadConfig(const std::string& filename) {
             else if (key == "HEIGHT") config.HEIGHT = static_cast<int>(value);
             else if (key == "PLAYER_SPEED") config.PLAYER_SPEED = value;
             else if (key == "TURN_SPEED") config.TURN_SPEED = value;
+            else if (key == "AI_TURN_SPEED") config.AI_TURN_SPEED = value;
             else if (key == "CIRCLE_SPEED") config.CIRCLE_SPEED = value;
             else if (key == "CIRCLE_RADIUS") config.CIRCLE_RADIUS = value;
             else if (key == "COLLISION_CHECK_SIZE") config.COLLISION_CHECK_SIZE = value;
             else if (key == "BOOP_DURATION") config.BOOP_DURATION = value;
             else if (key == "EXPLOSION_DURATION") config.EXPLOSION_DURATION = value;
             else if (key == "LASER_ZAP_DURATION") config.LASER_ZAP_DURATION = value;
+            else if (key == "WINNER_VOICE_DURATION") config.WINNER_VOICE_DURATION = value;
+            else if (key == "TECHNO_LOOP_DURATION") config.TECHNO_LOOP_DURATION = value;
             else if (key == "BLACK_SQUARE_SIZE") config.BLACK_SQUARE_SIZE = value;
             else if (key == "COLLECTIBLE_SIZE") config.COLLECTIBLE_SIZE = value;
             else if (key == "BLACK_CIRCLE_SIZE") config.BLACK_CIRCLE_SIZE = value;

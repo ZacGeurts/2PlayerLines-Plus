@@ -10,10 +10,10 @@ class InputManager {
 public:
     InputManager();
     bool handleInput(SDL_GameController* controllers[], int controllerCount, bool gameOverScreen, bool& isSplashScreen, bool& paused, Game* game);
-
 private:
     bool lastFrameButtons[2][SDL_CONTROLLER_BUTTON_MAX]; // Track controller button states
     bool lastFrameKeys[SDL_NUM_SCANCODES];              // Track keyboard key states
+    void handleAIDifficultyInput(SDL_KeyboardEvent& keyEvent, Game* game); // Handle AI difficulty
 };
 
 #endif // INPUT_H

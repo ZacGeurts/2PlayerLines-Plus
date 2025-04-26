@@ -2,40 +2,47 @@
 #define AUDIO_H
 
 #include <SDL2/SDL.h>
-#include "types.h"
+#include "types.h" // Include types.h for GameConfig and BoopAudioData
 
 class AudioManager {
 public:
     AudioManager(const GameConfig& config);
     ~AudioManager();
-
-    void playExplosion(float currentTimeSec);
     void playBoop(float currentTimeSec);
+    void playExplosion(float currentTimeSec);
     void playLaserZap(float currentTimeSec);
-    void stopAll();
+    void playWinnerVoice(float currentTimeSec);
+    void startTechnoLoop(float currentTimeSec);
+    void stopTechnoLoop();
 
 private:
-    struct SoundState {
-        bool active;
-        float startTime;
-        float t; // Track time for each sound
-    };
+    static void boopCallback(void* userdata, Uint8* stream, int len);
+    static void explosionCallback(void* userdata, Uint8* stream, int len);
+    static void laserZapCallback(void* userdata, Uint8* stream, int len);
+    static void winnerVoiceCallback(void* userdata, Uint8* stream, int len);
+    static void technoLoopCallback(void* userdata, Uint8* stream, int len);
 
-    struct AudioCallbackData {
-        const GameConfig* config;
-        AudioManager* audioManager; // Access to sound states
-    };
-
-    static void audioCallback(void* userdata, Uint8* stream, int len);
-
-    const GameConfig& config;
-    SDL_AudioDeviceID audioDevice; // Single audio device
-    BoopAudioData boopData;
+    SDL_AudioDeviceID boopDevice;
+    SDL_AudioDeviceID explosionDevice;
+    SDL_AudioDeviceID laserZapDevice;
+    SDL_AudioDeviceID winnerVoiceDevice;
+    SDL_AudioDeviceID technoLoopDevice;
     bool boopPlaying;
-    SoundState explosionState;
-    SoundState boopState;
-    SoundState laserZapState;
-    AudioCallbackData* callbackData; // Store callback data
+    bool explosionPlaying;
+    bool laserZapPlaying;
+    bool winnerVoicePlaying;
+    bool technoLoopPlaying;
+    BoopAudioData boopData;
+    BoopAudioData explosionData;
+    BoopAudioData laserZapData;
+    BoopAudioData winnerVoiceData;
+    BoopAudioData technoLoopData;
+    int technoSongId;
+    int technoChannels;
+    const GameConfig& config;
+
+    // Helper to reopen audio device safely
+    bool reopenAudioDevice(SDL_AudioDeviceID& device, BoopAudioData& data, SDL_AudioCallback callback, const char* deviceName, int channels);
 };
 
 #endif // AUDIO_H

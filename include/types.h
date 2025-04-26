@@ -1,4 +1,3 @@
-// include/types.h
 #ifndef TYPES_H
 #define TYPES_H
 
@@ -8,7 +7,10 @@
 #include <map>
 #include <cmath> // Added for M_PI in GameConfig
 
-// safty net. These change with game.ini
+// Forward declaration for AudioManager
+class AudioManager;
+
+// Safety net. These change with game.ini
 struct GameConfig {
     int WIDTH = 1920;
     int HEIGHT = 1080;
@@ -20,12 +22,15 @@ struct GameConfig {
     float BOOP_DURATION = 0.5f;
     float EXPLOSION_DURATION = 1.0f;
     float LASER_ZAP_DURATION = 0.5f;
+    float WINNER_VOICE_DURATION = 1.0f; // Duration for "Winner" voice
+    float TECHNO_LOOP_DURATION = -1.0f; // Negative for continuous loop
     float BLACK_SQUARE_SIZE = 80.0f;
     float COLLECTIBLE_SIZE = 40.0f;
     float BLACK_CIRCLE_SIZE = 60.0f;
     float EXPLOSION_MAX_RADIUS = 20.0f;
     float PLAYER_SIZE = 10.0f;
     float TRAIL_SIZE = 5.0f;
+    float AI_TURN_SPEED = 180.0f; // Added for AI turning speed (degrees/s)
 };
 
 struct Vec2 {
@@ -34,6 +39,11 @@ struct Vec2 {
     Vec2 operator+(const Vec2& other) const { return Vec2(x + other.x, y + other.y); }
     Vec2 operator-(const Vec2& other) const { return Vec2(x - other.x, y - other.y); }
     Vec2 operator*(float s) const { return Vec2(x * s, y * s); }
+    float magnitude() const { return std::sqrt(x * x + y * y); }
+    Vec2 normalized() const {
+        float mag = magnitude();
+        return mag > 0 ? Vec2(x / mag, y / mag) : Vec2(0, 0);
+    }
 };
 
 struct Player {
@@ -93,9 +103,9 @@ struct BoopAudioData {
     bool* playing;
     const GameConfig* config;
     float t; // Added for time tracking
+    AudioManager* manager; // Added for techno loop to access technoSongId
 };
 
-// 5x5 font map for text rendering (1 = pixel on, 0 = pixel off)
 const std::map<char, std::vector<bool>> FONT = {
     {'0', {1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1}},
     {'1', {0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0}},
