@@ -7,7 +7,7 @@ Do not collide with other lines or (yellow) circles with your head.<BR />
 Bouncing circles erase lines and another appears every 5 seconds with a short no collision (magenta).<BR />
 You are invincible until first move unless you hit the wall on the other side.<BR />
 F toggles fullscreen<BR />
-1-5 will eventually toggle AI difficulty. (0 to return to 2 Player).
+1-5 will eventually toggle AI difficulty. (0 to return to 2 Player).<BR />
 Steer with controller triggers.<BR />
 You get one short invincibility and invisibility per round by pressing A (X).<BR />
 B X Y or circle square triangle pauses during gameplay.<BR />
