@@ -17,7 +17,7 @@ There is a game.ini to modify settings. (Options coming soon(tm))<BR />
 <BR />
 I am currently working on an awesome instruments.h file that should be portable and create amazing tone generation for music.<BR />
 "It does not sound like MP3 or CD audio" - Nope, it is a tone generator. This is using complex math to make music for something like PC Speaker, ya know, BEEP.<BR />
-Or this thing, (Tone Generator)[https://www.szynalski.com/tone-generator/]<BR />
+Or this thing, [Tone Generator](https://www.szynalski.com/tone-generator)<BR />
 <BR />
 MIT license.<BR />
 <BR />
