@@ -244,7 +244,7 @@ void AudioManager::technoLoopCallback(void* userdata, Uint8* stream, int len) {
         }
         data->t += samples / 44100.0f;
         // Loop song (simplified; adjust duration as needed)
-        if (data->t >= 20.0f) data->t = 0.0f; // Each song is ~10–20s
+        //if (data->t >= 180.0f) data->t = 0.0f; // Each song is ~10–20s
         return;
     }
 
