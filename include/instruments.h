@@ -687,4 +687,10 @@ namespace Instruments {
     }
 }
 
+std::vector<float> generateSong1(float songTime, int channels);
+std::vector<float> generateSong2(float songTime, int channels);
+std::vector<float> generateSong3(float songTime, int channels);
+std::vector<float> generateSong4(float songTime, int channels);
+std::vector<float> generateSong5(float songTime, int channels);
+
 #endif // INSTRUMENTS_H

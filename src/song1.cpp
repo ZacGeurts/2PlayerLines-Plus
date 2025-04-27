@@ -3,11 +3,9 @@
 #include <cmath>
 #include <cstdio>
 
-// Techno: Neon Pulse
-// In A minor, 140 BPM, ~3 minutes
-float generateSong1(float t, float songTime) {
+std::vector<float> generateSong1(float songTime, int channels) {
     using namespace Instruments;
-    float sample = 0.0f;
+    std::vector<float> samples(channels, 0.0f);
 
     // Log message when song starts
     static bool hasLogged = false;
@@ -112,11 +110,21 @@ float generateSong1(float t, float songTime) {
         }
     }
 
-    // Mix channels
-    sample = (leftSample * 0.2f + rightSample * 0.2f + centerSample * 0.3f + lfeSample * 0.2f + surroundLeftSample * 0.05f + surroundRightSample * 0.05f);
+    // Assign samples based on channel count
+    if (channels == 6) { // 5.1 surround
+        samples[0] = std::min(std::max(leftSample, -0.9f), 0.9f);           // Front left
+        samples[1] = std::min(std::max(rightSample, -0.9f), 0.9f);          // Front right
+        samples[2] = std::min(std::max(centerSample, -0.9f), 0.9f);         // Center
+        samples[3] = std::min(std::max(lfeSample, -0.9f), 0.9f);            // LFE
+        samples[4] = std::min(std::max(surroundLeftSample, -0.9f), 0.9f);   // Surround left
+        samples[5] = std::min(std::max(surroundRightSample, -0.9f), 0.9f);  // Surround right
+    } else if (channels == 2) { // Stereo
+        samples[0] = std::min(std::max(leftSample + surroundLeftSample * 0.5f + centerSample * 0.5f, -0.9f), 0.9f);
+        samples[1] = std::min(std::max(rightSample + surroundRightSample * 0.5f + centerSample * 0.5f, -0.9f), 0.9f);
+    } else { // Mono
+        samples[0] = std::min(std::max(leftSample * 0.2f + rightSample * 0.2f + centerSample * 0.3f +
+                                       lfeSample * 0.2f + surroundLeftSample * 0.05f + surroundRightSample * 0.05f, -0.9f), 0.9f);
+    }
 
-    // Clip to prevent distortion
-    sample = std::min(std::max(sample, -0.9f), 0.9f);
-
-    return sample;
+    return samples;
 }

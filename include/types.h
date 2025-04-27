@@ -106,6 +106,15 @@ struct BoopAudioData {
     AudioManager* manager; // Added for techno loop to access technoSongId
 };
 
+struct TechnoAudioData {
+    SDL_AudioDeviceID deviceId;
+    bool* playing;
+    const GameConfig* config;
+    float t;
+    AudioManager* manager;
+    int songId;
+};
+
 const std::map<char, std::vector<bool>> FONT = {
     {'0', {1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1}},
     {'1', {0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0}},

@@ -2,14 +2,16 @@
 #define AUDIO_H
 
 #include <SDL2/SDL.h>
-#include "types.h" // Include types.h for GameConfig and BoopAudioData
+#include "types.h" // For GameConfig and BoopAudioData
+#include <mutex>
+#include <vector>
 
 // Song function declarations
-float generateSong1(float t, float songTime);
-float generateSong2(float t, float songTime);
-float generateSong3(float t, float songTime);
-float generateSong4(float t, float songTime);
-float generateSong5(float t, float songTime);
+std::vector<float> generateSong1(float t, int channels);
+std::vector<float> generateSong2(float t, int channels);
+std::vector<float> generateSong3(float t, int channels);
+std::vector<float> generateSong4(float t, int channels);
+std::vector<float> generateSong5(float t, int channels);
 
 class AudioManager {
 public:
@@ -19,37 +21,46 @@ public:
     void playExplosion(float currentTimeSec);
     void playLaserZap(float currentTimeSec);
     void playWinnerVoice(float currentTimeSec);
-    void startTechnoLoop(float currentTimeSec, int songId = -1); // Added songId parameter
+    void startTechnoLoop(float currentTimeSec, int songId = -1);
     void stopTechnoLoop();
 
 private:
-    static void boopCallback(void* userdata, Uint8* stream, int len);
-    static void explosionCallback(void* userdata, Uint8* stream, int len);
-    static void laserZapCallback(void* userdata, Uint8* stream, int len);
-    static void winnerVoiceCallback(void* userdata, Uint8* stream, int len);
     static void technoLoopCallback(void* userdata, Uint8* stream, int len);
 
-    SDL_AudioDeviceID boopDevice;
-    SDL_AudioDeviceID explosionDevice;
-    SDL_AudioDeviceID laserZapDevice;
-    SDL_AudioDeviceID winnerVoiceDevice;
+    SDL_AudioDeviceID soundEffectDevice;
     SDL_AudioDeviceID technoLoopDevice;
     bool boopPlaying;
     bool explosionPlaying;
     bool laserZapPlaying;
     bool winnerVoicePlaying;
     bool technoLoopPlaying;
-    BoopAudioData boopData;
-    BoopAudioData explosionData;
-    BoopAudioData laserZapData;
-    BoopAudioData winnerVoiceData;
-    BoopAudioData technoLoopData;
-    int technoSongId;
+    struct BoopAudioData {
+        SDL_AudioDeviceID deviceId;
+        const GameConfig* config;
+        AudioManager* manager;
+    } soundEffectData;
+    struct TechnoAudioData {
+        SDL_AudioDeviceID deviceId;
+        bool* playing;
+        const GameConfig* config;
+        float t;
+        AudioManager* manager;
+        int songId;
+    } technoLoopData;
     int technoChannels;
     const GameConfig& config;
+    std::mutex soundEffectMutex;
+    bool hasReopenedSoundEffectDevice;
 
     // Helper to reopen audio device safely
-    bool reopenAudioDevice(SDL_AudioDeviceID& device, BoopAudioData& data, SDL_AudioCallback callback, const char* deviceName, int channels);
+    bool reopenAudioDevice(SDL_AudioDeviceID& device, BoopAudioData& data, const char* deviceName, int channels);
+    bool reopenTechnoAudioDevice(SDL_AudioDeviceID& device, TechnoAudioData& data, SDL_AudioCallback callback, const char* deviceName, int channels);
+
+    // Helper to generate sound effect samples
+    void generateBoopSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
+    void generateExplosionSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
+    void generateLaserZapSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
+    void generateWinnerVoiceSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
 };
 
 #endif // AUDIO_H

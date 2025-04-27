@@ -36,6 +36,29 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
         if (!player->alive) continue;
 
         Vec2 nextPos = player->pos + player->direction * config.PLAYER_SPEED * dt;
+
+		if (player->willDie) {
+    		player->alive = false;
+    		player->deathPos = player->pos;
+
+    		// Check if both players are dead at the same time
+    		bool simultaneousDeath = (player1.willDie || !player1.alive) && (player2.willDie || !player2.alive);
+
+    		if (!simultaneousDeath) {
+        		if (player == &player1 && player2.alive) {
+            		score2 += 3;
+            		roundScore2 += 3;
+            		SDL_Log("Player 1 died, score2 += 3");
+        		} else if (player == &player2 && player1.alive) {
+            		score1 += 3;
+            		roundScore1 += 3;
+            		SDL_Log("Player 2 died, score1 += 3");
+        		}
+    		} else {
+        		SDL_Log("Simultaneous death detected, no points awarded");
+    		}
+    		continue;
+		}
         if (!player->willDie) {
             if (nextPos.x < 0 || nextPos.x > config.WIDTH || nextPos.y < 0 || nextPos.y > config.HEIGHT) {
                 player->willDie = true;
@@ -46,20 +69,6 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
             } else if (player->hasMoved) {
                 game->checkCollision(player, nextPos, currentTimeSec);
             }
-        }
-        if (player->willDie) {
-            player->alive = false;
-            player->deathPos = player->pos;
-            if (player == &player1 && player2.alive) {
-                score2 += 3;
-                roundScore2 += 3;
-                SDL_Log("Player 1 died, score2 += 3");
-            } else if (player == &player2 && player1.alive) {
-                score1 += 3;
-                roundScore1 += 3;
-                SDL_Log("Player 2 died, score1 += 3");
-            }
-            continue;
         }
 
         player->pos = nextPos;
