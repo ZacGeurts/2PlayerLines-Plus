@@ -1,6 +1,5 @@
-// src/main.cpp
 #include "game.h"
-#include "types.h" // Include types.h for GameConfig definition
+#include "types.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <fstream>
@@ -13,13 +12,11 @@ GameConfig loadConfig(const std::string& filename) {
     std::string line;
 
     if (!file.is_open()) {
-        // Use default values if file not found
         SDL_Log("Failed to open config file %s, using default values", filename.c_str());
         return config;
     }
 
     while (std::getline(file, line)) {
-        // Skip comments and empty lines
         if (line.empty() || line[0] == '#') continue;
 
         std::istringstream iss(line);
@@ -27,11 +24,9 @@ GameConfig loadConfig(const std::string& filename) {
         float value;
 
         if (std::getline(iss, key, '=') && iss >> value) {
-            // Trim whitespace
             key.erase(0, key.find_first_not_of(" \t"));
             key.erase(key.find_last_not_of(" \t") + 1);
 
-            // Map keys to config values
             if (key == "WIDTH") config.WIDTH = static_cast<int>(value);
             else if (key == "HEIGHT") config.HEIGHT = static_cast<int>(value);
             else if (key == "PLAYER_SPEED") config.PLAYER_SPEED = value;
@@ -59,20 +54,17 @@ GameConfig loadConfig(const std::string& filename) {
 }
 
 int main(int argc, char* argv[]) {
-    // Initialize SDL subsystems
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
         SDL_Log("SDL initialization failed: %s", SDL_GetError());
         return 1;
     }
 
-    // Initialize SDL_image for PNG loading
     if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
         SDL_Log("SDL_image initialization failed: %s", IMG_GetError());
         SDL_Quit();
         return 1;
     }
 
-    // Load configuration and create game
     GameConfig config = loadConfig("game.ini");
     try {
         Game game(config);
@@ -84,7 +76,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Clean up
     IMG_Quit();
     SDL_Quit();
     return 0;

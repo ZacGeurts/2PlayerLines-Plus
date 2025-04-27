@@ -3,6 +3,7 @@
 #include <cmath>
 #include <SDL2/SDL.h>
 #include <algorithm>
+#include <iostream> // For debugging
 
 AudioManager::AudioManager(const GameConfig& config)
     : boopDevice(0), explosionDevice(0), laserZapDevice(0), winnerVoiceDevice(0), technoLoopDevice(0),
@@ -12,7 +13,7 @@ AudioManager::AudioManager(const GameConfig& config)
       laserZapData{0, &laserZapPlaying, &config, 0.0f, nullptr},
       winnerVoiceData{0, &winnerVoicePlaying, &config, 0.0f, nullptr},
       technoLoopData{0, &technoLoopPlaying, &config, 0.0f, this},
-      technoSongId(0), technoChannels(2), config(config) {
+      technoSongId(-1), technoChannels(2), config(config) {
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
         SDL_Log("Failed to initialize SDL audio: %s", SDL_GetError());
         return;
@@ -70,36 +71,7 @@ AudioManager::~AudioManager() {
 }
 
 void AudioManager::boopCallback(void* userdata, Uint8* stream, int len) {
-    BoopAudioData* data = static_cast<BoopAudioData*>(userdata);
-    int16_t* buffer = reinterpret_cast<int16_t*>(stream);
-    SDL_AudioSpec spec;
-    SDL_zero(spec);
-    spec.freq = 44100; spec.format = AUDIO_S16SYS; spec.channels = 2; spec.samples = 1024; // Fallback
-    static bool loggedError = false;
-    SDL_AudioStatus status = SDL_GetAudioDeviceStatus(data->deviceId);
-    if (status != SDL_AUDIO_PLAYING || SDL_GetAudioDeviceSpec(static_cast<int>(data->deviceId), 0, &spec) != 0) {
-        if (!loggedError) {
-            SDL_Log("Boop callback: Invalid device ID=%u, status=%d, error=%s, using fallback spec", data->deviceId, status, SDL_GetError());
-            loggedError = true;
-        }
-    } else {
-        loggedError = false; // Reset if spec retrieval succeeds
-    }
-    int channels = spec.channels;
-    int samples = len / sizeof(int16_t) / channels;
-    if (!*(data->playing) || (data->config->BOOP_DURATION > 0 && data->t >= data->config->BOOP_DURATION)) {
-        *(data->playing) = false; data->t = 0.0f; std::fill(buffer, buffer + samples * channels, 0); return;
-    }
-    for (int i = 0; i < samples; ++i) {
-        float t = data->t + i / 44100.0f;
-        float freq = 440.0f + 100.0f * sin(t * 2.0f * M_PI * 5.0f);
-        int16_t sample = static_cast<int16_t>(32760.0f * sin(t * 2.0f * M_PI * freq));
-        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample;
-    }
-    data->t += samples / 44100.0f;
-}
-
-void AudioManager::explosionCallback(void* userdata, Uint8* stream, int len) {
+    using namespace Instruments;
     BoopAudioData* data = static_cast<BoopAudioData*>(userdata);
     int16_t* buffer = reinterpret_cast<int16_t*>(stream);
     SDL_AudioSpec spec;
@@ -109,7 +81,39 @@ void AudioManager::explosionCallback(void* userdata, Uint8* stream, int len) {
     SDL_AudioStatus status = SDL_GetAudioDeviceStatus(data->deviceId);
     if (status != SDL_AUDIO_PLAYING || SDL_GetAudioDeviceSpec(static_cast<int>(data->deviceId), 0, &spec) != 0) {
         if (!loggedError) {
-            SDL_Log("Explosion callback: Invalid device ID=%u, status=%d, error=%s, using fallback spec", data->deviceId, status, SDL_GetError());
+            SDL_Log("Boop callback: Invalid device ID=%u, status=%d, error=%s", data->deviceId, status, SDL_GetError());
+            loggedError = true;
+        }
+    } else {
+        loggedError = false;
+    }
+    int channels = spec.channels;
+    int samples = len / sizeof(int16_t) / channels;
+    if (!*(data->playing) || (data->config->BOOP_DURATION > 0 && data->t >= data->config->BOOP_DURATION)) {
+        *(data->playing) = false; data->t = 0.0f; std::fill(buffer, buffer + samples * channels, 0); return;
+    }
+    for (int i = 0; i < samples; ++i) {
+        float t = data->t + i / 44100.0f;
+        // Use generatePiano for a melodic boop sound
+        float sample = generatePiano(t, 440.0f) * 0.8f; // A4 note
+        int16_t sample16 = static_cast<int16_t>(32760.0f * sample);
+        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample16;
+    }
+    data->t += samples / 44100.0f;
+}
+
+void AudioManager::explosionCallback(void* userdata, Uint8* stream, int len) {
+    using namespace Instruments;
+    BoopAudioData* data = static_cast<BoopAudioData*>(userdata);
+    int16_t* buffer = reinterpret_cast<int16_t*>(stream);
+    SDL_AudioSpec spec;
+    SDL_zero(spec);
+    spec.freq = 44100; spec.format = AUDIO_S16SYS; spec.channels = 2; spec.samples = 1024;
+    static bool loggedError = false;
+    SDL_AudioStatus status = SDL_GetAudioDeviceStatus(data->deviceId);
+    if (status != SDL_AUDIO_PLAYING || SDL_GetAudioDeviceSpec(static_cast<int>(data->deviceId), 0, &spec) != 0) {
+        if (!loggedError) {
+            SDL_Log("Explosion callback: Invalid device ID=%u, status=%d, error=%s", data->deviceId, status, SDL_GetError());
             loggedError = true;
         }
     } else {
@@ -122,13 +126,16 @@ void AudioManager::explosionCallback(void* userdata, Uint8* stream, int len) {
     }
     for (int i = 0; i < samples; ++i) {
         float t = data->t + i / 44100.0f;
-        int16_t sample = static_cast<int16_t>((rand() % 32760) * (1.0f - t / data->config->EXPLOSION_DURATION));
-        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample;
+        // Combine snare and clap for a percussive explosion
+        float sample = (generateSnare(t) * 0.6f + generateClap(t) * 0.4f) * (1.0f - t / data->config->EXPLOSION_DURATION);
+        int16_t sample16 = static_cast<int16_t>(32760.0f * sample);
+        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample16;
     }
     data->t += samples / 44100.0f;
 }
 
 void AudioManager::laserZapCallback(void* userdata, Uint8* stream, int len) {
+    using namespace Instruments;
     BoopAudioData* data = static_cast<BoopAudioData*>(userdata);
     int16_t* buffer = reinterpret_cast<int16_t*>(stream);
     SDL_AudioSpec spec;
@@ -138,7 +145,7 @@ void AudioManager::laserZapCallback(void* userdata, Uint8* stream, int len) {
     SDL_AudioStatus status = SDL_GetAudioDeviceStatus(data->deviceId);
     if (status != SDL_AUDIO_PLAYING || SDL_GetAudioDeviceSpec(static_cast<int>(data->deviceId), 0, &spec) != 0) {
         if (!loggedError) {
-            SDL_Log("Laser zap callback: Invalid device ID=%u, status=%d, error=%s, using fallback spec", data->deviceId, status, SDL_GetError());
+            SDL_Log("Laser zap callback: Invalid device ID=%u, status=%d, error=%s", data->deviceId, status, SDL_GetError());
             loggedError = true;
         }
     } else {
@@ -151,14 +158,17 @@ void AudioManager::laserZapCallback(void* userdata, Uint8* stream, int len) {
     }
     for (int i = 0; i < samples; ++i) {
         float t = data->t + i / 44100.0f;
+        // Use synthArp for a sci-fi zap sound
         float freq = 880.0f - 600.0f * (t / data->config->LASER_ZAP_DURATION);
-        int16_t sample = static_cast<int16_t>(32760.0f * sin(t * 2.0f * M_PI * freq) * (1.0f - t / data->config->LASER_ZAP_DURATION));
-        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample;
+        float sample = generateSynthArp(t, freq) * (1.0f - t / data->config->LASER_ZAP_DURATION);
+        int16_t sample16 = static_cast<int16_t>(32760.0f * sample);
+        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample16;
     }
     data->t += samples / 44100.0f;
 }
 
 void AudioManager::winnerVoiceCallback(void* userdata, Uint8* stream, int len) {
+    using namespace Instruments;
     BoopAudioData* data = static_cast<BoopAudioData*>(userdata);
     int16_t* buffer = reinterpret_cast<int16_t*>(stream);
     SDL_AudioSpec spec;
@@ -168,7 +178,7 @@ void AudioManager::winnerVoiceCallback(void* userdata, Uint8* stream, int len) {
     SDL_AudioStatus status = SDL_GetAudioDeviceStatus(data->deviceId);
     if (status != SDL_AUDIO_PLAYING || SDL_GetAudioDeviceSpec(static_cast<int>(data->deviceId), 0, &spec) != 0) {
         if (!loggedError) {
-            SDL_Log("Winner voice callback: Invalid device ID=%u, status=%d, error=%s, using fallback spec", data->deviceId, status, SDL_GetError());
+            SDL_Log("Winner voice callback: Invalid device ID=%u, status=%d, error=%s", data->deviceId, status, SDL_GetError());
             loggedError = true;
         }
     } else {
@@ -181,11 +191,10 @@ void AudioManager::winnerVoiceCallback(void* userdata, Uint8* stream, int len) {
     }
     for (int i = 0; i < samples; ++i) {
         float t = data->t + i / 44100.0f;
-        float freq1 = 200.0f + 100.0f * sin(t * 2.0f * M_PI * 2.0f);
-        float freq2 = 800.0f + 200.0f * sin(t * 2.0f * M_PI * 3.0f);
-        float amplitude = 0.8f * (1.0f - t / data->config->WINNER_VOICE_DURATION);
-        int16_t sample = static_cast<int16_t>(32760.0f * amplitude * (0.5f * sin(t * 2.0f * M_PI * freq1) + 0.5f * sin(t * 2.0f * M_PI * freq2)));
-        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample;
+        // Use generateVocal with phoneme 1 ('ee') for a celebratory sound
+        float sample = generateVocal(t, 300.0f, 1) * 0.8f;
+        int16_t sample16 = static_cast<int16_t>(32760.0f * sample);
+        for (int ch = 0; ch < channels; ++ch) buffer[i * channels + ch] = sample16;
     }
     data->t += samples / 44100.0f;
 }
@@ -200,6 +209,47 @@ void AudioManager::technoLoopCallback(void* userdata, Uint8* stream, int len) {
 
     int songId = data->manager->technoSongId;
 
+    // If songId is 0–4, play classical song; otherwise, play techno loop
+    if (songId >= 0 && songId <= 4) {
+        // Call song functions for classical pieces
+        using namespace Instruments;
+        for (int i = 0; i < samples; ++i) {
+            float t = data->t + i / 44100.0f;
+            float sample = 0.0f;
+            switch (songId) {
+                case 0: sample = generateSong1(0.0f, t); break; // In the Hall of the Mountain King
+                case 1: sample = generateSong2(0.0f, t); break; // Dance of the Sugar Plum Fairy
+                case 2: sample = generateSong3(0.0f, t); break; // Symphony No. 5
+                case 3: sample = generateSong4(0.0f, t); break; // Eine Kleine Nachtmusik
+                case 4: sample = generateSong5(0.0f, t); break; // Für Elise
+            }
+            // Apply stereo panning (center for simplicity)
+            float left = sample * 0.5f;
+            float right = sample * 0.5f;
+            if (data->manager->technoChannels == 6) {
+                float channels[6] = {left * 0.3f, right * 0.3f, sample * 0.4f, 0.0f, left * 0.2f, right * 0.2f};
+                for (int ch = 0; ch < 6; ++ch) {
+                    channels[ch] = std::min(std::max(channels[ch], -0.9f), 0.9f);
+                    buffer[i * 6 + ch] = static_cast<int16_t>(32760.0f * channels[ch]);
+                }
+            } else if (data->manager->technoChannels == 2) {
+                left = std::min(std::max(left, -0.9f), 0.9f);
+                right = std::min(std::max(right, -0.9f), 0.9f);
+                buffer[i * 2] = static_cast<int16_t>(32760.0f * left);
+                buffer[i * 2 + 1] = static_cast<int16_t>(32760.0f * right);
+            } else {
+                float mono = std::min(std::max(sample, -0.9f), 0.9f);
+                buffer[i] = static_cast<int16_t>(32760.0f * mono);
+            }
+        }
+        data->t += samples / 44100.0f;
+        // Loop song (simplified; adjust duration as needed)
+        if (data->t >= 20.0f) data->t = 0.0f; // Each song is ~10–20s
+        return;
+    }
+
+    // Original techno loop (with fixes for pop/silence)
+    using namespace Instruments;
     const float BPM = 130.0f;
     const float BEAT_TIME = 60.0f / BPM;
     const float BAR_TIME = BEAT_TIME * 4;
@@ -248,7 +298,7 @@ void AudioManager::technoLoopCallback(void* userdata, Uint8* stream, int len) {
         int bar = static_cast<int>(localTime / BAR_TIME);
         float eighthTime = std::fmod(localTime, BEAT_TIME / 2);
 
-        float kickAmp = (beatTime < BEAT_TIME / 2) ? std::exp(-12.0f * beatTime) : 0.0f;
+        float kickAmp = (beatTime < BEAT_TIME / 2) ? 1.0f : 0.0f;
         float sidechain = 1.0f - 0.5f * kickAmp;
 
         float kickPan = 0.0f, bassPan = 0.0f, vocalPan = 0.0f;
@@ -260,25 +310,25 @@ void AudioManager::technoLoopCallback(void* userdata, Uint8* stream, int len) {
         float left = 0.0f, right = 0.0f, mono = 0.0f;
 
         if (section == 0) {
-            float kick = (beatTime < BEAT_TIME / 2) ? Instruments::generateKick(beatTime, 50.0f) : 0.0f;
-            float hihat = (eighthTime < BEAT_TIME / 4) ? Instruments::generateHiHat(eighthTime, 1500.0f, false) : 0.0f;
-            float snare = (beat == 1 || beat == 3) ? Instruments::generateSnare(beatTime) : 0.0f;
-            float bassFreq = NOTES[CHORD_PROGRESSIONS[songId][bar % 4]];
-            float bass = Instruments::generateBass(beatTime, bassFreq) * sidechain;
-            float subBass = Instruments::generateSubBass(beatTime, bassFreq / 2) * sidechain;
+            float kick = kickAmp ? generateKick(beatTime, 50.0f) : 0.0f;
+            float hihat = (eighthTime < BEAT_TIME / 4) ? generateHiHat(eighthTime, 1500.0f, false) : 0.0f;
+            float snare = (beat == 1 || beat == 3) ? generateSnare(beatTime) : 0.0f;
+            float bassFreq = NOTES[CHORD_PROGRESSIONS[songId % 5][bar % 4]];
+            float bass = generateBass(beatTime, bassFreq) * sidechain;
+            float subBass = generateSubBass(beatTime, bassFreq / 2) * sidechain;
             float arpTime = std::fmod(localTime, BEAT_TIME / 4);
             int arpIndex = (static_cast<int>(localTime / (BEAT_TIME / 4)) % ARP_LENGTH);
             float arpFreq = NOTES[ARP_PATTERN[arpIndex]];
-            float synthArp = (eighthTime < BEAT_TIME / 4) ? Instruments::generateSynthArp(arpTime, arpFreq) : 0.0f;
+            float synthArp = (eighthTime < BEAT_TIME / 4) ? generateSynthArp(arpTime, arpFreq) : 0.0f;
             float leadFreq = NOTES[3];
             if (barTime > BAR_TIME / 2) leadFreq = NOTES[5];
-            float leadSynth = (beat % 2 == 1) ? Instruments::generateLeadSynth(beatTime, leadFreq) : 0.0f;
+            float leadSynth = (beat % 2 == 1) ? generateLeadSynth(beatTime, leadFreq) : 0.0f;
             float vocal = 0.0f;
             if (vocalActive && bar >= 8 && bar < 12) {
                 float vocalTime = std::fmod(localTime, BEAT_TIME);
                 int vocalIndex = (static_cast<int>(localTime / BEAT_TIME) % VOCAL_LENGTH);
                 int phonemeIndex = PHONEMES[vocalIndex];
-                vocal = Instruments::generateVocal(vocalTime, VOCAL_NOTES[vocalIndex], phonemeIndex) * 0.5f;
+                vocal = generateVocal(vocalTime, VOCAL_NOTES[vocalIndex], phonemeIndex) * 0.5f;
             }
             if (data->manager->technoChannels == 6) {
                 channels[0] = hihat * 0.7f + synthArp * 0.6f;
@@ -296,19 +346,19 @@ void AudioManager::technoLoopCallback(void* userdata, Uint8* stream, int len) {
                 mono = kick + hihat + snare + bass + subBass + synthArp + leadSynth + vocal;
             }
         } else if (section == 1) {
-            float kick = (beatTime < BEAT_TIME / 2) ? Instruments::generateKick(beatTime, 55.0f) : 0.0f;
-            float hihat = (eighthTime < BEAT_TIME / 4) ? Instruments::generateHiHat(eighthTime, 1500.0f, true) : 0.0f;
-            float snare = (beat == 1 || beat == 3) ? Instruments::generateSnare(beatTime) : 0.0f;
-            float clap = (beat == 1 || beat == 3) ? Instruments::generateClap(beatTime) : 0.0f;
-            float bassFreq = NOTES[CHORD_PROGRESSIONS[songId][bar % 4]];
-            float bass = Instruments::generateBass(beatTime, bassFreq) * sidechain;
-            float subBass = Instruments::generateSubBass(beatTime, bassFreq / 2) * sidechain;
+            float kick = kickAmp ? generateKick(beatTime, 55.0f) : 0.0f;
+            float hihat = (eighthTime < BEAT_TIME / 4) ? generateHiHat(eighthTime, 1500.0f, true) : 0.0f;
+            float snare = (beat == 1 || beat == 3) ? generateSnare(beatTime) : 0.0f;
+            float clap = (beat == 1 || beat == 3) ? generateClap(beatTime) : 0.0f;
+            float bassFreq = NOTES[CHORD_PROGRESSIONS[songId % 5][bar % 4]];
+            float bass = generateBass(beatTime, bassFreq) * sidechain;
+            float subBass = generateSubBass(beatTime, bassFreq / 2) * sidechain;
             float arpTime = std::fmod(localTime, BEAT_TIME / 8);
             int arpIndex = (static_cast<int>(localTime / (BEAT_TIME / 8)) % ARP_LENGTH);
             float arpFreq = NOTES[ARP_PATTERN[arpIndex]] * (1.0f + sectionProgress);
-            float synthArp = (eighthTime < BEAT_TIME / 4) ? Instruments::generateSynthArp(arpTime, arpFreq) : 0.0f;
+            float synthArp = (eighthTime < BEAT_TIME / 4) ? generateSynthArp(arpTime, arpFreq) : 0.0f;
             float guitarFreq = NOTES[5];
-            float guitar = (beat % 2 == 1) ? Instruments::generateGuitar(beatTime, guitarFreq) : 0.0f;
+            float guitar = (beat % 2 == 1) ? generateGuitar(beatTime, guitarFreq) : 0.0f;
             float noise = (std::fmod(localTime, BEAT_TIME) < BEAT_TIME / 16) ? 0.2f * (rand() % 1000 / 500.0f - 1.0f) * sectionProgress : 0.0f;
             if (data->manager->technoChannels == 6) {
                 channels[0] = hihat * 0.7f + synthArp * 0.6f + guitar * 0.3f;
@@ -326,14 +376,14 @@ void AudioManager::technoLoopCallback(void* userdata, Uint8* stream, int len) {
                 mono = kick + hihat + snare + clap + bass + subBass + synthArp + guitar + noise;
             }
         } else if (section == 2) {
-            float kick = (beatTime < BEAT_TIME / 2) ? Instruments::generateKick(beatTime, 60.0f) : 0.0f;
-            float hihat = (eighthTime < BEAT_TIME / 4) ? Instruments::generateHiHat(eighthTime, 1500.0f, false) : 0.0f;
-            float tom = (beat % 2 == 1) ? Instruments::generateTom(beatTime, 150.0f) : 0.0f;
-            float snare = (localTime > BREAK_DURATION - 0.2f) ? 0.6f * (rand() % 1000 / 500.0f - 1.0f) * std::exp(-20.0f * (localTime - (BREAK_DURATION - 0.2f))) : 0.0f;
+            float kick = kickAmp ? generateKick(beatTime, 60.0f) : 0.0f;
+            float hihat = (eighthTime < BEAT_TIME / 4) ? generateHiHat(eighthTime, 1500.0f, false) : 0.0f;
+            float tom = (beat % 2 == 1) ? generateTom(beatTime, 150.0f) : 0.0f;
+            float snare = (localTime > BREAK_DURATION - 0.2f) ? generateSnare(localTime - (BREAK_DURATION - 0.2f)) * 0.6f : 0.0f;
             float padFreq = NOTES[0];
-            float pad = Instruments::generatePad(beatTime, padFreq) * (1.0f - sectionProgress);
+            float pad = generatePad(beatTime, padFreq) * (1.0f - sectionProgress);
             float pianoFreq = NOTES[5];
-            float piano = (beat == 3) ? Instruments::generatePiano(beatTime, pianoFreq) : 0.0f;
+            float piano = (beat == 3) ? generatePiano(beatTime, pianoFreq) : 0.0f;
             if (data->manager->technoChannels == 6) {
                 channels[0] = hihat * 0.7f + pad * 0.6f;
                 channels[1] = hihat * 0.3f + pad * 0.4f;
@@ -348,20 +398,20 @@ void AudioManager::technoLoopCallback(void* userdata, Uint8* stream, int len) {
                 mono = kick + hihat + tom + snare + pad + piano;
             }
         } else {
-            float kick = (beatTime < BEAT_TIME / 2) ? Instruments::generateKick(beatTime, 50.0f) * 0.7f : 0.0f;
-            float hihat = (eighthTime < BEAT_TIME / 4) ? Instruments::generateHiHat(eighthTime, 1500.0f, false) * 0.5f : 0.0f;
-            float bass = Instruments::generateBass(beatTime, NOTES[0]) * sidechain * 0.6f;
-            float subBass = Instruments::generateSubBass(beatTime, NOTES[0] / 2) * sidechain * 0.6f;
+            float kick = kickAmp ? generateKick(beatTime, 50.0f) * 0.7f : 0.0f;
+            float hihat = (eighthTime < BEAT_TIME / 4) ? generateHiHat(eighthTime, 1500.0f, false) * 0.5f : 0.0f;
+            float bass = generateBass(beatTime, NOTES[0]) * sidechain * 0.6f;
+            float subBass = generateSubBass(beatTime, NOTES[0] / 2) * sidechain * 0.6f;
             float padFreq = NOTES[1];
-            float pad = Instruments::generatePad(beatTime, padFreq);
+            float pad = generatePad(beatTime, padFreq);
             float pianoFreq = NOTES[5];
-            float piano = (beat == 2) ? Instruments::generatePiano(beatTime, pianoFreq) : 0.0f;
+            float piano = (beat == 2) ? generatePiano(beatTime, pianoFreq) : 0.0f;
             float vocal = 0.0f;
             if (vocalActive && bar >= 4 && bar < 8) {
                 float vocalTime = std::fmod(localTime, BEAT_TIME);
                 int vocalIndex = (static_cast<int>(localTime / BEAT_TIME) % VOCAL_LENGTH);
                 int phonemeIndex = PHONEMES[vocalIndex];
-                vocal = Instruments::generateVocal(vocalTime, VOCAL_NOTES[vocalIndex], phonemeIndex) * 0.5f;
+                vocal = generateVocal(vocalTime, VOCAL_NOTES[vocalIndex], phonemeIndex) * 0.5f;
             }
             if (data->manager->technoChannels == 6) {
                 channels[0] = hihat * 0.7f + pad * 0.6f;
@@ -511,10 +561,10 @@ void AudioManager::playWinnerVoice(float currentTimeSec) {
     }
 }
 
-void AudioManager::startTechnoLoop(float currentTimeSec) {
+void AudioManager::startTechnoLoop(float currentTimeSec, int songId) {
     if (technoLoopDevice != 0 && !technoLoopPlaying) {
         technoLoopData.t = 0.0f;
-        technoSongId = rand() % 5;
+        technoSongId = (songId >= 0 && songId <= 4) ? songId : (rand() % 5);
         technoLoopPlaying = true;
         SDL_PauseAudioDevice(technoLoopDevice, 0);
     }
@@ -526,4 +576,24 @@ void AudioManager::stopTechnoLoop() {
         technoLoopData.t = 0.0f;
         SDL_PauseAudioDevice(technoLoopDevice, 1);
     }
+}
+
+bool AudioManager::reopenAudioDevice(SDL_AudioDeviceID& device, BoopAudioData& data, SDL_AudioCallback callback, const char* deviceName, int channels) {
+    SDL_CloseAudioDevice(device);
+    SDL_AudioSpec desired, obtained;
+    SDL_zero(desired);
+    desired.freq = 44100;
+    desired.format = AUDIO_S16SYS;
+    desired.channels = channels;
+    desired.samples = 1024;
+    desired.callback = callback;
+    desired.userdata = &data;
+    device = SDL_OpenAudioDevice(nullptr, 0, &desired, &obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
+    if (device == 0) {
+        SDL_Log("Failed to reopen %s device: %s", deviceName, SDL_GetError());
+        return false;
+    }
+    data.deviceId = device;
+    SDL_Log("Reopened %s device: ID=%u, channels=%d", deviceName, device, obtained.channels);
+    return true;
 }

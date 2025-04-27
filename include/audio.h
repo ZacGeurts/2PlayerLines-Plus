@@ -4,6 +4,13 @@
 #include <SDL2/SDL.h>
 #include "types.h" // Include types.h for GameConfig and BoopAudioData
 
+// Song function declarations
+float generateSong1(float t, float songTime);
+float generateSong2(float t, float songTime);
+float generateSong3(float t, float songTime);
+float generateSong4(float t, float songTime);
+float generateSong5(float t, float songTime);
+
 class AudioManager {
 public:
     AudioManager(const GameConfig& config);
@@ -12,7 +19,7 @@ public:
     void playExplosion(float currentTimeSec);
     void playLaserZap(float currentTimeSec);
     void playWinnerVoice(float currentTimeSec);
-    void startTechnoLoop(float currentTimeSec);
+    void startTechnoLoop(float currentTimeSec, int songId = -1); // Added songId parameter
     void stopTechnoLoop();
 
 private:
