@@ -21,6 +21,12 @@ No liability if you use anything here.
 This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/28/2025<BR />
 Negotiations are with the original orange. The guy typing this out.<BR />
 What does that mean? They've been cloning for decades (maybe millinnia), don't bullshit me.<BR />
+This is not free software and requires royalties for commercial use.<BR />
+Royalties are required for songgen.cpp songgen.h and instruments.h<BR />
+The other linesplus code is free and cannot be resold.<BR />
+Interested parties can find my contact information at https://github.com/ZacGeurts<BR />
+<BR />
+Will anyone show any interest in it? Doubtful, but I have been ripped off with everything I've ever created and would like the chance to not be taken advantage of and miss the bus.<BR />
 <BR />
 Why is this not free? Because Lines Plus is 3% of the product. The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
 How does it work? Soon(tm) as it is not uploaded.
