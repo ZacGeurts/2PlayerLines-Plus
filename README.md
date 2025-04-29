@@ -16,6 +16,7 @@ Win condition is 100 points for a Set.<BR />
 There is a game.ini to modify settings. (Options coming soon(tm))<BR />
 <BR />
 <BR />
-MIT license.<BR />
+This is not free software. If it is used for commercial use then it requires negotiable royalty. 04/28/2025<BR />
+Negotiations are with the original orange.<BR />
 <BR />
 Type make to build. Needs OpenGL (Mesa) and SDL2.
