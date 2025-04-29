@@ -18,19 +18,14 @@ There is a game.ini to modify settings. (Options coming soon(tm))<BR />
 Below is the licensing.<BR />
 No liability if you use anything here. 
 <BR />
-This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/01/2025<BR />
+This license updates and the software and all iterations are covered by the latest version.<BR />
+This is not free software. If it is used for commercial use then it requires negotiable royalty (1%+).<BR />
 This license covers this software across all iterations, including initial upload.<BR />
-Time, being linear, means if my date is incorrect in my listing, then it is from the actual time.<BR />
-If you are looking at this, then the license is now.<BR />
-If you did not see this, then it is in effect, now.<BR />
 Negotiations are with the original orange. The guy typing this out.<BR />
-What does that mean? They've been cloning for decades (maybe millinnia), don't bullshit me.<BR />
 This is not free software and requires royalties for commercial use.<BR />
 Royalties are required for songgen.cpp songgen.h and instruments.h instruments.dat<BR />
 The other linesplus code is free and cannot be resold.<BR />
 Interested parties can find my contact information at https://github.com/ZacGeurts<BR />
-<BR />
-Will anyone show any interest in it? Doubtful, but I have been ripped off with everything I've ever created and would like the chance to not be taken advantage of and miss the bus.<BR />
 <BR />
 Why is this not free? Because Lines Plus is 3% of the product. The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
 All the songs in the universe? No way, that would be crazy. It does not sing like an artist or bang on a cooking pot.<BR />
