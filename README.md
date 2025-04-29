@@ -20,6 +20,7 @@ No liability if you use anything here.
 <BR />
 This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/28/2025<BR />
 Negotiations are with the original orange. The guy typing this out.<BR />
+What does that mean? They've been cloning for decades (maybe millinnia), don't bullshit me.<BR />
 <BR />
 Why is this not free? Because Lines Plus is 3% of the product. The real meat is the sound generator that pretty much makes more songs than grains of sand in the universe.<BR />
 How does it work? Soon(tm) as it is not uploaded.
