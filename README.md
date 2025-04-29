@@ -15,10 +15,13 @@ Q or ESC quits<BR />
 Win condition is 100 points for a Set.<BR />
 There is a game.ini to modify settings. (Options coming soon(tm))<BR />
 <BR />
+Below is the licensing.<BR />
+No liability if you use anything here. 
 <BR />
 This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/28/2025<BR />
 Negotiations are with the original orange. The guy typing this out.<BR />
 <BR />
 Why is this not free? Because Lines Plus is 3% of the product. The real meat is the sound generator that pretty much makes more songs than grains of sand in the universe.<BR />
+How does it work? Soon(tm) as it is not uploaded.
 <BR />
 Type make to build. Needs OpenGL (Mesa) and SDL2.
