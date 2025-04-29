@@ -19,4 +19,6 @@ There is a game.ini to modify settings. (Options coming soon(tm))<BR />
 This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/28/2025<BR />
 Negotiations are with the original orange.<BR />
 <BR />
+Why is this not free? Because Lines Plus is 3% of the product. The real meat is the sound generator that pretty much makes more songs than grains of sand in the universe.<BR />
+<BR />
 Type make to build. Needs OpenGL (Mesa) and SDL2.
