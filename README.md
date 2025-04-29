@@ -23,6 +23,8 @@ This is not free software. If it is used for commercial use then it requires neg
 This license covers this software across all iterations, including initial upload.<BR />
 Negotiations are with the original orange. The guy typing this out.<BR />
 This is not free software and requires royalties for commercial use.<BR />
+If this helps you make money on your project, think of me.<BR />
+If you make a free project, enjoy.<BR />
 Royalties are required for songgen.cpp songgen.h and instruments.h instruments.dat<BR />
 The other linesplus code is free and cannot be resold.<BR />
 Interested parties can find my contact information at https://github.com/ZacGeurts<BR />
