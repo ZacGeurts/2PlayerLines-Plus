@@ -22,7 +22,7 @@ This is not free software. If it is used for commercial use then it requires neg
 Negotiations are with the original orange. The guy typing this out.<BR />
 What does that mean? They've been cloning for decades (maybe millinnia), don't bullshit me.<BR />
 <BR />
-Why is this not free? Because Lines Plus is 3% of the product. The real meat is the sound generator that pretty much makes more songs than grains of sand in the universe.<BR />
+Why is this not free? Because Lines Plus is 3% of the product. The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
 How does it work? Soon(tm) as it is not uploaded.
 <BR /><BR />
 Type `make` to build. Needs OpenGL (Mesa) and SDL2.
