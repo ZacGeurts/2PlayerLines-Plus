@@ -24,5 +24,5 @@ What does that mean? They've been cloning for decades (maybe millinnia), don't b
 <BR />
 Why is this not free? Because Lines Plus is 3% of the product. The real meat is the sound generator that pretty much makes more songs than grains of sand in the universe.<BR />
 How does it work? Soon(tm) as it is not uploaded.
-<BR />
-Type make to build. Needs OpenGL (Mesa) and SDL2.
+<BR /><BR />
+Type `make` to build. Needs OpenGL (Mesa) and SDL2.
