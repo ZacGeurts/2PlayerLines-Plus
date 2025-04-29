@@ -33,6 +33,7 @@ Interested parties can find my contact information at https://github.com/ZacGeur
 Will anyone show any interest in it? Doubtful, but I have been ripped off with everything I've ever created and would like the chance to not be taken advantage of and miss the bus.<BR />
 <BR />
 Why is this not free? Because Lines Plus is 3% of the product. The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
+All the songs in the universe? No way, that would be crazy. It does not sing like an artist or bang on a cooking pot.<BR />
 How does it work? Soon(tm) as it is not uploaded.
 <BR /><BR />
 Type `make` to build. Needs OpenGL (Mesa) and SDL2.
