@@ -19,6 +19,10 @@ Below is the licensing.<BR />
 No liability if you use anything here. 
 <BR />
 This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/01/2025<BR />
+This license covers this software across all iterations, including initial upload.<BR />
+Time, being linear, means if my date is incorrect in my listing, then it is from the actual time.<BR />
+If you are looking at this, then the license is now.<BR />
+If you did not see this, then it is in effect, now.<BR />
 Negotiations are with the original orange. The guy typing this out.<BR />
 What does that mean? They've been cloning for decades (maybe millinnia), don't bullshit me.<BR />
 This is not free software and requires royalties for commercial use.<BR />
