@@ -18,7 +18,7 @@ There is a game.ini to modify settings. (Options coming soon(tm))<BR />
 Below is the licensing.<BR />
 No liability if you use anything here. 
 <BR />
-This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/28/2025<BR />
+This is not free software. If it is used for commercial use then it requires negotiable royalty (10%+). 04/01/2025<BR />
 Negotiations are with the original orange. The guy typing this out.<BR />
 What does that mean? They've been cloning for decades (maybe millinnia), don't bullshit me.<BR />
 This is not free software and requires royalties for commercial use.<BR />
