@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cstring>
 
-InputManager::InputManager() {
+InputManager::InputManager() : musicMuted(false) {
     std::memset(lastFrameButtons, 0, sizeof(lastFrameButtons));
     std::memset(lastFrameKeys, 0, sizeof(lastFrameKeys));
 }
@@ -21,7 +21,12 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                 case SDLK_f:
                     game->toggleFullscreen();
                     break;
-                case SDLK_q:
+                case SDLK_n:
+                    //game->renderManager->togglePostProcessing();
+                    break;
+                case SDLK_i:
+                    //game->toggleFPSDisplay();
+                    break;
                 case SDLK_ESCAPE:
                     running = false;
                     break;
@@ -31,16 +36,27 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                         SDL_Log("Game %s", paused ? "paused" : "unpaused");
                     }
                     break;
+                case SDLK_m:
+                    musicMuted = !musicMuted;
+                    if (musicMuted) {
+                        game->audio.stopBackgroundMusic();
+                        SDL_Log("Music muted (sent Ctrl+C to songgen)");
+                    } else {
+                        game->audio.startBackgroundMusic();
+                        SDL_Log("Music unmuted (restarted songgen)");
+                    }
+                    break;
                 case SDLK_SPACE:
                     if (isSplashScreen) {
                         isSplashScreen = false;
                         game->firstFrame = true;
+                        SDL_Log("Splash screen exited via SPACE key");
                     } else if (gameOverScreen) {
                         game->reset();
                     }
                     break;
                 default:
-                    handleAIDifficultyInput(event.key, game);
+                    handleAIModeInput(event.key, game);
                     break;
             }
             lastFrameKeys[event.key.keysym.scancode] = true;
@@ -50,6 +66,11 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
             Uint8 button = event.cbutton.button;
             int controllerIndex = event.cbutton.which;
             lastFrameButtons[controllerIndex][button] = true;
+
+            // Debug log for button press
+            if (button == SDL_CONTROLLER_BUTTON_A) {
+                SDL_Log("Controller %d 'A' button pressed (splash=%d, gameOver=%d, winner=%d)", controllerIndex, isSplashScreen, gameOverScreen, game->winnerDeclared);
+            }
 
             if (game->winnerDeclared) {
                 if (button == SDL_CONTROLLER_BUTTON_A) {
@@ -63,6 +84,7 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                     button == SDL_CONTROLLER_BUTTON_X || button == SDL_CONTROLLER_BUTTON_Y) {
                     isSplashScreen = false;
                     game->firstFrame = true;
+                    SDL_Log("Splash screen exited via controller button %d", button);
                 }
             } else if (!gameOverScreen) {
                 if (button == SDL_CONTROLLER_BUTTON_X || button == SDL_CONTROLLER_BUTTON_Y ||
@@ -92,27 +114,15 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
     return running;
 }
 
-void InputManager::handleAIDifficultyInput(SDL_KeyboardEvent& keyEvent, Game* game) {
+void InputManager::handleAIModeInput(SDL_KeyboardEvent& keyEvent, Game* game) {
     switch (keyEvent.keysym.sym) {
-        case SDLK_0:
-            game->ai.setDifficulty(AI::Difficulty::OFF);
-            SDL_Log("AI Difficulty set to OFF (Two-player mode)");
-            break;
         case SDLK_1:
-            game->ai.setDifficulty(AI::Difficulty::EASY);
-            SDL_Log("AI Difficulty set to EASY");
+            game->ai.setMode(true);
+            SDL_Log("AI Mode set to ON (One-player mode)");
             break;
         case SDLK_2:
-            game->ai.setDifficulty(AI::Difficulty::MEDIUM);
-            SDL_Log("AI Difficulty set to MEDIUM");
-            break;
-        case SDLK_3:
-            game->ai.setDifficulty(AI::Difficulty::HARD);
-            SDL_Log("AI Difficulty set to HARD");
-            break;
-        case SDLK_4:
-            game->ai.setDifficulty(AI::Difficulty::EXPERT);
-            SDL_Log("AI Difficulty set to EXPERT");
+            game->ai.setMode(false);
+            SDL_Log("AI Mode set to OFF (Two-player mode)");
             break;
     }
 }

@@ -1,4 +1,3 @@
-// include/player.h
 #ifndef PLAYER_H
 #define PLAYER_H
 
@@ -13,12 +12,18 @@
 #include <vector>
 
 // Forward declaration for Game
-struct Game; // Replace #include "game.h" with this
+struct Game;
 
 class PlayerManager {
 public:
     PlayerManager(const GameConfig& config);
-    void updatePlayers(SDL_GameController* controllers[], int controllerCount, Player& player1, Player& player2, Collectible& collectible, std::vector<Explosion>& explosions, std::vector<Flash>& flashes, int& score1, int& score2, int& roundScore1, int& roundScore2, std::mt19937& rng, float dt, float currentTimeSec, AudioManager& audio, CollectibleManager& collectibleManager, ExplosionManager& explosionManager, CircleManager& circleManager, std::vector<Circle>& circles, std::chrono::steady_clock::time_point& lastCircleSpawn, Game* game);
+    void updatePlayers(SDL_GameController* controllers[], int controllerCount, Player& player1, Player& player2, 
+                       Collectible& collectible, std::vector<Explosion>& explosions, std::vector<Flash>& flashes, 
+                       int& score1, int& score2, int& roundScore1, int& roundScore2, std::mt19937& rng, 
+                       float dt, float currentTimeSec, AudioManager& audio, CollectibleManager& collectibleManager, 
+                       ExplosionManager& explosionManager, CircleManager& circleManager, std::vector<Circle>& circles, 
+                       std::chrono::steady_clock::time_point& lastCircleSpawn, Game* game,
+                       const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight);
 
 private:
     const GameConfig& config;

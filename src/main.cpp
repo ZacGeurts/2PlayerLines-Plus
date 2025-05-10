@@ -30,8 +30,10 @@ GameConfig loadConfig(const std::string& filename) {
             if (key == "WIDTH") config.WIDTH = static_cast<int>(value);
             else if (key == "HEIGHT") config.HEIGHT = static_cast<int>(value);
             else if (key == "PLAYER_SPEED") config.PLAYER_SPEED = value;
+            else if (key == "AI_SPEED") config.AI_SPEED = value;
             else if (key == "TURN_SPEED") config.TURN_SPEED = value;
             else if (key == "AI_TURN_SPEED") config.AI_TURN_SPEED = value;
+			else if (key == "RAYCAST_STEP") config.RAYCAST_STEP = value;
             else if (key == "CIRCLE_SPEED") config.CIRCLE_SPEED = value;
             else if (key == "CIRCLE_RADIUS") config.CIRCLE_RADIUS = value;
             else if (key == "COLLISION_CHECK_SIZE") config.COLLISION_CHECK_SIZE = value;
@@ -40,12 +42,15 @@ GameConfig loadConfig(const std::string& filename) {
             else if (key == "LASER_ZAP_DURATION") config.LASER_ZAP_DURATION = value;
             else if (key == "WINNER_VOICE_DURATION") config.WINNER_VOICE_DURATION = value;
             else if (key == "TECHNO_LOOP_DURATION") config.TECHNO_LOOP_DURATION = value;
-            else if (key == "BLACK_SQUARE_SIZE") config.BLACK_SQUARE_SIZE = value;
+            else if (key == "GREEN_SQUARE_SIZE") config.GREEN_SQUARE_SIZE = value;
             else if (key == "COLLECTIBLE_SIZE") config.COLLECTIBLE_SIZE = value;
-            else if (key == "BLACK_CIRCLE_SIZE") config.BLACK_CIRCLE_SIZE = value;
             else if (key == "EXPLOSION_MAX_RADIUS") config.EXPLOSION_MAX_RADIUS = value;
             else if (key == "PLAYER_SIZE") config.PLAYER_SIZE = value;
             else if (key == "TRAIL_SIZE") config.TRAIL_SIZE = value;
+            else if (key == "WINNING_SCORE") config.WINNING_SCORE = value;
+            else if (key == "GREEN_SQUARE_POINTS") config.GREEN_SQUARE_POINTS = value;
+            else if (key == "DEATH_POINTS") config.DEATH_POINTS = value;
+            else if (key == "ENABLE_DEBUG") config.ENABLE_DEBUG = static_cast<bool>(value);
         }
     }
 

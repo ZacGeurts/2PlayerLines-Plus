@@ -1,133 +1,301 @@
-#include "ai.h"
-#include "game.h"
+#include "game.h" // Include game.h for full Game definition
 #include <cmath>
 #include <algorithm>
+#include <vector>
+#include <chrono>
+#include <SDL2/SDL.h>
 
-AI::AI(const GameConfig& config) : config(config), difficulty(Difficulty::OFF), reactionTime(0.0f),
-                                   predictionDistance(100.0f), avoidanceRadius(50.0f) {}
+AI::AI(const GameConfig& config, Game& game)
+    : config(config),
+      game(&game),
+      framebuffer(),
+      drawableWidth(0),
+      drawableHeight(0),
+      flashUsed(false),
+      modeEnabled(false),
+      leftTrigger(0.0f),
+      rightTrigger(0.0f),
+      aButton(false),
+      updateReady(false),
+      newDirection(0, 0),
+      shouldDie(false),
+      newPosition(0, 0),
+      hasMoved(false),
+      hitOpponentHeadResult(false),
+      currentTimeSec(0.0f),
+      frameCount(0) {}
 
-void AI::update(Player& aiPlayer, const Player& opponent, const Collectible& collectible,
-                const std::vector<Circle>& circles, float dt, std::mt19937& rng) {
-    if (difficulty == Difficulty::OFF || !aiPlayer.alive) return;
+AI::~AI() {
+    if (updateThread.joinable()) {
+        updateThread.join();
+    }
+}
 
-    // Update difficulty-specific parameters
-    switch (difficulty) {
-        case Difficulty::EASY:
-            reactionTime = 0.5f;
-            predictionDistance = 50.0f;
-            avoidanceRadius = 30.0f;
-            break;
-        case Difficulty::MEDIUM:
-            reactionTime = 0.3f;
-            predictionDistance = 75.0f;
-            avoidanceRadius = 40.0f;
-            break;
-        case Difficulty::HARD:
-            reactionTime = 0.15f;
-            predictionDistance = 100.0f;
-            avoidanceRadius = 50.0f;
-            break;
-        case Difficulty::EXPERT:
-            reactionTime = 0.05f;
-            predictionDistance = 150.0f;
-            avoidanceRadius = 60.0f;
-            break;
-        default:
-            return;
+void AI::startUpdate(Player& aiPlayer, const Player& opponent, const Collectible& collectible,
+                     const std::vector<Circle>& circles, float dt, std::mt19937& rng, Game& game,
+                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
+    if (!modeEnabled || !aiPlayer.alive || aiPlayer.willDie) return;
+
+    if (updateThread.joinable()) {
+        updateThread.join();
+    }
+    this->framebuffer = framebuffer;
+    this->drawableWidth = drawableWidth;
+    this->drawableHeight = drawableHeight;
+    updateThread = std::thread(&AI::simulateControllerInput, this, std::ref(aiPlayer), std::ref(collectible),
+                              std::ref(circles), std::ref(opponent), dt, std::ref(rng), std::ref(game),
+                              std::ref(framebuffer), drawableWidth, drawableHeight,
+                              std::ref(leftTrigger), std::ref(rightTrigger), std::ref(aButton));
+}
+
+void AI::waitForUpdate() {
+    if (updateThread.joinable()) {
+        updateThread.join();
+    }
+}
+
+void AI::applyUpdate(Player& aiPlayer) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (!updateReady) return;
+
+    Vec2 newDir = aiPlayer.direction;
+    float rotation = (rightTrigger - leftTrigger) * config.TURN_SPEED * 0.008333f;
+    if (std::abs(rotation) > 0) {
+        float cosTheta = std::cos(rotation);
+        float sinTheta = std::sin(rotation);
+        newDir = Vec2(
+            aiPlayer.direction.x * cosTheta - aiPlayer.direction.y * sinTheta,
+            aiPlayer.direction.x * sinTheta + aiPlayer.direction.y * cosTheta
+        ).normalized();
     }
 
-    // Simulate reaction time
-    static float timeSinceLastDecision = 0.0f;
-    timeSinceLastDecision += dt;
-    if (timeSinceLastDecision < reactionTime) return;
-    timeSinceLastDecision = 0.0f;
+    float speed = config.AI_SPEED;
+    Vec2 nextPos = aiPlayer.pos + newDir * speed * 0.008333f;
+    nextPos.x = std::max(10.0f, std::min(nextPos.x, game->orthoWidth - 10.0f));
+    nextPos.y = std::max(10.0f, std::min(nextPos.y, game->orthoHeight - 10.0f));
 
-    // Calculate desired direction
-    Vec2 targetDir = calculateTargetDirection(aiPlayer, opponent, collectible, circles, rng);
-    
-    // Smoothly adjust AI player's direction
-    float turnSpeed = config.AI_TURN_SPEED ? config.AI_TURN_SPEED : 180.0f; // Degrees per second
-    float maxTurn = turnSpeed * dt * (3.14159f / 180.0f); // Convert to radians
-    Vec2 currentDir = aiPlayer.direction;
-    Vec2 newDir = currentDir + (targetDir - currentDir) * std::min(1.0f, maxTurn);
-    if (newDir.magnitude() > 0) {
-        aiPlayer.direction = newDir.normalized();
+    if (aButton && !flashUsed && aiPlayer.canUseNoCollision) {
+        game->activateNoCollision(&aiPlayer, currentTimeSec);
+        flashUsed = true;
     }
 
-    // Update position
-    float speed = config.PLAYER_SPEED ? config.PLAYER_SPEED : 100.0f;
-    Vec2 nextPos = aiPlayer.pos + aiPlayer.direction * speed * dt;
+    bool willDie = false;
+    bool hitOpponentHead = false;
+    if (aiPlayer.hasMoved && !aiPlayer.isInvincible && !aiPlayer.spawnInvincibilityTimer) {
+        Player aiPlayerCopy = aiPlayer;
+        aiPlayerCopy.pos = nextPos;
+        aiPlayerCopy.direction = newDir;
+        aiPlayerCopy.trail = aiPlayer.trail;
+        aiPlayerCopy.alive = true;
+        aiPlayerCopy.willDie = false;
+        aiPlayerCopy.noCollisionTimer = aiPlayer.noCollisionTimer;
+        aiPlayerCopy.isInvincible = aiPlayer.isInvincible;
+        aiPlayerCopy.hitOpponentHead = false;
 
-    // Keep AI within bounds
-    if (nextPos.x < 10) nextPos.x = 10;
-    if (nextPos.x > config.WIDTH - 10) nextPos.x = config.WIDTH - 10;
-    if (nextPos.y < 10) nextPos.y = 10;
-    if (nextPos.y > config.HEIGHT - 10) nextPos.y = config.HEIGHT - 10;
+        game->checkCollision(&aiPlayerCopy, nextPos, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+        if (aiPlayerCopy.willDie) {
+            willDie = true;
+            hitOpponentHead = aiPlayerCopy.hitOpponentHead;
+        }
+    }
 
-    aiPlayer.pos = nextPos;
-    aiPlayer.hasMoved = true;
+    aiPlayer.direction = newDir;
+    if (willDie) {
+        aiPlayer.willDie = true;
+        aiPlayer.deathPos = nextPos;
+        aiPlayer.hitOpponentHead = hitOpponentHead;
+    } else {
+        aiPlayer.pos = nextPos;
+        aiPlayer.hasMoved = true;
+    }
+
+    if (config.ENABLE_DEBUG) {
+        float effectiveSpeed = ((nextPos - aiPlayer.pos).magnitude() / 0.008333f);
+        SDL_Log("AI apply: pos=(%f, %f), dir=(%f, %f), speed=%f, expected=%f, leftTrigger=%f, rightTrigger=%f, aButton=%d",
+                aiPlayer.pos.x, aiPlayer.pos.y, newDir.x, newDir.y, effectiveSpeed, speed, leftTrigger, rightTrigger, aButton);
+    }
+
+    updateReady = false;
 }
 
-void AI::setDifficulty(Difficulty diff) {
-    difficulty = diff;
+void AI::simulateControllerInput(const Player& aiPlayer, const Collectible& collectible,
+                                const std::vector<Circle>& circles, const Player& opponent,
+                                float dt, std::mt19937& rng, Game& game,
+                                const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight,
+                                float& leftTrigger, float& rightTrigger, bool& aButton) {
+    leftTrigger = 0.0f;
+    rightTrigger = 0.0f;
+    aButton = false;
+    currentTimeSec = std::chrono::duration<float>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    frameCount++;
+
+    dt = std::min(dt, 0.008333f);
+
+    size_t expectedSize = static_cast<size_t>(drawableWidth) * drawableHeight * 3;
+    if (framebuffer.size() < expectedSize) {
+        if (config.ENABLE_DEBUG) {
+            SDL_Log("Invalid framebuffer size: got %zu, expected %zu", framebuffer.size(), expectedSize);
+        }
+        return;
+    }
+
+    Vec2 targetDir = calculateTargetDirection(aiPlayer, collectible, circles, opponent, rng, game, currentTimeSec,
+                                              framebuffer, drawableWidth, drawableHeight);
+
+    float angleDiff = std::acos(std::clamp(aiPlayer.direction.dot(targetDir), -1.0f, 1.0f));
+    float cross = aiPlayer.direction.x * targetDir.y - aiPlayer.direction.y * targetDir.x;
+    if (angleDiff > 0.01f) {
+        if (cross > 0) {
+            leftTrigger = std::min(angleDiff / (config.TURN_SPEED * dt), 1.0f);
+        } else {
+            rightTrigger = std::min(angleDiff / (config.TURN_SPEED * dt), 1.0f);
+        }
+    }
+
+    if (!flashUsed && aiPlayer.canUseNoCollision && !aiPlayer.isInvincible && frameCount > (config.FLASH_COOLDOWN / dt)) {
+        RaycastResult ray = raycastForward(aiPlayer, game, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+        if (ray.centerLine.hasDanger || ray.leftLine.hasDanger || ray.rightLine.hasDanger) {
+            aButton = true;
+        }
+    }
+
+    std::lock_guard<std::mutex> lock(mutex);
+    updateReady = true;
+
+    if (config.ENABLE_DEBUG) {
+        SDL_Log("AI input: leftTrigger=%f, rightTrigger=%f, aButton=%d, angleDiff=%f degrees",
+                leftTrigger, rightTrigger, aButton, angleDiff * 180.0f / M_PI);
+    }
 }
 
-AI::Difficulty AI::getDifficulty() const {
-    return difficulty;
+AI::LineCheckResult AI::checkLine(const Vec2& start, const Vec2& dir, float maxDistance, const Vec2& playerDir,
+                                  Game& game, float currentTimeSec, const std::vector<unsigned char>& framebuffer,
+                                  int drawableWidth, int drawableHeight) const {
+    LineCheckResult result = {"black", start, false, false, maxDistance};
+
+    for (float d = 0; d <= maxDistance; d += config.RAYCAST_STEP) {
+        Vec2 pos = start + dir * d;
+
+        if (pos.x < 10 || pos.x > game.orthoWidth - 10 || pos.y < 10 || pos.y > game.orthoHeight - 10) {
+            result = {"wall", pos, result.greenVisible, true, d};
+            return result;
+        }
+
+        std::string color = getPixelColor(pos, game, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+
+        Vec2 toPixel = pos - start;
+        float distance = toPixel.magnitude();
+        if (color == "red" && distance < 10.0f && toPixel.dot(playerDir) < -0.5f) {
+            continue;
+        }
+
+        if (color == "green") {
+            result.greenVisible = true;
+        } else if (color == "black" || color == "magenta") {
+        } else {
+            result = {color, pos, result.greenVisible, true, d};
+            return result;
+        }
+    }
+
+    return result;
 }
 
-Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Player& opponent,
-                                 const Collectible& collectible, const std::vector<Circle>& circles,
-                                 std::mt19937& rng) const {
-    // Primary goal: move toward collectible
+AI::RaycastResult AI::raycastForward(const Player& aiPlayer, Game& game, float currentTimeSec,
+                                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
+    RaycastResult result;
+    const float ANGLE_OFFSET = M_PI / 6;
+    const float RAYCAST_RANGE = 100.0f;
+    const float HEAD_OFFSET = 10.0f;
+
+    Vec2 start = aiPlayer.pos + aiPlayer.direction * HEAD_OFFSET;
+
+    result.centerLine = checkLine(start, aiPlayer.direction, RAYCAST_RANGE, aiPlayer.direction, game, currentTimeSec,
+                                  framebuffer, drawableWidth, drawableHeight);
+
+    float cosA = std::cos(-ANGLE_OFFSET);
+    float sinA = std::sin(-ANGLE_OFFSET);
+    Vec2 leftDir = Vec2(
+        aiPlayer.direction.x * cosA - aiPlayer.direction.y * sinA,
+        aiPlayer.direction.x * sinA + aiPlayer.direction.y * cosA
+    ).normalized();
+    result.leftLine = checkLine(start, leftDir, RAYCAST_RANGE, aiPlayer.direction, game, currentTimeSec,
+                                framebuffer, drawableWidth, drawableHeight);
+    result.leftDir = leftDir;
+
+    cosA = std::cos(ANGLE_OFFSET);
+    sinA = std::sin(ANGLE_OFFSET);
+    Vec2 rightDir = Vec2(
+        aiPlayer.direction.x * cosA - aiPlayer.direction.y * sinA,
+        aiPlayer.direction.x * sinA + aiPlayer.direction.y * cosA
+    ).normalized();
+    result.rightLine = checkLine(start, rightDir, RAYCAST_RANGE, aiPlayer.direction, game, currentTimeSec,
+                                 framebuffer, drawableWidth, drawableHeight);
+    result.rightDir = rightDir;
+
+    if (config.ENABLE_DEBUG && (result.centerLine.hasDanger || result.leftLine.hasDanger || result.rightLine.hasDanger)) {
+        SDL_Log("Line check: center=%s at (%f, %f, dist=%f), left=%s at (%f, %f, dist=%f), right=%s at (%f, %f, dist=%f)",
+                result.centerLine.color.c_str(), result.centerLine.hitPos.x, result.centerLine.hitPos.y, result.centerLine.distance,
+                result.leftLine.color.c_str(), result.leftLine.hitPos.x, result.leftLine.hitPos.y, result.leftLine.distance,
+                result.rightLine.color.c_str(), result.rightLine.hitPos.x, result.rightLine.hitPos.y, result.rightLine.distance);
+    }
+
+    return result;
+}
+
+std::string AI::getPixelColor(const Vec2& pos, Game& game, float currentTimeSec,
+                              const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) const {
+    float x_read = (pos.x / game.orthoWidth) * drawableWidth;
+    float y_read = (1.0f - pos.y / game.orthoHeight) * drawableHeight;
+    x_read = std::max(0.0f, std::min(x_read, static_cast<float>(drawableWidth - 1)));
+    y_read = std::max(0.0f, std::min(y_read, static_cast<float>(drawableHeight - 1)));
+
+    size_t index = static_cast<size_t>(static_cast<int>(y_read)) * drawableWidth * 3 + static_cast<size_t>(static_cast<int>(x_read)) * 3;
+    if (index + 2 >= framebuffer.size()) {
+        if (config.ENABLE_DEBUG) {
+            SDL_Log("Framebuffer index out of bounds in getPixelColor: index=%zu, size=%zu", index, framebuffer.size());
+        }
+        return "black";
+    }
+
+    unsigned char r = framebuffer[index];
+    unsigned char g = framebuffer[index + 1];
+    unsigned char b = framebuffer[index + 2];
+
+    if (r == 0 && g == 0 && b == 0) return "black";
+    if (r == 0 && g == 255 && b == 0) return "green";
+    if (r == 255 && g == 0 && b == 255) return "magenta";
+    if (r == 0 && g == 0 && b == 255) return "blue";
+    if (r == 255 && g == 0 && b == 0) return "red";
+    if (r == 255 && g == 255 && b == 0) return "yellow";
+    return "other";
+}
+
+Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& collectible,
+                                  const std::vector<Circle>& circles, const Player& opponent,
+                                  std::mt19937& rng, Game& game, float currentTimeSec,
+                                  const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
     Vec2 toCollectible = (collectible.pos - aiPlayer.pos).normalized();
-    Vec2 targetDir = toCollectible;
+    RaycastResult ray = raycastForward(aiPlayer, game, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
 
-    // Check if path to collectible is safe
-    if (!isPathSafe(aiPlayer.pos, toCollectible, predictionDistance, circles, opponent)) {
-        // Try to avoid obstacles by testing alternative directions
-        std::vector<Vec2> directions;
-        for (int i = 0; i < 8; ++i) {
-            float angle = i * (2 * 3.14159f / 8);
-            directions.emplace_back(std::cos(angle), std::sin(angle));
-        }
-        std::shuffle(directions.begin(), directions.end(), rng);
-
-        for (const auto& dir : directions) {
-            if (isPathSafe(aiPlayer.pos, dir, predictionDistance, circles, opponent)) {
-                targetDir = dir;
-                break;
-            }
-        }
+    if (!ray.centerLine.hasDanger || ray.centerLine.greenVisible) {
+        return toCollectible;
     }
 
-    return targetDir;
-}
-
-bool AI::isPathSafe(const Vec2& start, const Vec2& direction, float distance,
-                    const std::vector<Circle>& circles, const Player& opponent) const {
-    Vec2 end = start + direction * distance;
-
-    // Check for collision with circles
-    for (const auto& circle : circles) {
-        float distToCircle = (circle.pos - start).magnitude();
-        if (distToCircle < circle.radius + avoidanceRadius) {
-            return false;
-        }
+    if (!ray.leftLine.hasDanger && ray.rightLine.hasDanger) {
+        return ray.leftDir;
+    } else if (!ray.rightLine.hasDanger && ray.leftLine.hasDanger) {
+        return ray.rightDir;
+    } else if (!ray.leftLine.hasDanger && !ray.rightLine.hasDanger) {
+        float leftScore = ray.leftDir.dot(toCollectible);
+        float rightScore = ray.rightDir.dot(toCollectible);
+        return leftScore > rightScore ? ray.leftDir : ray.rightDir;
     }
 
-    // Check for collision with opponent's trail (simplified)
-    if (opponent.alive) {
-        float distToOpponent = (opponent.pos - start).magnitude();
-        if (distToOpponent < avoidanceRadius) {
-            return false;
-        }
-    }
-
-    // Check screen boundaries
-    if (end.x < 10 || end.x > config.WIDTH - 10 || end.y < 10 || end.y > config.HEIGHT - 10) {
-        return false;
-    }
-
-    return true;
+    std::uniform_real_distribution<float> dist(-M_PI / 2, M_PI / 2);
+    Vec2 newDir = Vec2(
+        aiPlayer.direction.x * std::cos(dist(rng)) - aiPlayer.direction.y * std::sin(dist(rng)),
+        aiPlayer.direction.x * std::sin(dist(rng)) + aiPlayer.direction.y * std::cos(dist(rng))
+    ).normalized();
+    return newDir;
 }

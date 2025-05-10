@@ -5,32 +5,39 @@
 #include <cstdint>
 #include <vector>
 #include <map>
-#include <cmath> // Added for M_PI in GameConfig
+#include <cmath>
+#include <memory>
 
-// Forward declaration for AudioManager
 class AudioManager;
 
-// Safety net. These change with game.ini
 struct GameConfig {
     int WIDTH = 1920;
     int HEIGHT = 1080;
     float PLAYER_SPEED = 200.0f;
-    float TURN_SPEED = 2.0f * M_PI; // Approximately 6.2832
+    float AI_SPEED = 200.0f;
+    float TURN_SPEED = 2.0f * M_PI;
+    float AI_TURN_SPEED = 180.0f;
+    float RAYCAST_STEP = 5.0f;
     float CIRCLE_SPEED = 100.0f;
     float CIRCLE_RADIUS = 40.0f;
     float COLLISION_CHECK_SIZE = 10.0f;
     float BOOP_DURATION = 0.5f;
     float EXPLOSION_DURATION = 1.0f;
     float LASER_ZAP_DURATION = 0.5f;
-    float WINNER_VOICE_DURATION = 1.0f; // Duration for "Winner" voice
-    float TECHNO_LOOP_DURATION = -1.0f; // Negative for continuous loop
-    float BLACK_SQUARE_SIZE = 80.0f;
-    float COLLECTIBLE_SIZE = 40.0f;
-    float BLACK_CIRCLE_SIZE = 60.0f;
+    float WINNER_VOICE_DURATION = 1.0f;
+    float TECHNO_LOOP_DURATION = -1.0f;
+    float GREEN_SQUARE_SIZE = 80.0f;
+    float COLLECTIBLE_SIZE = 80.0f;
     float EXPLOSION_MAX_RADIUS = 20.0f;
     float PLAYER_SIZE = 10.0f;
     float TRAIL_SIZE = 5.0f;
-    float AI_TURN_SPEED = 180.0f; // Added for AI turning speed (degrees/s)
+    float WINNING_SCORE = 100.0f;
+    float GREEN_SQUARE_POINTS = 1.0f;
+    float DEATH_POINTS = 3.0f;
+    bool ENABLE_DEBUG = true;
+    float COLLECT_COOLDOWN = 0.5f;
+    float FLASH_COOLDOWN = 2.5f;
+    float CIRCLE_SPAWN_INTERVAL = 5.0f; // Updated to 5 seconds
 };
 
 struct Vec2 {
@@ -39,12 +46,22 @@ struct Vec2 {
     Vec2 operator+(const Vec2& other) const { return Vec2(x + other.x, y + other.y); }
     Vec2 operator-(const Vec2& other) const { return Vec2(x - other.x, y - other.y); }
     Vec2 operator*(float s) const { return Vec2(x * s, y * s); }
+    Vec2 operator/(float s) const { return s != 0 ? Vec2(x / s, y / s) : Vec2(0, 0); }
+    Vec2 operator-() const { return Vec2(-x, -y); }
+    float dot(const Vec2& other) const { return x * other.x + y * other.y; }
     float magnitude() const { return std::sqrt(x * x + y * y); }
     Vec2 normalized() const {
         float mag = magnitude();
         return mag > 0 ? Vec2(x / mag, y / mag) : Vec2(0, 0);
     }
+    bool operator==(const Vec2& other) const {
+        const float EPSILON = 1e-6f;
+        return std::abs(x - other.x) < EPSILON && std::abs(y - other.y) < EPSILON;
+    }
+    Vec2& operator+=(const Vec2& other) { x += other.x; y += other.y; return *this; }
 };
+
+struct Flash;
 
 struct Player {
     Vec2 pos;
@@ -58,12 +75,17 @@ struct Player {
     float noCollisionTimer;
     bool canUseNoCollision;
     bool isInvincible;
-    struct Flash* endFlash;
+    Flash* endFlash;
+    bool collectedGreenThisFrame;
+    bool scoredDeathThisFrame;
+    float spawnInvincibilityTimer;
+    bool hitOpponentHead;
 };
 
 struct Circle {
     Vec2 pos;
     Vec2 vel;
+    Vec2 prevPos;
     float radius;
     ::SDL_Color color;
     float magentaTimer;
@@ -73,8 +95,7 @@ struct Circle {
 struct Collectible {
     Vec2 pos;
     float size;
-    float blackCircleSize;
-    float blackSquareSize;
+    bool active;
 };
 
 struct ExplosionParticle {
@@ -96,14 +117,16 @@ struct Flash {
     bool soundPlayed;
     float soundStartTime;
     ::SDL_Color color;
+    float maxRadius;
+    float duration;
 };
 
 struct BoopAudioData {
     SDL_AudioDeviceID deviceId;
     bool* playing;
     const GameConfig* config;
-    float t; // Added for time tracking
-    AudioManager* manager; // Added for techno loop to access technoSongId
+    float t;
+    AudioManager* manager;
 };
 
 struct TechnoAudioData {
@@ -115,52 +138,6 @@ struct TechnoAudioData {
     int songId;
 };
 
-const std::map<char, std::vector<bool>> FONT = {
-    {'0', {1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'1', {0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0}},
-    {'2', {1,1,1,1,1, 0,0,0,0,1, 1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,1}},
-    {'3', {1,1,1,1,1, 0,0,0,0,1, 1,1,1,1,1, 0,0,0,0,1, 1,1,1,1,1}},
-    {'4', {1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1, 0,0,0,0,1, 0,0,0,0,1}},
-    {'5', {1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,1, 0,0,0,0,1, 1,1,1,1,1}},
-    {'6', {1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'7', {1,1,1,1,1, 0,0,0,0,1, 0,0,0,0,1, 0,0,0,0,1, 0,0,0,0,1}},
-    {'8', {1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'9', {1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1, 0,0,0,0,1, 1,1,1,1,1}},
-    {'A', {1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1}},
-    {'B', {1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'C', {1,1,1,1,1, 1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 1,1,1,1,1}},
-    {'D', {1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'E', {1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,1}},
-    {'F', {1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,1, 1,0,0,0,0, 1,0,0,0,0}},
-    {'G', {1,1,1,1,1, 1,0,0,0,0, 1,0,1,1,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'H', {1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1}},
-    {'I', {1,1,1,1,1, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 1,1,1,1,1}},
-    {'J', {1,1,1,1,1, 0,0,0,0,1, 0,0,0,0,1, 0,0,0,0,1, 1,1,1,1,1}},
-    {'K', {1,0,0,0,1, 1,0,0,1,0, 1,1,1,0,0, 1,0,0,1,0, 1,0,0,0,1}},
-    {'L', {1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 1,1,1,1,1}},
-    {'M', {1,0,0,0,1, 1,1,0,1,1, 1,0,1,0,1, 1,0,0,0,1, 1,0,0,0,1}},
-    {'N', {1,0,0,0,1, 1,1,0,0,1, 1,0,1,0,1, 1,0,0,1,1, 1,0,0,0,1}},
-    {'O', {1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'P', {1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,0,0, 1,0,0,0,0}},
-    {'Q', {1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,1,1, 1,1,1,1,1}},
-    {'R', {1,1,1,1,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,1,0, 1,0,0,0,1}},
-    {'S', {1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,1, 0,0,0,0,1, 1,1,1,1,1}},
-    {'T', {1,1,1,1,1, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0}},
-    {'U', {1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1}},
-    {'V', {1,0,0,0,1, 1,0,0,0,1, 0,1,0,1,0, 0,1,0,1,0, 0,0,1,0,0}},
-    {'W', {1,0,0,0,1, 1,0,0,0,1, 1,0,1,0,1, 1,1,0,1,1, 1,0,0,0,1}},
-    {'X', {1,0,0,0,1, 0,1,0,1,0, 0,0,1,0,0, 0,1,0,1,0, 1,0,0,0,1}},
-    {'Y', {1,0,0,0,1, 0,1,0,1,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0}},
-    {'Z', {1,1,1,1,1, 0,0,0,1,0, 0,0,1,0,0, 0,1,0,0,0, 1,1,1,1,1}},
-    {'+', {0,0,0,0,0, 0,0,1,0,0, 0,1,1,1,0, 0,0,1,0,0, 0,0,0,0,0}},
-    {'-', {0,0,0,0,0, 0,0,0,0,0, 0,1,1,1,0, 0,0,0,0,0, 0,0,0,0,0}},
-    {' ', {0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0}},
-    {'.', {0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,1,0,0}},
-    {',', {0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,1,1,0}},
-    {'!', {0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,0,0,0}},
-    {'?', {0,1,1,1,0, 0,0,0,1,0, 0,0,1,1,0, 0,0,0,0,0, 0,0,1,0,0}},
-    {':', {0,0,0,0,0, 0,0,1,0,0, 0,0,0,0,0, 0,0,1,0,0, 0,0,0,0,0}},
-    {';', {0,0,0,0,0, 0,0,1,0,0, 0,0,0,0,0, 0,0,1,0,0, 0,0,1,1,0}}
-};
+extern const std::map<char, std::vector<bool>> FONT;
 
 #endif // TYPES_H
