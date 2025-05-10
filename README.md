@@ -40,6 +40,6 @@ How does it work? ./songgen<BR />
 Non-lines files - songgen.h - makes songs. songgen.cpp reads song format. instruments.h intruments.h.
 Note: linesplus previous code works more stably<BR />
 <BR /><BR />
-Type `make` to build. Needs OpenGL (Mesa) and SDL2.<BR />
+Type `make` to build. Needs OpenGL (Mesa)) and SDL2.<BR />
 Type `make songgen` if you just want to see songgen build. Needs OpenGL (Mesa) and SDL2.<BR />
 Type `make clean` before rebuilding.<BR />
