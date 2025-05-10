@@ -33,6 +33,6 @@ Why is this not free? Because Lines Plus is 3% of the product. The real meat is 
 All the songs in the universe? No way, that would be crazy. It does not sing like an artist or bang on a cooking pot.<BR />
 How does it work? ./songgen<BR />
 <BR /><BR />
-Type `make` to build. Needs OpenGL (Mesa) and SDL2.
-Type `make songgen` if you just want to see songgen build. Needs OpenGL (Mesa) and SDL2.
+Type `make` to build. Needs OpenGL (Mesa) and SDL2.<BR />
+Type `make songgen` if you just want to see songgen build. Needs OpenGL (Mesa) and SDL2.<BR />
 Type `make clean` before rebuilding.<BR />
