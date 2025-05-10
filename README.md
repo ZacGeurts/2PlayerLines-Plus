@@ -32,6 +32,8 @@ Interested parties can find my contact information at https://github.com/ZacGeur
 Why is this not free? Because Lines Plus is 3% of the product. The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
 All the songs in the universe? No way, that would be crazy. It does not sing like an artist or bang on a cooking pot.<BR />
 Somtimes sounds like it. I am making the instruments.h as a side project.<BR />
+It is difficult to add new instruments accurately. Many are left undone.
+It will want to be asked with the range of frequencies like A subwoofer should be limited to 20-80hz. (Grok3 was tested)
 How does it work? ./songgen<BR />
 Non-lines files - songgen.h - makes songs. songgen.cpp reads song format. instruments.h intruments.h.
 Note: linesplus previous code works more stably<BR />
