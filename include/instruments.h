@@ -36,6 +36,10 @@ public:
         b2 = 0.96900f * b2 + white * 0.1538520f;
         return 0.2f * (b0 + b1 + b2 + white * 0.1848f);
     }
+	float generateUniform(float min, float max) {
+        std::uniform_real_distribution<float> dist(min, max);
+        return dist(rng);
+    }
 };
 
 thread_local std::mt19937 AudioUtils::RandomGenerator::rng(std::random_device{}());
@@ -418,21 +422,57 @@ static float generateHiHatWave(float t, float freq, bool open, float dur) {
 
 static float generateSnareWave(float t, float dur) {
     static AudioUtils::RandomGenerator rng;
-    float attack = 0.005f, decay = 0.1f, sustain = 0.5f, release = 0.2f, env;
-    if (t < attack) env = t / attack;
-    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    else if (t < dur) env = sustain;
-    else env = sustain * std::exp(-(t - dur) / release);
-    float noise = rng.generatePinkNoise() * 0.5f;
-    float tone = std::sin(2.0f * M_PI * 200.0f * t) * 0.25f;
-    float rattle = rng.generateWhiteNoise() * std::exp(-40.0f * t / dur) * 0.25f;
-    float output = env * (noise + tone + rattle);
-    AudioUtils::Distortion dist(2.0f, 0.7f);
-    AudioUtils::Reverb reverb(0.05f, 0.4f, 0.2f);
+    
+    // Simulate dynamic variation (like velocity, 0.4 to 1.0)
+    float velocity = 0.7f + rng.generateUniform(-0.3f, 0.3f);
+    velocity = std::max(0.4f, std::min(1.0f, velocity));
+    if (dur < 0.05f) velocity *= 0.7f; // Short hits are softer
+
+    // ADSR envelope: sharper attack, quick decay, minimal sustain
+    float attack = 0.002f * (1.0f - 0.3f * velocity); // Louder hits have sharper attack
+    float decay = 0.05f; // Crisp decay
+    float sustain = 0.2f; // Low sustain for punch
+    float release = 0.08f; // Quick release
+    float env;
+    if (t < attack) {
+        env = t / attack;
+    } else if (t < attack + decay) {
+        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    } else if (t < dur) {
+        env = sustain * std::exp(-10.0f * (t - attack - decay)); // Fast exponential drop
+    } else {
+        env = sustain * std::exp(-(t - dur) / release);
+    }
+
+    // Noise component (body of snare)
+    float noise = rng.generatePinkNoise() * 0.4f;
+    // Band-passed noise for high-frequency "crack"
+    static AudioUtils::BandPassFilter crackFilter(2000.0f, 1.5f, 44100.0f);
+    float crack = rng.generateWhiteNoise() * std::exp(-50.0f * t) * 0.3f * velocity;
+    crack = crackFilter.process(crack);
+
+    // Tonal component (shell resonance, using detuned triangle wave)
+    float toneFreq = 220.0f + rng.generateUniform(-20.0f, 20.0f); // Slight pitch variation
+    float phase = 2.0f * M_PI * toneFreq * t;
+    float tone = (1.0f - 2.0f * std::fmod(phase / M_PI, 1.0f)) * std::exp(-20.0f * t) * 0.2f * velocity;
+
+    // Snare wire rattle (filtered white noise with dynamic decay)
+    static AudioUtils::BandPassFilter rattleFilter(4000.0f, 1.0f, 44100.0f);
+    float rattleDecay = 0.1f + rng.generateUniform(-0.02f, 0.02f);
+    float rattle = rng.generateWhiteNoise() * std::exp(-t / rattleDecay) * 0.35f * velocity;
+    rattle = rattleFilter.process(rattle);
+
+    // Combine components
+    float output = env * (noise + crack + tone + rattle);
+
+    // Effects
+    AudioUtils::Distortion dist(1.5f, 0.5f); // Softer distortion for warmth
+    AudioUtils::Reverb reverb(0.1f, 0.5f, 0.25f); // Small room reverb
     output = dist.process(output);
     output = reverb.process(output);
-	
-	output *= 0.5f;
+
+    output *= 0.6f * velocity; // Scale amplitude with velocity
+    output = std::max(-1.0f, std::min(1.0f, output)); // Clip to avoid distortion
     return output;
 }
 
@@ -1096,56 +1136,111 @@ static float generateSaxophoneWave(float sampleRate, float freq, float time, flo
 
 static float generatePianoWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
-    static AudioUtils::LowPassFilter stringFilter(1800.0f, 44100.0f);
-    static AudioUtils::Reverb reverb(0.12f, 0.55f, 0.35f, 44100.0f);
+    static AudioUtils::LowPassFilter stringFilter(1600.0f, 44100.0f); // Lowered cutoff for warmth
+    static AudioUtils::Reverb reverb(0.15f, 0.65f, 0.45f, 44100.0f); // Warmer, longer reverb
+
     if (!std::isfinite(sampleRate) || sampleRate <= 0.0f || !std::isfinite(freq) || freq <= 0.0f) {
         SDL_Log("Invalid sampleRate %.2f or freq %.2f, returning 0.0", sampleRate, freq);
         return 0.0f;
     }
+
     freq = std::max(27.5f, std::min(4186.0f, freq));
+
+    // Simulate velocity (0.1 to 1.0) based on duration or randomization
+    float velocity = 0.7f + rng.generateUniform(-0.2f, 0.2f); // Random variation around mezzo-forte
+    if (dur < 0.1f) velocity *= 0.6f; // Short notes are softer
+    velocity = std::max(0.1f, std::min(1.0f, velocity));
+
+    // Simulate sustain pedal: active for longer notes or after some time
+    bool sustainPedal = (dur > 1.0f || time > 2.0f); // Heuristic for pedal effect
+
+    // Initialize delay lines if frequency changes or empty
     if (std::abs(state1.lastFreq - freq) > 0.1f || state1.delayLine.empty()) {
         state1.lastFreq = state2.lastFreq = freq;
         state1.delayLineSize = state2.delayLineSize = static_cast<size_t>(sampleRate / freq);
         if (state1.delayLineSize < 2) state1.delayLineSize = 2;
         state1.delayLine.assign(state1.delayLineSize, 0.0f);
         state2.delayLine.assign(state2.delayLineSize, 0.0f);
-        size_t initSize = std::min(state1.delayLineSize / 4, static_cast<size_t>(8));
+
+        // Hammer-like excitation: short, broadband pulse
+        size_t initSize = std::min(state1.delayLineSize / 8, static_cast<size_t>(4));
         for (size_t i = 0; i < initSize; ++i) {
             float x = static_cast<float>(i) / initSize;
-            float impulse = (1.0f - x) * (1.0f - x);
-            float noise = rng.generatePinkNoise() * 0.04f;
-            state1.delayLine[i] = impulse * 0.85f + noise;
-            state2.delayLine[i] = impulse * 0.8f + noise * 0.8f;
+            float impulse = (1.0f - x) * (1.0f - x) * velocity;
+            float noise = rng.generateWhiteNoise() * 0.06f * velocity;
+            state1.delayLine[i] = impulse * 0.9f + noise;
+            state2.delayLine[i] = impulse * 0.85f + noise * 0.9f;
         }
     }
+
+    // Karplus-Strong processing
     size_t readPos = (state1.writePos + state1.delayLineSize - 1) % state1.delayLineSize;
     float x1 = state1.delayLine[readPos];
     float x2 = state2.delayLine[readPos];
     float output = 0.5f * (x1 + x2);
     float filteredOutput = stringFilter.process(output);
-    float damping = 0.994f - std::min(freq / 10000.0f, 0.02f);
+    float damping = 0.996f - std::min(freq / 6000.0f, 0.03f); // Slightly higher damping for high notes
     state1.delayLine[state1.writePos] = filteredOutput * damping;
     state2.delayLine[state2.writePos] = filteredOutput * damping * 0.98f;
     state1.writePos = (state1.writePos + 1) % state1.delayLineSize;
     state2.writePos = (state2.writePos + 1) % state2.delayLineSize;
-    float decayTime = 2.0f - std::min(freq / 2000.0f, 1.5f);
+
+    // Decay time: longer for low notes, shorter for high notes
+    float decayTime = 6.0f * std::pow(440.0f / freq, 0.7f);
+    decayTime = std::max(0.5f, std::min(10.0f, decayTime));
+    if (sustainPedal) decayTime *= 1.5f; // Extend decay for pedal
+
+    // Velocity-dependent envelope
+    float attackTime = 0.002f * (1.0f - 0.4f * velocity);
     float env;
-    if (time < 0.002f) {
-        env = time / 0.002f;
-    } else if (time < dur) {
-        env = std::exp(-time / decayTime);
+    if (time < attackTime) {
+        env = time / attackTime;
+    } else if (time < dur || sustainPedal) {
+        if (freq > 1000.0f) { // High notes: linear + exponential
+            float linearPhase = 0.1f * (1.0f - velocity);
+            if (time < linearPhase) {
+                env = 1.0f - (time / linearPhase) * 0.5f;
+            } else {
+                env = 0.5f * std::exp(-(time - linearPhase) / (decayTime * 0.8f));
+            }
+        } else { // Low notes: exponential
+            env = std::exp(-time / decayTime);
+        }
     } else {
-        env = std::exp(-(time - dur) / (decayTime * 0.5f));
+        env = std::exp(-(time - dur) / (decayTime * (freq > 1000.0f ? 0.3f : 0.5f)));
     }
-    float harmonic1 = 1.0f * std::cos(2.0f * M_PI * freq * time) * env;
-    float harmonic2 = 0.55f * std::cos(2.0f * M_PI * 2.0f * freq * time) * env;
-    float harmonic3 = 0.35f * std::cos(2.0f * M_PI * 3.0f * freq * time) * env;
-    float harmonic4 = 0.2f * std::cos(2.0f * M_PI * 4.0f * freq * time) * env;
-    output += (harmonic1 + harmonic2 + harmonic3 + harmonic4) * 0.5f;
+
+    // Hammer strike transient
+    if (time < 0.002f) {
+        output += rng.generateWhiteNoise() * 0.1f * velocity * (1.0f - time / 0.002f);
+    }
+
+    // Inharmonic partials
+    float partial1 = 1.0f * std::cos(2.0f * M_PI * freq * time) * env;
+    float partial2 = 0.35f * std::cos(2.0f * M_PI * 2.01f * freq * time) * env * std::exp(-time * freq / 4500.0f);
+    float partial3 = 0.15f * std::cos(2.0f * M_PI * 3.03f * freq * time) * env * std::exp(-time * freq / 3500.0f);
+    output += (partial1 + partial2 + partial3) * 0.25f * velocity;
+
+    // Sympathetic resonance
+    if (sustainPedal) {
+        float resFreq1 = freq * 2.0f; // Octave
+        float resFreq2 = freq * 1.5f; // Fifth
+        if (resFreq1 <= 4186.0f) {
+            output += 0.04f * std::cos(2.0f * M_PI * resFreq1 * time) * env * velocity;
+        }
+        if (resFreq2 <= 4186.0f) {
+            output += 0.02f * std::cos(2.0f * M_PI * resFreq2 * time) * env * velocity;
+        }
+    }
+
     output *= env;
-    output = reverb.process(output);
+
+    // Frequency-dependent reverb
+    float reverbMix = 0.45f * (1.0f - std::min(freq / 4000.0f, 0.6f));
+    output = reverb.process(output) * reverbMix + output * (1.0f - reverbMix);
+
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= 0.3f * velocity;
     return output;
 }
 
