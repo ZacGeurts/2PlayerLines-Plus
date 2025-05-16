@@ -73,6 +73,48 @@ public:
     }
 };
 
+class HighPassFilter {
+    float cutoffFreq, q, sampleRate;
+    float x1, x2, y1, y2; // Store two previous inputs and outputs for second-order filter
+    float b0, b1, b2, a1, a2; // Biquad coefficients
+public:
+    HighPassFilter(float cutoff, float qVal, float sr) : cutoffFreq(cutoff), q(qVal), sampleRate(sr), 
+        x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {
+        updateCoefficients();
+    }
+
+    void updateCoefficients() {
+        float w0 = 2.0f * M_PI * cutoffFreq / sampleRate;
+        float cosW0 = std::cos(w0);
+        float alpha = std::sin(w0) / (2.0f * q);
+        float a0 = 1.0f + alpha;
+        b0 = (1.0f + cosW0) / 2.0f / a0;
+        b1 = -(1.0f + cosW0) / a0;
+        b2 = (1.0f + cosW0) / 2.0f / a0;
+        a1 = -2.0f * cosW0 / a0;
+        a2 = (1.0f - alpha) / a0;
+    }
+
+    float process(float input) {
+        float output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1;
+        x1 = input;
+        y2 = y1;
+        y1 = output;
+        return output;
+    }
+
+    void setCutoff(float cutoff) {
+        cutoffFreq = cutoff;
+        updateCoefficients();
+    }
+
+    void setQ(float qVal) {
+        q = qVal;
+        updateCoefficients();
+    }
+};
+
 class LowPassFilter {
     float cutoffFreq, sampleRate, x1, y1;
 public:
@@ -115,6 +157,7 @@ namespace Instruments {
 // Forward declarations for all instrument wave generation functions
 struct KarplusStrongState;
 struct InstrumentSample;
+struct WaveguideState;
 class SampleManager;
 
 static float generateKickWave(float t, float freq, float dur);
@@ -148,6 +191,48 @@ struct KarplusStrongState {
     size_t writePos;
     std::vector<float> delayLine;
     KarplusStrongState() : lastFreq(0.0f), delayLineSize(0), writePos(0), delayLine() {}
+};
+
+struct FormantFilter {
+    float centerFreq, bandwidth, sampleRate;
+    float b0, b1, b2, a1, a2;
+    float x1, x2, y1, y2;
+
+    FormantFilter(float freq, float bw, float sr) : centerFreq(freq), bandwidth(bw), sampleRate(sr),
+        x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {
+        updateCoefficients();
+    }
+
+    void updateCoefficients() {
+        float r = expf(-M_PI * bandwidth / sampleRate);
+        float theta = 2.0f * M_PI * centerFreq / sampleRate;
+        b0 = 1.0f - r;
+        b1 = 0.0f;
+        b2 = 0.0f;
+        a1 = -2.0f * r * cosf(theta);
+        a2 = r * r;
+    }
+
+    float process(float input) {
+        float output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1; x1 = input;
+        y2 = y1; y1 = output;
+        return output;
+    }
+
+    void setParameters(float freq, float bw) {
+        centerFreq = freq;
+        bandwidth = bw;
+        updateCoefficients();
+    }
+};
+
+struct WaveguideState {
+    std::vector<float> forwardWave, backwardWave;
+    size_t delayLineSize = 0;
+    size_t writePos = 0;
+    float lastFreq = 0.0f;
+    float pressure = 0.0f; // Breath pressure
 };
 
 struct InstrumentSample {
@@ -184,7 +269,8 @@ class SampleManager {
 
 static float generateSample(const std::string& instrument, float sampleRate, float freq, float dur, int phoneme, bool open, float t) {
     if (instrument == "kick") return generateKickWave(t, freq, dur);
-    if (instrument == "hihat") return generateHiHatWave(t, freq, open, dur);
+    if (instrument == "hihat_closed") return generateHiHatWave(t, freq, open, dur);
+	if (instrument == "hihat_open") return generateHiHatWave(t, freq, open, dur);
     if (instrument == "snare") return generateSnareWave(t, dur);
     if (instrument == "clap") return generateClapWave(t, dur);
     if (instrument == "tom") return generateTomWave(t, freq, dur);
@@ -193,7 +279,8 @@ static float generateSample(const std::string& instrument, float sampleRate, flo
     if (instrument == "leadsynth") return generateLeadSynthWave(t, freq, dur);
     if (instrument == "pad") return generatePadWave(t, freq, dur);
     if (instrument == "cymbal") return generateCymbalWave(t, freq, dur);
-    if (instrument == "vocal") return generateVocalWave(t, freq, phoneme, dur);
+	if (instrument == "vocal_0") return generateVocalWave(t, freq, phoneme, dur);
+    if (instrument == "vocal_1") return generateVocalWave(t, freq, phoneme, dur);
     if (instrument == "flute") return generateFluteWave(t, freq, dur);
     if (instrument == "trumpet") return generateTrumpetWave(t, freq, dur);
 
@@ -247,6 +334,7 @@ static SampleManager sampleManager;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 
+// Existing instrument implementations (unchanged)
 static float generateKickWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
     float attack = 0.01f, decay = 0.2f, sustain = 0.6f, release = 0.15f, env;
@@ -268,17 +356,63 @@ static float generateKickWave(float t, float freq, float dur) {
 
 static float generateHiHatWave(float t, float freq, bool open, float dur) {
     static AudioUtils::RandomGenerator rng;
-    float env = std::exp(-15.0f * t / (open ? dur * 1.5f : dur * 0.2f));
-    float filterFreq = (freq > 0.0f ? freq * 10.0f : 10000.0f);
-    AudioUtils::BandPassFilter filter(filterFreq, 1.0f, 44100.0f);
-    float noise = rng.generateWhiteNoise() * 0.7f;
-    noise = filter.process(noise);
-    float saw = 0.3f * (std::fmod(filterFreq * t, 1.0f) - 0.5f) * (open ? 0.5f : 0.8f);
-    float output = env * (noise + saw);
-    AudioUtils::Distortion dist(1.4f, 0.85f);
-    AudioUtils::Reverb reverb(0.05f, 0.4f, 0.2f);
+    float release = open ? 0.8f : 0.1f; // Longer for open, short for closed
+    if (t > dur + release) {
+        return 0.0f; // Force zero output
+    }
+
+    // Envelope: tailored for short durations
+    float envDecay = open ? -10.0f * t / (dur * 4.0f) : -12.0f * t / (dur * 0.5f); // ~0.6s open, ~0.08s closed
+    float env = std::exp(envDecay);
+    if (open) {
+        env *= (1.0f + 0.1f * std::sin(2.0f * M_PI * 5.0f * t)); // Subtle shimmer for open
+    }
+
+    // Base frequency for tonal components
+    float baseFreq = (freq > 0.0f ? freq : 1000.0f); // Default 1 kHz if freq invalid
+    float filterFreq = baseFreq * 8.0f; // Center ~8 kHz for hi-hat
+    float filterQ = open ? 1.5f : 2.0f; // Broader for open, tighter for closed
+
+    // Time-varying filter with slight sweep
+    float filterSweep = std::exp(-5.0f * t / (open ? dur * 2.0f : dur * 0.3f)); // Faster sweep for closed
+    filterFreq *= (0.8f + 0.2f * filterSweep); // Sweep down slightly
+    AudioUtils::BandPassFilter filter(filterFreq, filterQ, 44100.0f);
+
+    // Noise components
+    float pseudoVelocity = 0.7f; // Placeholder (adjust with actual velocity if available)
+    float mainNoise = rng.generatePinkNoise() * 0.5f * pseudoVelocity; // Pink noise for warmth
+    mainNoise = filter.process(mainNoise);
+
+    // Additional high-passed noise for sizzle
+    float sizzleFreq = open ? 6000.0f : 8000.0f; // Lower for open, higher for closed
+    AudioUtils::HighPassFilter sizzleFilter(sizzleFreq, 1.0f, 44100.0f);
+    float sizzleNoise = rng.generatePinkNoise() * (open ? 0.3f : 0.15f) * pseudoVelocity;
+    sizzleNoise = sizzleFilter.process(sizzleNoise);
+
+    // Tonal components: sine partials for metallic ring
+    float tonal = 0.0f;
+    tonal += 0.1f * std::sin(2.0f * M_PI * baseFreq * t) * (open ? 0.6f : 1.0f); // Fundamental
+    tonal += 0.07f * std::sin(2.0f * M_PI * 2.0f * baseFreq * t) * (open ? 0.8f : 0.9f); // 2nd partial
+    tonal += 0.03f * std::sin(2.0f * M_PI * 3.0f * baseFreq * t) * (open ? 1.0f : 0.7f); // 3rd partial
+    tonal *= std::exp(-8.0f * t / (open ? dur * 2.0f : dur * 0.4f)); // Faster decay for closed
+
+    // Combine components
+    float output = env * (mainNoise + sizzleNoise + tonal);
+
+    // Soft distortion for grit
+    AudioUtils::Distortion dist(1.2f, 0.9f);
     output = dist.process(output);
-    output = reverb.process(output);
+
+    // Skip reverb since UseReverb: false
+    output *= 0.7f; // Lower gain to prevent clipping
+    output = std::max(-1.0f, std::min(1.0f, output));
+
+    // Log non-zero output
+    if (t > dur + release - 0.01f && std::abs(output) > 0.001f) {
+        SDL_Log("Non-zero output at note end: %.6f", output);
+    }
+
+	output *= 5.0f;
     return output;
 }
 
@@ -297,25 +431,47 @@ static float generateSnareWave(float t, float dur) {
     AudioUtils::Reverb reverb(0.05f, 0.4f, 0.2f);
     output = dist.process(output);
     output = reverb.process(output);
+	
+	output *= 0.5f;
     return output;
 }
 
 static float generateClapWave(float t, float dur) {
     static AudioUtils::RandomGenerator rng;
-    float attack = 0.005f, decay = 0.05f, sustain = 0.4f, release = 0.1f, env;
-    if (t < attack) env = t / attack;
-    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    else if (t < dur) env = sustain;
-    else env = sustain * std::exp(-(t - dur) / release);
-    float burst = 1.0f + 0.5f * (std::sin(50.0f * M_PI * t) + std::sin(70.0f * M_PI * t));
-    env *= (t < dur * 0.1f ? burst : 0.5f);
-    float noise = rng.generateWhiteNoise() * 0.6f + rng.generatePinkNoise() * 0.2f;
-    float saw = 0.3f * (std::fmod(1000.0f * t, 1.0f) - 0.5f);
-    float output = env * (noise + saw);
-    AudioUtils::Distortion dist(1.6f, 0.8f);
-    AudioUtils::Reverb reverb(0.05f, 0.4f, 0.2f);
+
+    // Shorten duration for clap-like transient (80-150 ms typical)
+    dur = std::clamp(dur, 0.08f, 0.15f);
+
+    // Tight ADSR envelope for sharp attack and quick decay
+    float attack = 0.002f, decay = 0.03f, sustain = 0.2f, release = 0.05f, env;
+    if (t < attack) {
+        env = t / attack;
+    } else if (t < attack + decay) {
+        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    } else if (t < dur) {
+        env = sustain;
+    } else {
+        env = sustain * std::exp(-(t - dur) / release);
+    }
+
+    // Layered noise bursts to simulate clap transients
+    float burst1 = (t < 0.002f) ? rng.generateWhiteNoise() * 1.0f : 0.0f;
+    float burst2 = (t >= 0.002f && t < 0.004f) ? rng.generateWhiteNoise() * 0.8f : 0.0f;
+    float burst3 = (t >= 0.004f && t < 0.006f) ? rng.generateWhiteNoise() * 0.6f : 0.0f;
+    float noise = rng.generatePinkNoise() * 0.4f; // Continuous pink noise for body
+
+    // Band-passed noise for tonal character (~200-2000 Hz)
+    float tonal = rng.generateWhiteNoise() * std::sin(2.0f * M_PI * 800.0f * t) * 0.3f;
+
+    // Combine sound components
+    float output = env * (burst1 + burst2 + burst3 + noise + tonal);
+
+    // Apply band-pass filter effect implicitly via tonal shaping
+    static AudioUtils::Distortion dist(1.4f, 0.6f); // Light distortion for grit
+    static AudioUtils::Reverb reverb(0.03f, 0.3f, 0.2f); // Short reverb for space
     output = dist.process(output);
     output = reverb.process(output);
+
     return output;
 }
 
@@ -339,36 +495,90 @@ static float generateTomWave(float t, float freq, float dur) {
 }
 
 static float generateSubBassWave(float t, float freq, float dur) {
+    // Clamp frequency to 20-180 Hz
+    freq = std::clamp(freq, 20.0f, 180.0f);
+
+    // ADSR envelope parameters
     float attack = 0.02f, decay = 0.15f, sustain = 0.8f, release = 0.25f, env;
-    if (t < attack) env = t / attack;
-    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    else if (t < dur) env = sustain;
-    else env = sustain * std::exp(-(t - dur) / release);
+
+    // Calculate envelope
+    if (t < attack) {
+        env = t / attack;
+    } else if (t < attack + decay) {
+        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    } else if (t < dur) {
+        env = sustain;
+    } else {
+        env = sustain * std::exp(-(t - dur) / release);
+    }
+
+    // Generate waveform: sine for warmth, slight saw for edge
     float sine = std::sin(2.0f * M_PI * freq * t) * 0.7f;
     float saw = (std::fmod((freq * 0.99f) * t, 1.0f) - 0.5f) * 0.3f;
     float output = env * (sine + saw);
-    AudioUtils::LowPassFilter filter(100.0f, 44100.0f);
+
+    // Apply low-pass filter at 200 Hz to preserve 20-180 Hz range
+    static AudioUtils::LowPassFilter filter(200.0f, 44100.0f);
     output = filter.process(output);
+
     return output;
 }
 
 static float generateSynthArpWave(float t, float freq, float dur) {
-    float attack = 0.01f, decay = 0.05f, sustain = 0.6f, release = 0.1f, env;
-    if (t < attack) env = t / attack;
-    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    else if (t < dur) env = sustain;
-    else env = sustain * std::exp(-(t - dur) / release);
-    float modFreq = freq * 3.0f;
-    float modIndex = 1.0f + 0.5f * std::sin(2.0f * M_PI * t / dur);
-    float carrier = std::sin(2.0f * M_PI * freq * t + modIndex * std::sin(2.0f * M_PI * modFreq * t));
-    float saw = (std::fmod(freq * t, 1.0f) - 0.5f) * 0.3f;
-    float output = env * (carrier * 0.7f + saw);
-    AudioUtils::Distortion dist(1.7f, 0.75f);
-    AudioUtils::Reverb reverb(0.06f, 0.4f, 0.2f);
-    AudioUtils::LowPassFilter filter(4000.0f, 44100.0f);
-    output = dist.process(output);
-    output = reverb.process(output);
-    output = filter.process(output);
+    static AudioUtils::RandomGenerator rng;
+    static AudioUtils::BandPassFilter formant1(800.0f, 1.2f, 44100.0f);
+    static AudioUtils::BandPassFilter formant2(2400.0f, 1.5f, 44100.0f);
+    static AudioUtils::BandPassFilter breathFilter(2000.0f, 0.7f, 44100.0f);
+
+    // Input validation
+    if (!std::isfinite(freq) || freq <= 0.0f) {
+        SDL_Log("Invalid freq %.2f, returning 0.0", freq);
+        return 0.0f;
+    }
+    freq = std::max(138.59f, std::min(880.0f, freq)); // Saxophone range (C#3 to A5)
+
+    // ADSR envelope
+    float attack = 0.003f, decay = 0.02f, sustain = 0.85f, release = 0.3f, env;
+    if (t < attack) {
+        env = t / attack;
+    } else if (t < attack + decay) {
+        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    } else if (t < dur) {
+        env = sustain;
+    } else if (t < dur + release) {
+        env = sustain * std::exp(-(t - dur) / release);
+    } else {
+        env = 0.0f;
+    }
+
+    // Vibrato
+    float vibratoFreq = 5.5f;
+    float vibratoDepth = 0.005f;
+    float vibrato = (t > 0.1f) ? std::sin(2.0f * M_PI * vibratoFreq * t) * vibratoDepth : 0.0f;
+    float modulatedFreq = freq * (1.0f + vibrato);
+
+    // Dynamic harmonics
+    float harmonic1 = 1.0f * std::cos(2.0f * M_PI * modulatedFreq * t) * env;
+    float harmonic3 = 0.8f * std::cos(2.0f * M_PI * 3.0f * modulatedFreq * t) * env;
+    float harmonic5 = 0.5f * std::cos(2.0f * M_PI * 5.0f * modulatedFreq * t) * env;
+    float harmonic7 = 0.3f * std::cos(2.0f * M_PI * 7.0f * modulatedFreq * t) * env;
+    float harmonic2 = 0.2f * std::cos(2.0f * M_PI * 2.0f * modulatedFreq * t) * env;
+    float output = (harmonic1 + harmonic2 + harmonic3 + harmonic5 + harmonic7) * 0.5f;
+
+    // Formant filters
+    output = formant1.process(output) * 1.2f + formant2.process(output) * 0.8f;
+
+    // Articulation noise
+    float articulation = (t < 0.005f) ? breathFilter.process(rng.generateWhiteNoise()) * 0.2f : 0.0f;
+
+    // Combine output
+    float breathNoise = breathFilter.process(rng.generateWhiteNoise()) * 0.1f * (t < 0.05f ? 1.5f : 1.0f);
+    output = (output + breathNoise * env + articulation) * env;
+
+    // Clip and scale
+    output = std::max(-1.0f, std::min(1.0f, output));
+    output *= 0.3f;
+
     return output;
 }
 
@@ -437,18 +647,40 @@ static float generatePadWave(float t, float freq, float dur) {
 
 static float generateCymbalWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
-    float env = std::exp(-8.0f * t / dur) * (1.0f + 0.3f * std::sin(4.0f * M_PI * t / dur));
-    float baseFilterFreq = (freq > 0.0f ? std::min(freq * 12.0f, 14000.0f) : 12000.0f);
-    float filterCutoff = 8000.0f + 4000.0f * std::exp(-6.0f * t / dur);
-    float filter = std::sin(2.0f * M_PI * baseFilterFreq * t) * 0.5f + 0.5f;
-    float noise = rng.generateWhiteNoise() * filter * 0.7f;
-    float saw = 0.3f * (std::fmod(baseFilterFreq * t, 1.0f) - 0.5f);
-    float tonal = 0.1f * std::sin(2.0f * M_PI * freq * t) * std::exp(-4.0f * t / dur);
-    float output = env * (noise + saw + tonal);
-    output *= (filterCutoff - 8000.0f) / 4000.0f;
-    static AudioUtils::Reverb reverb(0.1f, 0.5f, 0.3f);
+
+    // Clamp duration to 0.1-1.5 seconds for cymbal realism
+    dur = std::clamp(dur, 0.1f, 1.5f);
+
+    // Use freq as base for metallic components, default to 6000 Hz if invalid
+    freq = (freq > 0.0f) ? std::clamp(freq, 2000.0f, 10000.0f) : 6000.0f;
+
+    // Envelope with sharp attack and long tail
+    float env = std::exp(-6.0f * t / dur) * (1.0f + 0.4f * std::sin(8.0f * M_PI * t / dur));
+    env = std::max(0.0f, env);
+
+    // High-frequency noise for cymbal shimmer
+    float whiteNoise = rng.generateWhiteNoise() * 0.7f;
+    float pinkNoise = rng.generatePinkNoise() * 0.3f;
+
+    // Metallic inharmonic components (scaled by freq)
+    float metallic1 = std::sin(2.0f * M_PI * freq * t) * 0.2f * std::exp(-4.0f * t / dur);
+    float metallic2 = std::sin(2.0f * M_PI * (freq * 1.5f) * t) * 0.15f * std::exp(-5.0f * t / dur);
+    float metallic3 = std::sin(2.0f * M_PI * (freq * 2.0f) * t) * 0.1f * std::exp(-6.0f * t / dur);
+
+    // Modulate noise to simulate cymbal's high-passed character
+    float filterMod = 0.5f + 0.5f * std::sin(2.0f * M_PI * (8000.0f + 6000.0f * std::exp(-5.0f * t / dur)) * t);
+    float noise = (whiteNoise + pinkNoise) * filterMod;
+
+    // Combine components
+    float output = env * (noise + metallic1 + metallic2 + metallic3);
+
+    // Apply reverb for long, shimmering tail
+    static AudioUtils::Reverb reverb(0.15f, 0.6f, 0.4f, 44100.0f);
     output = reverb.process(output);
+
+    // Clip output to prevent distortion
     output = std::max(-1.0f, std::min(1.0f, output));
+
     return output;
 }
 
@@ -496,23 +728,84 @@ static float generateFluteWave(float t, float freq, float dur) {
 
 static float generateTrumpetWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
-    float attack = 0.03f, decay = 0.1f, sustain = 0.8f, release = 0.2f, env;
-    if (t < attack) env = t / attack;
-    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    else if (t < dur) env = sustain;
-    else env = sustain * std::exp(-(t - dur) / release);
-    float modFreq = freq * 2.0f;
-    float modIndex = 2.0f + 0.5f * std::sin(2.0f * M_PI * t / dur);
-    float carrier = std::sin(2.0f * M_PI * freq * t + modIndex * std::sin(2.0f * M_PI * modFreq * t));
-    float breath = rng.generatePinkNoise() * std::exp(-15.0f * t / dur) * 0.2f;
-    float vibrato = 1.0f + 0.02f * std::sin(2.0f * M_PI * 5.5f * t);
-    float output = env * (carrier * 0.75f + breath) * vibrato;
-    AudioUtils::Distortion dist(1.5f, 0.8f);
-    AudioUtils::Reverb reverb(0.12f, 0.5f, 0.3f);
-    AudioUtils::BandPassFilter filter(2000.0f, 1.0f, 44100.0f);
-    output = dist.process(output);
-    output = reverb.process(output);
-    output = filter.process(output);
+    static AudioUtils::BandPassFilter breathFilter(2500.0f, 600.0f, 44100.0f); // Breath noise filter
+
+    // Input validation
+    if (!std::isfinite(t) || t < 0.0f || !std::isfinite(freq) || freq <= 0.0f || !std::isfinite(dur) || dur <= 0.0f) {
+        SDL_Log("Invalid t %.2f, freq %.2f, or dur %.2f, returning 0.0", t, freq, dur);
+        return 0.0f;
+    }
+    freq = std::max(155.56f, std::min(1244.51f, freq)); // Trumpet range (D#3 to D#6)
+
+    // ADSR envelope
+    float attack = 0.005f, decay = 0.02f, sustain = 0.9f, release = 0.15f, env;
+    if (t < attack) {
+        env = t / attack;
+    } else if (t < attack + decay) {
+        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    } else if (t < dur) {
+        env = sustain;
+    } else if (t < dur + release) {
+        env = sustain * std::exp(-(t - dur) / release);
+    } else {
+        env = 0.0f;
+    }
+
+    // Vibrato
+    float vibratoFreq = 5.0f;
+    float vibratoDepth = 0.005f * (t > 0.15f ? 1.0f : t / 0.15f);
+    float vibrato = std::sin(2.0f * M_PI * vibratoFreq * t) * vibratoDepth;
+    float modulatedFreq = freq * (1.0f + vibrato);
+
+    // Additive synthesis for trumpet-like timbre
+    float harmonic1 = 1.0f * std::cos(2.0f * M_PI * modulatedFreq * t);
+    float harmonic2 = 0.9f * std::cos(2.0f * M_PI * 2.0f * modulatedFreq * t);
+    float harmonic3 = 0.7f * std::cos(2.0f * M_PI * 3.0f * modulatedFreq * t);
+    float harmonic4 = 0.5f * std::cos(2.0f * M_PI * 4.0f * modulatedFreq * t);
+    float harmonic5 = 0.3f * std::cos(2.0f * M_PI * 5.0f * modulatedFreq * t);
+    float output = (harmonic1 + harmonic2 + harmonic3 + harmonic4 + harmonic5) * 0.2f * env;
+
+    // Check harmonics
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite harmonics at t %.2f, freq %.2f: %.2f", t, freq, output);
+        output = 0.0f;
+    }
+    output = std::max(-0.8f, std::min(0.8f, output)); // Clip harmonics
+
+    // Breath noise
+    float breathNoise = breathFilter.process(rng.generateWhiteNoise()) * 0.04f * (t < 0.05f ? 1.3f : 0.4f);
+    breathNoise = std::max(-0.4f, std::min(0.4f, breathNoise));
+    if (!std::isfinite(breathNoise)) {
+        SDL_Log("Non-finite breath noise at t %.2f, freq %.2f: %.2f", t, freq, breathNoise);
+        breathNoise = 0.0f;
+    }
+
+    // Articulation noise
+    float articulation = (t < 0.006f) ? breathFilter.process(rng.generateWhiteNoise()) * 0.08f * env : 0.0f;
+    articulation = std::max(-0.4f, std::min(0.4f, articulation));
+    if (!std::isfinite(articulation)) {
+        SDL_Log("Non-finite articulation at t %.2f, freq %.2f: %.2f", t, freq, articulation);
+        articulation = 0.0f;
+    }
+
+    // Combine output
+    output = output + breathNoise * env + articulation;
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite combined output at t %.2f, freq %.2f: %.2f", t, freq, output);
+        output = 0.0f;
+    }
+
+    // Soft clipping
+    output = std::tanh(output * 0.5f); // Conservative gain
+    output *= 0.3f;
+
+    // Final validation
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite final output at t %.2f, freq %.2f: %.2f", t, freq, output);
+        output = 0.0f;
+    }
+    output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
+
     return output;
 }
 
@@ -522,6 +815,7 @@ static float generateBassWave(float sampleRate, float freq, float time, float du
         SDL_Log("Invalid sampleRate %.2f or freq %.2f, returning 0.0", sampleRate, freq);
         return 0.0f;
     }
+
     if (std::abs(state1.lastFreq - freq) > 0.1f || state1.delayLine.empty()) {
         std::vector<float> oldDelayLine1 = state1.delayLine;
         std::vector<float> oldDelayLine2 = state2.delayLine;
@@ -530,92 +824,112 @@ static float generateBassWave(float sampleRate, float freq, float time, float du
         if (state1.delayLineSize < 2) state1.delayLineSize = state2.delayLineSize = 2;
         state1.delayLine.assign(state1.delayLineSize, 0.0f);
         state2.delayLine.assign(state2.delayLineSize, 0.0f);
+
         size_t initSize = state1.delayLineSize / 4;
         for (size_t i = 0; i < initSize; ++i) {
             float x = static_cast<float>(i) / initSize;
             float pulse = std::sin(2.0f * M_PI * x) * (1.0f - x);
-            float noise = rng.generatePinkNoise() * 0.4f;
-            state1.delayLine[i] = pulse * 0.5f + noise;
-            state2.delayLine[i] = pulse * 0.45f + noise * 0.9f;
+            float noise = rng.generatePinkNoise() * 0.2f; // Reduced noise
+            state1.delayLine[i] = pulse * 0.45f + noise;
+            state2.delayLine[i] = pulse * 0.4f + noise * 0.8f;
         }
+
         if (!oldDelayLine1.empty()) {
-            size_t crossfadeLen = std::min(oldDelayLine1.size(), state1.delayLineSize) / 4;
+            size_t crossfadeLen = std::min(oldDelayLine1.size(), state1.delayLineSize) / 2; // Longer crossfade
             for (size_t i = 0; i < crossfadeLen; ++i) {
                 float t = static_cast<float>(i) / crossfadeLen;
-                state1.delayLine[i] = (1.0f - t) * oldDelayLine1[i % oldDelayLine1.size()] + t * state1.delayLine[i];
-                state2.delayLine[i] = (1.0f - t) * oldDelayLine2[i % oldDelayLine2.size()] + t * state2.delayLine[i];
+                float smoothT = 0.5f * (1.0f - std::cos(M_PI * t)); // Cosine taper
+                state1.delayLine[i] = (1.0f - smoothT) * oldDelayLine1[i % oldDelayLine1.size()] + smoothT * state1.delayLine[i];
+                state2.delayLine[i] = (1.0f - smoothT) * oldDelayLine2[i % oldDelayLine2.size()] + smoothT * state2.delayLine[i];
             }
         }
+
         size_t harmonicSize = state1.delayLineSize / 2;
         std::vector<float> harmonicLine(harmonicSize, 0.0f);
         for (size_t i = 0; i < std::min(initSize, harmonicSize); ++i) {
             float x = static_cast<float>(i) / initSize;
-            harmonicLine[i] = std::sin(2.0f * M_PI * x) * (1.0f - x) * 0.1f;
+            harmonicLine[i] = std::sin(2.0f * M_PI * x) * (1.0f - x) * 0.08f; // Slightly reduced
         }
         state1.delayLine.insert(state1.delayLine.end(), harmonicLine.begin(), harmonicLine.end());
         state1.delayLine.resize(state1.delayLineSize);
         state2.delayLine.insert(state2.delayLine.end(), harmonicLine.begin(), harmonicLine.end());
         state2.delayLine.resize(state2.delayLineSize);
     }
+
     size_t readPos = (state1.writePos + state1.delayLineSize - 1) % state1.delayLineSize;
     float x1 = state1.delayLine[readPos];
     float x2 = state2.delayLine[readPos];
     float output = 0.5f * (x1 + x2);
-    static AudioUtils::LowPassFilter feedbackLPF1(400.0f, sampleRate);
-    static AudioUtils::LowPassFilter feedbackLPF2(400.0f, sampleRate);
-    float cutoff = 400.0f - 200.0f * (time / (dur + 2.0f));
-    cutoff = std::max(200.0f, cutoff);
+
+    static AudioUtils::LowPassFilter feedbackLPF1(200.0f, sampleRate);
+    static AudioUtils::LowPassFilter feedbackLPF2(200.0f, sampleRate);
+    float pseudoVelocity = std::min(0.8f, 1.0f - time / (dur + 0.3f)); // Velocity scaling
+    float cutoff = 200.0f - 100.0f * (time / (dur + 1.0f)); // 200–100 Hz
+    cutoff = std::max(100.0f, std::min(200.0f, cutoff));
     feedbackLPF1.setCutoff(cutoff);
     feedbackLPF2.setCutoff(cutoff);
     float y1 = feedbackLPF1.process(x1);
     float y2 = feedbackLPF2.process(x2);
-    float pitchVariation = 1.0f - 0.03f * (time / (dur + 2.0f));
+
+    float pitchVariation = 1.0f - 0.02f * (time / (dur + 2.0f)); // Slightly reduced
     pitchVariation *= 1.0f + 0.002f * std::sin(2.0f * M_PI * 0.2f * time);
-    float pluckNoise = rng.generatePinkNoise() * std::exp(-15.0f * time) * 0.08f;
-    float fingerTap = (time < 0.01f) ? rng.generateWhiteNoise() * 0.06f : 0.0f;
-    state1.delayLine[state1.writePos] = (y1 * 0.995f + pluckNoise + fingerTap) * pitchVariation;
-    state2.delayLine[state2.writePos] = (y2 * 0.99f + pluckNoise * 0.8f + fingerTap * 0.8f) * pitchVariation;
+
+    float pluckNoise = rng.generatePinkNoise() * std::exp(-25.0f * time) * 0.04f * pseudoVelocity; // Reduced, faster decay
+    float fingerTap = (time < 0.005f) ? rng.generatePinkNoise() * 0.03f * pseudoVelocity : 0.0f; // Pink noise, shorter
+
+    state1.delayLine[state1.writePos] = (y1 * 0.98f + pluckNoise + fingerTap) * pitchVariation; // Lower feedback
+    state2.delayLine[state2.writePos] = (y2 * 0.975f + pluckNoise * 0.8f + fingerTap * 0.8f) * pitchVariation;
     state1.writePos = (state1.writePos + 1) % state1.delayLineSize;
     state2.writePos = (state2.writePos + 1) % state2.delayLineSize;
-    float attack = 0.01f, decay = 0.15f, sustain = 0.5f, release = 1.5f, env;
+
+    float attack = 0.005f, decay = 0.05f, sustain = 0.5f + 0.1f * pseudoVelocity, release = 1.5f, env;
     if (time < attack) {
         env = time / attack;
     } else if (time < attack + decay) {
         env = 1.0f - (time - attack) / decay * (1.0f - sustain);
     } else if (time < dur) {
-        env = sustain + 0.03f * std::sin(2.0f * M_PI * 1.0f * time);
+        env = sustain; // Removed modulation
     } else if (time < dur + release) {
         float t = (time - dur) / release;
-        env = sustain * (1.0f - t) * std::exp(-t * 4.0f);
+        env = sustain * (1.0f - t) * std::exp(-t * 6.0f); // Faster decay
     } else {
         env = 0.0f;
+        output = 0.0f; // Force zero output
     }
-    float resonanceFreq = 80.0f;
+
+    float resonanceFreq = 60.0f; // Lowered for bass
     float resonanceFilter = std::sin(2.0f * M_PI * resonanceFreq * time) * 0.5f + 0.5f;
-    float resonanceNoise = rng.generatePinkNoise() * resonanceFilter * 0.06f * (time < dur ? 1.0f : std::exp(-(time - dur) / release));
+    float resonanceNoise = rng.generatePinkNoise() * resonanceFilter * 0.03f * env; // Reduced
+
     pluckNoise *= env;
     fingerTap *= env;
     resonanceNoise *= env;
     output += resonanceNoise;
-    float harmonic1 = 0.6f * std::cos(2.0f * M_PI * freq * pitchVariation * time) * std::exp(-0.7f * time);
-    float harmonic2 = 0.25f * std::cos(2.0f * M_PI * 2.0f * freq * pitchVariation * time) * std::exp(-1.0f * time);
-    float harmonic3 = 0.1f * std::cos(2.0f * M_PI * 3.0f * freq * pitchVariation * time) * std::exp(-1.4f * time);
-    output += (harmonic1 + harmonic2 + harmonic3) * env;
+
+    float harmonic1 = 0.4f * std::cos(2.0f * M_PI * freq * pitchVariation * time) * std::exp(-1.0f * time); // Reduced, faster decay
+    float harmonic2 = 0.15f * std::cos(2.0f * M_PI * 2.0f * freq * pitchVariation * time) * std::exp(-1.5f * time);
+    float harmonic3 = 0.05f * std::cos(2.0f * M_PI * 3.0f * freq * pitchVariation * time) * std::exp(-2.0f * time);
+    output += (harmonic1 + harmonic2 + harmonic3) * env * 0.6f; // Scaled down
+
     output = (output + pluckNoise + fingerTap) * env;
-    static AudioUtils::LowPassFilter bodyResonance(400.0f, sampleRate);
-    float resonanceCutoff = 400.0f;
+
+    static AudioUtils::LowPassFilter bodyResonance(200.0f, sampleRate); // Lowered base
+    float resonanceCutoff = 200.0f;
     if (time > dur) {
         resonanceCutoff *= std::exp(-(time - dur) / release);
     }
-    bodyResonance.setCutoff(std::max(100.0f, resonanceCutoff));
+    bodyResonance.setCutoff(std::max(80.0f, resonanceCutoff)); // Lower minimum
     output = bodyResonance.process(output);
-    static AudioUtils::Reverb reverb(0.05f, 0.3f, 0.1f, sampleRate);
-    output = reverb.process(output);
-    output *= 0.8f;
+
+    // Skip reverb since UseReverb: false
+    output *= 0.6f; // Lower gain to prevent clipping
     output = std::max(-1.0f, std::min(1.0f, output));
+
     if (time > dur + release - 0.01f && std::abs(output) > 0.001f) {
         SDL_Log("Non-zero output at note end: %.6f", output);
     }
+
+	output *= 5.0f;
     return output;
 }
 
@@ -701,45 +1015,17 @@ static float generateGuitarWave(float sampleRate, float freq, float time, float 
 
 static float generateSaxophoneWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
-    static AudioUtils::BandPassFilter noiseFilter(1650.0f, 0.8f, sampleRate);
-    if (!std::isfinite(sampleRate) || sampleRate <= 0.0f || !std::isfinite(freq) || freq <= 0.0f) {
-        SDL_Log("Invalid sampleRate %.2f or freq %.2f, returning 0.0", sampleRate, freq);
+    static AudioUtils::BandPassFilter breathFilter(2500.0f, 600.0f, sampleRate); // Breath noise filter
+
+    // Input validation
+    if (!std::isfinite(sampleRate) || sampleRate <= 0.0f || !std::isfinite(freq) || freq <= 0.0f || !std::isfinite(time) || time < 0.0f) {
+        SDL_Log("Invalid sampleRate %.2f, freq %.2f, or time %.2f, returning 0.0", sampleRate, freq, time);
         return 0.0f;
     }
-    freq = std::max(138.59f, std::min(880.0f, freq));
-    if (std::abs(state1.lastFreq - freq) > 0.1f || state1.delayLine.empty()) {
-        state1.lastFreq = state2.lastFreq = freq;
-        state1.delayLineSize = state2.delayLineSize = static_cast<size_t>(sampleRate / freq);
-        if (state1.delayLineSize < 2) state1.delayLineSize = 2;
-        state1.delayLine.assign(state1.delayLineSize, 0.0f);
-        state2.delayLine.assign(state2.delayLineSize, 0.0f);
-        size_t initSize = state1.delayLineSize / 3;
-        for (size_t i = 0; i < initSize; ++i) {
-            float x = static_cast<float>(i) / initSize;
-            float sawtooth = (2.0f * (x - std::floor(x + 0.5f))) * (1.0f - x);
-            float noise = noiseFilter.process(rng.generateWhiteNoise()) * 0.2f;
-            state1.delayLine[i] = sawtooth * 0.85f + noise;
-            state2.delayLine[i] = sawtooth * 0.8f + noise * 0.8f;
-        }
-        size_t harmonicSize = state1.delayLineSize / 2;
-        std::vector<float> harmonicLine(harmonicSize, 0.0f);
-        for (size_t i = 0; i < std::min(initSize, harmonicSize); ++i) {
-            float x = static_cast<float>(i) / initSize;
-            harmonicLine[i] = (std::sin(2.0f * M_PI * x) + 0.7f * std::sin(6.0f * M_PI * x) + 0.4f * std::sin(10.0f * M_PI * x)) * (1.0f - x) * 0.45f;
-        }
-        state1.delayLine.insert(state1.delayLine.end(), harmonicLine.begin(), harmonicLine.end());
-        state1.delayLine.resize(state1.delayLineSize);
-    }
-    size_t readPos = (state1.writePos + state1.delayLineSize - 1) % state1.delayLineSize;
-    float x1 = state1.delayLine[readPos];
-    float x2 = state2.delayLine[readPos];
-    float output = 0.5f * (x1 + x2);
-    float breathNoise = noiseFilter.process(rng.generateWhiteNoise()) * 0.06f * (time < dur ? 1.0f : std::exp(-(time - dur) / 0.5f));
-    state1.delayLine[state1.writePos] = x1 * 0.999f + breathNoise;
-    state2.delayLine[state2.writePos] = x2 * 0.998f + breathNoise * 0.8f;
-    state1.writePos = (state1.writePos + 1) % state1.delayLineSize;
-    state2.writePos = (state2.writePos + 1) % state2.delayLineSize;
-    float attack = 0.005f, decay = 0.03f, sustain = 0.9f, release = 0.5f, env;
+    freq = std::max(138.59f, std::min(880.0f, freq)); // Saxophone range (C#3 to A5)
+
+    // ADSR envelope
+    float attack = 0.005f, decay = 0.03f, sustain = 0.85f, release = 0.25f, env;
     if (time < attack) {
         env = time / attack;
     } else if (time < attack + decay) {
@@ -751,16 +1037,60 @@ static float generateSaxophoneWave(float sampleRate, float freq, float time, flo
     } else {
         env = 0.0f;
     }
-    float overblow = (time < 0.008f) ? 0.12f * noiseFilter.process(rng.generateWhiteNoise()) : 0.0f;
-    float breath = noiseFilter.process(rng.generateWhiteNoise()) * 0.08f * env;
-    float harmonic1 = 1.0f * std::cos(2.0f * M_PI * freq * time) * env;
-    float harmonic3 = 0.7f * std::cos(2.0f * M_PI * 3.0f * freq * time) * env;
-    float harmonic5 = 0.4f * std::cos(2.0f * M_PI * 5.0f * freq * time) * env;
-    float harmonic7 = 0.2f * std::cos(2.0f * M_PI * 7.0f * freq * time) * env;
-    output += (harmonic1 + harmonic3 + harmonic5 + harmonic7) * 0.65f;
-    output = (output + breath + overblow) * env;
-    output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+
+    // Vibrato
+    float vibratoFreq = 5.0f;
+    float vibratoDepth = 0.005f * (time > 0.15f ? 1.0f : time / 0.15f);
+    float vibrato = std::sin(2.0f * M_PI * vibratoFreq * time) * vibratoDepth;
+    float modulatedFreq = freq * (1.0f + vibrato);
+
+    // Additive synthesis for saxophone-like timbre
+    float harmonic1 = 1.0f * std::cos(2.0f * M_PI * modulatedFreq * time);
+    float harmonic2 = 0.6f * std::cos(2.0f * M_PI * 2.0f * modulatedFreq * time);
+    float harmonic3 = 0.3f * std::cos(2.0f * M_PI * 3.0f * modulatedFreq * time);
+    float output = (harmonic1 + harmonic2 + harmonic3) * 0.3f * env;
+
+    // Check harmonics
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite harmonics at time %.2f, freq %.2f: %.2f", time, freq, output);
+        output = 0.0f;
+    }
+    output = std::max(-0.8f, std::min(0.8f, output)); // Clip harmonics
+
+    // Breath noise
+    float breathNoise = breathFilter.process(rng.generateWhiteNoise()) * 0.05f * (time < 0.05f ? 1.2f : 0.5f);
+    breathNoise = std::max(-0.4f, std::min(0.4f, breathNoise));
+    if (!std::isfinite(breathNoise)) {
+        SDL_Log("Non-finite breath noise at time %.2f, freq %.2f: %.2f", time, freq, breathNoise);
+        breathNoise = 0.0f;
+    }
+
+    // Articulation noise
+    float articulation = (time < 0.008f) ? breathFilter.process(rng.generateWhiteNoise()) * 0.1f * env : 0.0f;
+    articulation = std::max(-0.4f, std::min(0.4f, articulation));
+    if (!std::isfinite(articulation)) {
+        SDL_Log("Non-finite articulation at time %.2f, freq %.2f: %.2f", time, freq, articulation);
+        articulation = 0.0f;
+    }
+
+    // Combine output
+    output = output + breathNoise * env + articulation;
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite combined output at time %.2f, freq %.2f: %.2f", time, freq, output);
+        output = 0.0f;
+    }
+
+    // Soft clipping
+    output = std::tanh(output * 0.5f); // Conservative gain
+    output *= 0.3f;
+
+    // Final validation
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite final output at time %.2f, freq %.2f: %.2f", time, freq, output);
+        output = 0.0f;
+    }
+    output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
+
     return output;
 }
 
