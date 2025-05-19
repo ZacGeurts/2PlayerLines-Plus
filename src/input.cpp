@@ -46,15 +46,6 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                         SDL_Log("Music unmuted (restarted songgen)");
                     }
                     break;
-                case SDLK_SPACE:
-                    if (isSplashScreen) {
-                        isSplashScreen = false;
-                        game->firstFrame = true;
-                        SDL_Log("Splash screen exited via SPACE key");
-                    } else if (gameOverScreen) {
-                        game->reset();
-                    }
-                    break;
                 default:
                     handleAIModeInput(event.key, game);
                     break;
@@ -85,6 +76,7 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                     isSplashScreen = false;
                     game->firstFrame = true;
                     SDL_Log("Splash screen exited via controller button %d", button);
+					game->reset();
                 }
             } else if (!gameOverScreen) {
                 if (button == SDL_CONTROLLER_BUTTON_X || button == SDL_CONTROLLER_BUTTON_Y ||
