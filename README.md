@@ -48,4 +48,10 @@ Non-linesplus files - songgen.h - makes structured songs (WIP). songgen.cpp read
 Type `make` to build linesplus and songgen. Needs OpenGL (Mesa)) and SDL2.<BR />
 Type `make songgen` if you just want to see songgen build. Needs OpenGL (Mesa) and SDL2.<BR />
 Type `make clean` before rebuilding.<BR />
-`./linesplus`
+`./linesplus`<BR /><BR />
+The new songview might cause build issues due to additional dependancies.<BR />
+`make linesplus`<BR />
+`make songgen`<BR />
+Build them seperate (like above) if you experience build issues.<BR />
+`make songview` builds, but currently has a broken display.<BR />
+If you still have issues try a makefile from before May 19, 2025.
