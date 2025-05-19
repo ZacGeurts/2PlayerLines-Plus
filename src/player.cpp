@@ -37,7 +37,6 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
             if (player.noCollisionTimer <= 0) {
                 player.noCollisionTimer = 0;
                 player.isInvincible = false;
-                player.canUseNoCollision = true;
                 player.endFlash = new Flash(explosionManager.createFlash(player.pos, rng, currentTimeSec, {255, 0, 255, 255}));
                 audio.playLaserZap(currentTimeSec);
                 if (config.ENABLE_DEBUG) {
