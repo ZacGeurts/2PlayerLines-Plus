@@ -1,7 +1,7 @@
 # Compiler and flags
 CC = g++
 CFLAGS = -Wall -O3 -Iinclude -std=c++17
-LDFLAGS = -lSDL2 -lSDL2_image -lGL -lGLU -lfftw3 -pthread
+LDFLAGS = -lSDL2 -lSDL2_image -lGL -pthread
 SONGVIEW_LDFLAGS = -lSDL2 -lGL -lGLU -lfftw3
 
 # This also builds songgen and songview
