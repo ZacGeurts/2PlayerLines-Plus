@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <thread>
+#include <mutex>
 #include <vector>
 #include <map>
 #include <set>
@@ -355,35 +357,124 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     PlaybackState* state = static_cast<PlaybackState*>(userdata);
     float* output = reinterpret_cast<float*>(stream);
     bool isStereo = state->song.channels == 2;
-    int numChannels = isStereo ? 2 : 6; // 5.1 has 6 channels (L, R, C, LFE, Ls, Rs)
+    int numChannels = isStereo ? 2 : 6;
     int numSamples = len / sizeof(float) / numChannels;
     float sampleRate = 44100.0f;
 
     // Determine full playback duration (last section's end time + 5-second fade-out)
     float fullDuration = state->song.sections.empty() ? state->song.duration : state->song.sections.back().endTime;
-    fullDuration += 5.0f; // Add 5-second fade-out
+    fullDuration += 5.0f;
 
     // Clear output buffer
-    std::fill(output, output + numSamples * numChannels, 0.0f);
+    std::fill(output, output + static_cast<size_t>(numSamples) * numChannels, 0.0f);
 
-    for (int i = 0; i < numSamples; ++i) {
+    // Thread-local storage for channel outputs
+    unsigned int numThreads = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(state->song.parts.size()));
+    if (numThreads == 0) numThreads = 1;
+    std::vector<std::vector<float>> threadOutputs(numThreads, std::vector<float>(static_cast<size_t>(numSamples) * numChannels, 0.0f));
+    std::mutex outputMutex;
+
+    auto processParts = [&](size_t startIdx, size_t endIdx, size_t threadIdx, float startTime) {
+        std::vector<float> localOutput(static_cast<size_t>(numSamples) * numChannels, 0.0f);
+        for (size_t i = 0; i < static_cast<size_t>(numSamples); ++i) {
+            float t = startTime + i / sampleRate;
+            float L = 0.0f, R = 0.0f, C = 0.0f, LFE = 0.0f, Ls = 0.0f, Rs = 0.0f;
+
+            // Apply fade-in and fade-out
+            float fadeGain = 1.0f;
+            if (t < 5.0f) {
+                fadeGain = t / 5.0f;
+            } else if (t > fullDuration - 5.0f) {
+                fadeGain = (fullDuration - t) / 5.0f;
+            }
+
+            // Process parts assigned to this thread
+            for (size_t partIdx = startIdx; partIdx < endIdx && partIdx < state->song.parts.size(); ++partIdx) {
+                auto& part = state->song.parts[partIdx];
+                auto& nextIdx = state->nextNoteIndices[partIdx];
+                auto& active = state->activeNotes[partIdx];
+
+                float pan = interpolateAutomation(t, part.panAutomation, part.pan);
+                float volume = interpolateAutomation(t, part.volumeAutomation, 0.5f);
+                float reverbMix = interpolateAutomation(t, part.reverbMixAutomation, part.reverbMix);
+
+                float leftGain = (pan <= 0.0f) ? 1.0f : 1.0f - pan;
+                float rightGain = (pan >= 0.0f) ? 1.0f : 1.0f + pan;
+                float surroundGain = 0.5f * (leftGain + rightGain);
+                float centerWeight = (part.instrument == "voice") ? 0.8f : 0.3f;
+                float lfeWeight = (part.instrument == "subbass" || part.instrument == "kick") ? 0.5f : 0.1f;
+                float sideWeight = (part.instrument == "guitar" || part.instrument == "syntharp") ? 0.6f : 0.4f;
+
+                while (nextIdx < part.notes.size() && part.notes[nextIdx].startTime <= t && active.size() < 16) {
+                    const auto& note = part.notes[nextIdx];
+                    float tailDuration = getTailDuration(part.instrument);
+                    active.push_back({nextIdx, note.startTime, note.startTime + note.duration + tailDuration});
+                    ++nextIdx;
+                }
+
+                for (auto it = active.begin(); it != active.end();) {
+                    const auto& note = part.notes[it->noteIndex];
+                    if (t <= it->endTime) {
+                        float noteTime = t - note.startTime;
+                        size_t sampleIndex = static_cast<size_t>(noteTime * sampleRate);
+                        const std::vector<float>& samples = Instruments::sampleManager.getSample(
+                            part.instrument, sampleRate, note.freq, note.duration, note.phoneme, note.open);
+                        float sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
+                        if (samples.empty()) {
+                            SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
+                        }
+                        sample *= note.volume * note.velocity * volume * fadeGain;
+                        if (part.useDistortion) {
+                            sample = state->distortions[partIdx].process(sample);
+                        }
+                        if (part.useReverb) {
+                            sample = state->reverbs[partIdx].process(sample * (1.0f - reverbMix)) + sample * reverbMix;
+                        }
+
+                        L += sample * leftGain * sideWeight;
+                        R += sample * rightGain * sideWeight;
+                        C += sample * centerWeight;
+                        LFE += sample * lfeWeight;
+                        Ls += sample * surroundGain * sideWeight;
+                        Rs += sample * surroundGain * sideWeight;
+
+                        ++it;
+                    } else {
+                        it = active.erase(it);
+                    }
+                }
+            }
+
+            // Store in local output
+            if (isStereo) {
+                float L_out = L + 0.707f * C + 0.707f * LFE + 0.5f * Ls;
+                float R_out = R + 0.707f * C + 0.707f * LFE + 0.5f * Rs;
+                localOutput[i * 2 + 0] = std::max(-1.0f, std::min(1.0f, L_out));
+                localOutput[i * 2 + 1] = std::max(-1.0f, std::min(1.0f, R_out));
+            } else {
+                localOutput[i * 6 + 0] = std::max(-1.0f, std::min(1.0f, L));
+                localOutput[i * 6 + 1] = std::max(-1.0f, std::min(1.0f, R));
+                localOutput[i * 6 + 2] = std::max(-1.0f, std::min(1.0f, C));
+                localOutput[i * 6 + 3] = std::max(-1.0f, std::min(1.0f, LFE));
+                localOutput[i * 6 + 4] = std::max(-1.0f, std::min(1.0f, Ls));
+                localOutput[i * 6 + 5] = std::max(-1.0f, std::min(1.0f, Rs));
+            }
+        }
+
+        // Accumulate into thread output
+        std::lock_guard<std::mutex> lock(outputMutex);
+        for (size_t i = 0; i < static_cast<size_t>(numSamples) * numChannels; ++i) {
+            threadOutputs[threadIdx][i] += localOutput[i];
+        }
+    };
+
+    // Handle section logging (single-threaded to avoid race conditions)
+    for (size_t i = 0; i < static_cast<size_t>(numSamples); ++i) {
         float t = state->currentTime + i / sampleRate;
-        float L = 0.0f, R = 0.0f, C = 0.0f, LFE = 0.0f, Ls = 0.0f, Rs = 0.0f;
-
-        // Stop playback after full duration or if interrupted
         if (t > fullDuration || !running) {
             state->playing = false;
             break;
         }
-
-        // Apply fade-in (0 to 5 seconds) and fade-out (last 5 seconds)
-        float fadeGain = 1.0f;
-        if (t < 5.0f) {
-            fadeGain = t / 5.0f; // Linear fade-in
-        } else if (t > fullDuration - 5.0f) {
-            fadeGain = (fullDuration - t) / 5.0f; // Linear fade-out
-        }
-
         if (state->currentSectionIdx < state->song.sections.size()) {
             const auto& section = state->song.sections[state->currentSectionIdx];
             if (t >= section.startTime) {
@@ -394,79 +485,28 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 state->currentSectionIdx++;
             }
         }
+    }
 
-        for (size_t partIdx = 0; partIdx < state->song.parts.size(); ++partIdx) {
-            auto& part = state->song.parts[partIdx];
-            auto& nextIdx = state->nextNoteIndices[partIdx];
-            auto& active = state->activeNotes[partIdx];
-
-            float pan = interpolateAutomation(t, part.panAutomation, part.pan);
-            float volume = interpolateAutomation(t, part.volumeAutomation, 0.5f);
-            float reverbMix = interpolateAutomation(t, part.reverbMixAutomation, part.reverbMix);
-
-            // Map pan to 5.1 channels
-            float leftGain = (pan <= 0.0f) ? 1.0f : 1.0f - pan;
-            float rightGain = (pan >= 0.0f) ? 1.0f : 1.0f + pan;
-            float surroundGain = 0.5f * (leftGain + rightGain);
-
-            float centerWeight = (part.instrument == "voice") ? 0.8f : 0.3f;
-            float lfeWeight = (part.instrument == "subbass" || part.instrument == "kick") ? 0.5f : 0.1f;
-            float sideWeight = (part.instrument == "guitar" || part.instrument == "syntharp") ? 0.6f : 0.4f;
-
-            // Schedule notes up to the full duration
-            while (nextIdx < part.notes.size() && part.notes[nextIdx].startTime <= t && active.size() < 16) {
-                const auto& note = part.notes[nextIdx];
-                float tailDuration = getTailDuration(part.instrument);
-                active.push_back({nextIdx, note.startTime, note.startTime + note.duration + tailDuration});
-                ++nextIdx;
-            }
-
-            for (auto it = active.begin(); it != active.end();) {
-                const auto& note = part.notes[it->noteIndex];
-                if (t <= it->endTime) {
-                    float noteTime = t - note.startTime;
-                    size_t sampleIndex = static_cast<size_t>(noteTime * sampleRate);
-                    const std::vector<float>& samples = Instruments::sampleManager.getSample(
-                        part.instrument, sampleRate, note.freq, note.duration, note.phoneme, note.open);
-                    float sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
-                    if (samples.empty()) {
-                        SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
-                    }
-                    sample *= note.volume * note.velocity * volume * fadeGain; // Apply fade
-                    if (part.useDistortion) {
-                        sample = state->distortions[partIdx].process(sample);
-                    }
-                    if (part.useReverb) {
-                        sample = state->reverbs[partIdx].process(sample * (1.0f - reverbMix)) + sample * reverbMix;
-                    }
-
-                    // Distribute to 5.1 channels
-                    L += sample * leftGain * sideWeight;
-                    R += sample * rightGain * sideWeight;
-                    C += sample * centerWeight;
-                    LFE += sample * lfeWeight;
-                    Ls += sample * surroundGain * sideWeight;
-                    Rs += sample * surroundGain * sideWeight;
-
-                    ++it;
-                } else {
-                    it = active.erase(it);
-                }
-            }
+    // Launch threads
+    std::vector<std::thread> threads;
+    size_t partsPerThread = (state->song.parts.size() + numThreads - 1) / numThreads;
+    for (size_t t = 0; t < numThreads; ++t) {
+        size_t startIdx = t * partsPerThread;
+        size_t endIdx = std::min(startIdx + partsPerThread, state->song.parts.size());
+        if (startIdx < state->song.parts.size()) {
+            threads.emplace_back(processParts, startIdx, endIdx, t, state->currentTime);
         }
+    }
 
-        if (isStereo) {
-            float L_out = L + 0.707f * C + 0.707f * LFE + 0.5f * Ls;
-            float R_out = R + 0.707f * C + 0.707f * LFE + 0.5f * Rs;
-            output[i * 2 + 0] = std::max(-1.0f, std::min(1.0f, L_out));
-            output[i * 2 + 1] = std::max(-1.0f, std::min(1.0f, R_out));
-        } else {
-            output[i * 6 + 0] = std::max(-1.0f, std::min(1.0f, L));
-            output[i * 6 + 1] = std::max(-1.0f, std::min(1.0f, R));
-            output[i * 6 + 2] = std::max(-1.0f, std::min(1.0f, C));
-            output[i * 6 + 3] = std::max(-1.0f, std::min(1.0f, LFE));
-            output[i * 6 + 4] = std::max(-1.0f, std::min(1.0f, Ls));
-            output[i * 6 + 5] = std::max(-1.0f, std::min(1.0f, Rs));
+    // Join threads
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // Sum thread outputs
+    for (const auto& tOutput : threadOutputs) {
+        for (size_t i = 0; i < static_cast<size_t>(numSamples) * numChannels; ++i) {
+            output[i] += tOutput[i];
         }
     }
 
