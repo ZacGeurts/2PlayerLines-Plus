@@ -23,7 +23,7 @@ There is a game.ini to modify settings.<BR />
 <BR />
 Below is the licensing.<BR />
 No liability if you use anything here. None of it can be sold commercially by anyone but me.<BR />
-How much does it cost? You are not allowed to sell it.<BR />
+How much does it cost? You are not allowed to sell it or distribute products from it.<BR />
 <BR />
 This license updates and the software and all iterations are covered by the latest version.<BR />
 This is not free software. If it is used for commercial use then it requires negotiable royalty (1%+).<BR />
