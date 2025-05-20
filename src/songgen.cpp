@@ -26,22 +26,24 @@ void handleSignal(int) {
 }
 
 void printHelp() {
-    std::cout << "Generates songs with up to 3 genres\n";
+    std::cout << "Generates songs\n";
     std::cout << "Examples:\n";
     std::cout << "  songgen rock\n";
-    std::cout << "  songgen jazz soul gospel\n";
+    std::cout << "  songgen jazz\n";
+	std::cout << " \n";
+	std::cout << "Playback\n";
     std::cout << "  songgen song1.song [--stereo]\n";
     std::cout << "Available genres:\n";
     std::cout << "  classical, jazz, pop, rock, techno, rap, blues, country, folk, reggae,\n";
     std::cout << "  metal, punk, disco, funk, soul, gospel, ambient, edm, latin, hiphop\n";
     std::cout << "Usage:\n";
-    std::cout << "  ./songgen [genre1] [genre2] [genre3]  # Generate a new song\n";
-    std::cout << "  ./songgen <filename>.song [--stereo]  # Play an existing song (5.1 or stereo)\n";
+    std::cout << "  ./songgen [genre]  # Generate a new song\n";
+    std::cout << "  ./songgen <filename>.song [--stereo]  # Play an existing song (5.1 or option stereo)\n";
     std::cout << "  ./songgen                            # Show this help message\n";
     std::cout << "\n";
     std::cout << "This makes song1.song if it does not exist then song2.song etc\n";
     std::cout << "Delete song2.song and next song created is song2.song assuming song1 exists\n";
-    std::cout << "You can keep only song3.song etc and it will not cause issues with playback in game\n";
+    std::cout << "You can keep only song3.song etc and it will not cause issues with playback with linesplus game\n";
     std::cout << "Missing song numbers are merely skipped.\n";
 }
 
@@ -104,6 +106,9 @@ SongData parseSongFile(const std::string& filename) {
             if (token == "Song:") {
                 std::getline(ss, song.title);
                 song.title = trim(song.title);
+            } else if (token == "Genres:") {
+                std::getline(ss, song.genres);
+                song.genres = trim(song.genres);
             } else if (token == "Sections:") {
                 ss >> expectedSections;
             } else if (token == "Section:") {
@@ -564,7 +569,10 @@ int main(int argc, char* argv[]) {
         // Generate the song with the first genre
         auto [title, parts, sections] = generator.generateSong(genres[0]);
         // Save the generated song to the file
-        generator.saveToFile(title, parts, sections, filename);
+		std::string genreStr(argv[1]);
+		std::string genreStrUpper = genreStr;
+		std::transform(genreStrUpper.begin(), genreStrUpper.end(), genreStrUpper.begin(), ::toupper);
+        generator.saveToFile(title, genreStrUpper, parts, sections, filename);
         // Verify the generated file
         std::ifstream checkFile(filename);
         if (!checkFile || checkFile.peek() == std::ifstream::traits_type::eof()) {
