@@ -359,6 +359,10 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     int numSamples = len / sizeof(float) / numChannels;
     float sampleRate = 44100.0f;
 
+    // Determine full playback duration (last section's end time + 5-second fade-out)
+    float fullDuration = state->song.sections.empty() ? state->song.duration : state->song.sections.back().endTime;
+    fullDuration += 5.0f; // Add 5-second fade-out
+
     // Clear output buffer
     std::fill(output, output + numSamples * numChannels, 0.0f);
 
@@ -366,11 +370,18 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
         float t = state->currentTime + i / sampleRate;
         float L = 0.0f, R = 0.0f, C = 0.0f, LFE = 0.0f, Ls = 0.0f, Rs = 0.0f;
 
-        // Extend song duration to accommodate longest tail
-        float maxTail = 3.0f; // Longest tail (cello)
-        if (t > state->song.duration + maxTail || !running) {
+        // Stop playback after full duration or if interrupted
+        if (t > fullDuration || !running) {
             state->playing = false;
             break;
+        }
+
+        // Apply fade-in (0 to 5 seconds) and fade-out (last 5 seconds)
+        float fadeGain = 1.0f;
+        if (t < 5.0f) {
+            fadeGain = t / 5.0f; // Linear fade-in
+        } else if (t > fullDuration - 5.0f) {
+            fadeGain = (fullDuration - t) / 5.0f; // Linear fade-out
         }
 
         if (state->currentSectionIdx < state->song.sections.size()) {
@@ -393,16 +404,16 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
             float volume = interpolateAutomation(t, part.volumeAutomation, 0.5f);
             float reverbMix = interpolateAutomation(t, part.reverbMixAutomation, part.reverbMix);
 
-            // Map pan to 5.1 channels (simplified spatialization)
+            // Map pan to 5.1 channels
             float leftGain = (pan <= 0.0f) ? 1.0f : 1.0f - pan;
             float rightGain = (pan >= 0.0f) ? 1.0f : 1.0f + pan;
-            float surroundGain = 0.5f * (leftGain + rightGain); // Surround channels get balanced contribution
+            float surroundGain = 0.5f * (leftGain + rightGain);
 
-            // Channel weights based on instrument type
             float centerWeight = (part.instrument == "voice") ? 0.8f : 0.3f;
             float lfeWeight = (part.instrument == "subbass" || part.instrument == "kick") ? 0.5f : 0.1f;
             float sideWeight = (part.instrument == "guitar" || part.instrument == "syntharp") ? 0.6f : 0.4f;
 
+            // Schedule notes up to the full duration
             while (nextIdx < part.notes.size() && part.notes[nextIdx].startTime <= t && active.size() < 16) {
                 const auto& note = part.notes[nextIdx];
                 float tailDuration = getTailDuration(part.instrument);
@@ -418,7 +429,10 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                     const std::vector<float>& samples = Instruments::sampleManager.getSample(
                         part.instrument, sampleRate, note.freq, note.duration, note.phoneme, note.open);
                     float sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
-                    sample *= note.volume * note.velocity * volume;
+                    if (samples.empty()) {
+                        SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
+                    }
+                    sample *= note.volume * note.velocity * volume * fadeGain; // Apply fade
                     if (part.useDistortion) {
                         sample = state->distortions[partIdx].process(sample);
                     }
@@ -442,13 +456,11 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
         }
 
         if (isStereo) {
-            // Downmix 5.1 to stereo
             float L_out = L + 0.707f * C + 0.707f * LFE + 0.5f * Ls;
             float R_out = R + 0.707f * C + 0.707f * LFE + 0.5f * Rs;
             output[i * 2 + 0] = std::max(-1.0f, std::min(1.0f, L_out));
             output[i * 2 + 1] = std::max(-1.0f, std::min(1.0f, R_out));
         } else {
-            // 5.1 output (channel order: L, R, C, LFE, Ls, Rs)
             output[i * 6 + 0] = std::max(-1.0f, std::min(1.0f, L));
             output[i * 6 + 1] = std::max(-1.0f, std::min(1.0f, R));
             output[i * 6 + 2] = std::max(-1.0f, std::min(1.0f, C));
