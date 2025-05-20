@@ -588,7 +588,7 @@ for (const auto& section : sections) {
     return {title, parts, sections};
 }
 
-        void saveToFile(const std::string& title, const std::vector<Part>& parts, const std::vector<Section>& sections, const std::string& filename) {
+        void saveToFile(const std::string& title, const std::string& genres, const std::vector<Part>& parts, const std::vector<Section>& sections, const std::string& filename) {
             ::SDL_Log("Saving song '%s' to file %s", title.c_str(), filename.c_str());
             std::ofstream out(filename);
             if (!out.is_open()) {
@@ -597,6 +597,8 @@ for (const auto& section : sections) {
             }
 
             out << "Song: " << title << "\n";
+			out << "Genres: " << genres << "\n";
+						
             out << "Sections: " << sections.size() << "\n";
             for (const auto& section : sections) {
                 out << "Section: " << section.name << " " << section.startTime << " " << section.endTime
@@ -780,14 +782,83 @@ for (const auto& section : sections) {
             return std::round(time / sixteenthNote) * sixteenthNote;
         }
 
-        std::string generateTitle() {
-            ::SDL_Log("Generating song title");
-            std::vector<std::string> adjectives = {"Cosmic", "Epic", "Mystic", "Vibrant", "Ethereal", "Sonic", "Radiant", "Dreamy", "Galactic", "Infinite"};
-            std::vector<std::string> nouns = {"Journey", "Wave", "Pulse", "Horizon", "Echo", "Symphony", "Orbit", "Dream", "Tide", "Spark"};
-            std::uniform_int_distribution<> adjDist(0, adjectives.size() - 1);
-            std::uniform_int_distribution<> nounDist(0, nouns.size() - 1);
-            return adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)];
-        }
+std::string generateTitle() {
+    ::SDL_Log("Generating song title");
+
+    // Word lists
+    std::vector<std::string> adjectives = {
+        "Cosmic", "Epic", "Mystic", "Vibrant", "Ethereal", "Sonic", "Radiant", "Dreamy", "Galactic", "Infinite",
+        "Lunar", "Stellar", "Velvet", "Crimson", "Azure", "Glimmering", "Haunted", "Flickering", "Blazing", "Serene",
+        "Twilight", "Neon", "Golden", "Silver", "Echoing", "Drifting", "Pulsing", "Shimmering", "Fading", "Rising",
+        "Wandering", "Spectral", "Celestial", "Primal", "Frozen", "Burning", "Silent", "Electric", "Magnetic", "Vivid",
+        "Hazy", "Distant", "Glowing", "Shadowy", "Crystal", "Tempest", "Sacred", "Wild", "Eternal", "Frenzied"
+    };
+    std::vector<std::string> nouns = {
+        "Journey", "Wave", "Pulse", "Horizon", "Echo", "Symphony", "Orbit", "Dream", "Tide", "Spark",
+        "Flame", "Void", "Star", "Shadow", "Dawn", "Dusk", "River", "Sky", "Abyss", "Light",
+        "Storm", "Breeze", "Path", "Vortex", "Glow", "Haze", "Mist", "Peak", "Field", "Ocean",
+        "Comet", "Moon", "Sun", "Rift", "Chasm", "Beacon", "Drift", "Surge", "Whisper", "Roar",
+        "Crest", "Valley", "Glint", "Shore", "Ember", "Frost", "Wind", "Cycle", "Ray", "Eclipse"
+    };
+    std::vector<std::string> verbs = {
+        "Chase", "Soar", "Burn", "Drift", "Rise", "Fade", "Glow", "Surge", "Wander", "Ignite",
+        "Pulse", "Shine", "Roar", "Sail", "Dance", "Climb", "Echo", "Blaze", "Spin", "Rush",
+        "Dive", "Bloom", "Forge", "Sing", "Break", "Fly", "Melt", "Twist", "Seek", "Burst"
+    };
+    std::vector<std::string> adverbs = {
+        "Boldly", "Softly", "Swiftly", "Silently", "Fiercely", "Gently", "Wildly", "Calmly", "Brightly", "Darkly",
+        "Freely", "Quietly", "Loudly", "Slowly", "Quickly", "Deeply", "Highly", "Vividly", "Truly", "Madly"
+    };
+    std::vector<std::string> prepositions = {
+        "Through", "Over", "Beyond", "Across", "Into", "Above", "Beneath", "Against", "Within", "Upon"
+    };
+
+    // Distributions for random selection
+    std::uniform_int_distribution<> adjDist(0, adjectives.size() - 1);
+    std::uniform_int_distribution<> nounDist(0, nouns.size() - 1);
+    std::uniform_int_distribution<> verbDist(0, verbs.size() - 1);
+    std::uniform_int_distribution<> advDist(0, adverbs.size() - 1);
+    std::uniform_int_distribution<> prepDist(0, prepositions.size() - 1);
+    std::uniform_int_distribution<> templateDist(0, 8); // 9 templates
+
+    // Select a random template
+    int templateId = templateDist(rng);
+    std::string title;
+
+    switch (templateId) {
+        case 0: // Adj Noun
+            title = adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)];
+            break;
+        case 1: // Verb the Noun
+            title = verbs[verbDist(rng)] + " the " + nouns[nounDist(rng)];
+            break;
+        case 2: // Adj Noun Prep Noun
+            title = adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)] + " " +
+                    prepositions[prepDist(rng)] + " " + nouns[nounDist(rng)];
+            break;
+        case 3: // Verb Adv
+            title = verbs[verbDist(rng)] + " " + adverbs[advDist(rng)];
+            break;
+        case 4: // Adj Noun Prep Adj Noun
+            title = adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)] + " " +
+                    prepositions[prepDist(rng)] + " " + adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)];
+            break;
+        case 5: // Noun Prep Noun
+            title = nouns[nounDist(rng)] + " " + prepositions[prepDist(rng)] + " " + nouns[nounDist(rng)];
+            break;
+        case 6: // Verb the Adj Noun
+            title = verbs[verbDist(rng)] + " the " + adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)];
+            break;
+        case 7: // Adj Verb Noun
+            title = adjectives[adjDist(rng)] + " " + verbs[verbDist(rng)] + " " + nouns[nounDist(rng)];
+            break;
+        case 8: // Adv Verb Noun
+            title = adverbs[advDist(rng)] + " " + verbs[verbDist(rng)] + " " + nouns[nounDist(rng)];
+            break;
+    }
+
+    return title;
+}
 
         float getRandomDuration(Genre g, float sectionProgress, float bpm) {
             if (!std::isfinite(bpm) || bpm <= 0.0f) {
