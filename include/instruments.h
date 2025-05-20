@@ -359,64 +359,61 @@ static float generateKickWave(float t, float freq, float dur) {
 }
 
 static float generateHiHatWave(float t, float freq, bool open, float dur) {
+    // Static instances to maintain state across samples
     static AudioUtils::RandomGenerator rng;
-    float release = open ? 0.8f : 0.1f; // Longer for open, short for closed
+    static AudioUtils::HighPassFilter openFilter(6000.0f, 0.707f, 44100.0f);  // Lower cutoff for open
+    static AudioUtils::HighPassFilter closedFilter(10000.0f, 0.707f, 44100.0f); // Higher cutoff for closed
+    static AudioUtils::Reverb reverb(0.02f, 0.2f, 0.15f, 44100.0f);            // Short, subtle reverb
+    static AudioUtils::Distortion dist(1.2f, 0.8f);                            // Light distortion
+
+    // Define release time to ensure sound stops
+    float release = open ? 1.5f : 0.2f;
     if (t > dur + release) {
-        return 0.0f; // Force zero output
+        return 0.0f; // Force zero output after duration + release
     }
 
-    // Envelope: tailored for short durations
-    float envDecay = open ? -10.0f * t / (dur * 4.0f) : -12.0f * t / (dur * 0.5f); // ~0.6s open, ~0.08s closed
-    float env = std::exp(envDecay);
-    if (open) {
-        env *= (1.0f + 0.1f * std::sin(2.0f * M_PI * 5.0f * t)); // Subtle shimmer for open
-    }
+    // Envelope with exponential decay
+    float decayTime = open ? 1.2f : 0.1f; // Longer decay for open, short for closed
+    float env = std::exp(-t / decayTime);
 
-    // Base frequency for tonal components
-    float baseFreq = (freq > 0.0f ? freq : 1000.0f); // Default 1 kHz if freq invalid
-    float filterFreq = baseFreq * 8.0f; // Center ~8 kHz for hi-hat
-    float filterQ = open ? 1.5f : 2.0f; // Broader for open, tighter for closed
+    // Transient: Sharp attack with fast decay
+    float transient = rng.generateWhiteNoise() * std::exp(-100.0f * t);
 
-    // Time-varying filter with slight sweep
-    float filterSweep = std::exp(-5.0f * t / (open ? dur * 2.0f : dur * 0.3f)); // Faster sweep for closed
-    filterFreq *= (0.8f + 0.2f * filterSweep); // Sweep down slightly
-    AudioUtils::BandPassFilter filter(filterFreq, filterQ, 44100.0f);
+    // Body: Mix of white and pink noise, filtered for high frequencies
+    float whiteNoise = rng.generateWhiteNoise();
+    float pinkNoise = rng.generatePinkNoise();
+    float noise = 0.7f * whiteNoise + 0.3f * pinkNoise; // More white for brightness
+    AudioUtils::HighPassFilter& filter = open ? openFilter : closedFilter;
+    float body = filter.process(noise) * env;
 
-    // Noise components
-    float pseudoVelocity = 0.7f; // Placeholder (adjust with actual velocity if available)
-    float mainNoise = rng.generatePinkNoise() * 0.5f * pseudoVelocity; // Pink noise for warmth
-    mainNoise = filter.process(mainNoise);
-
-    // Additional high-passed noise for sizzle
-    float sizzleFreq = open ? 6000.0f : 8000.0f; // Lower for open, higher for closed
-    AudioUtils::HighPassFilter sizzleFilter(sizzleFreq, 1.0f, 44100.0f);
-    float sizzleNoise = rng.generatePinkNoise() * (open ? 0.3f : 0.15f) * pseudoVelocity;
-    sizzleNoise = sizzleFilter.process(sizzleNoise);
-
-    // Tonal components: sine partials for metallic ring
+    // Tonal: Inharmonic sine waves for metallic resonance
+    float baseFreq = 2500.0f; // Fixed base frequency for consistency
     float tonal = 0.0f;
-    tonal += 0.1f * std::sin(2.0f * M_PI * baseFreq * t) * (open ? 0.6f : 1.0f); // Fundamental
-    tonal += 0.07f * std::sin(2.0f * M_PI * 2.0f * baseFreq * t) * (open ? 0.8f : 0.9f); // 2nd partial
-    tonal += 0.03f * std::sin(2.0f * M_PI * 3.0f * baseFreq * t) * (open ? 1.0f : 0.7f); // 3rd partial
-    tonal *= std::exp(-8.0f * t / (open ? dur * 2.0f : dur * 0.4f)); // Faster decay for closed
+    float freqs[3] = {baseFreq, baseFreq * 1.618f, baseFreq * 2.618f}; // Golden ratio for inharmonicity
+    for (int i = 0; i < 3; i++) {
+        float phase = 2.0f * M_PI * freqs[i] * t;
+        tonal += 0.3f * std::sin(phase);
+    }
+    if (open) {
+        // Add shimmer to open hi-hat with amplitude modulation
+        float lowFreqNoise = rng.generatePinkNoise() * 0.1f;
+        tonal *= (1.0f + 0.2f * lowFreqNoise);
+    }
+    tonal *= env;
 
-    // Combine components
-    float output = env * (mainNoise + sizzleNoise + tonal);
+    // Mix components
+    float output = transient + 0.5f * body + 0.5f * tonal;
 
-    // Soft distortion for grit
-    AudioUtils::Distortion dist(1.2f, 0.9f);
+    // Apply effects
+    output = reverb.process(output);
     output = dist.process(output);
 
-    // Skip reverb since UseReverb: false
-    output *= 0.7f; // Lower gain to prevent clipping
+    // Scale amplitude and clip to [-1, 1]
+    output *= 0.8f;
     output = std::max(-1.0f, std::min(1.0f, output));
 
-    // Log non-zero output
-    if (t > dur + release - 0.01f && std::abs(output) > 0.001f) {
-        SDL_Log("Non-zero output at note end: %.6f", output);
-    }
+	output *= 0.3f; // I add these for final volume adjustments
 
-	output *= 5.0f;
     return output;
 }
 
@@ -720,6 +717,8 @@ static float generateCymbalWave(float t, float freq, float dur) {
 
     // Clip output to prevent distortion
     output = std::max(-1.0f, std::min(1.0f, output));
+	
+	output *= 0.3f; // I add these for final volume adjustments
 
     return output;
 }
@@ -1006,50 +1005,76 @@ static float generateGuitarWave(float sampleRate, float freq, float time, float 
     float x1 = state1.delayLine[readPos];
     float x2 = state2.delayLine[readPos];
     float output = 0.5f * (x1 + x2);
-    static AudioUtils::LowPassFilter feedbackLPF1(1200.0f, sampleRate);
-    static AudioUtils::LowPassFilter feedbackLPF2(1200.0f, sampleRate);
-    float cutoff = 1200.0f - 800.0f * (time / (dur + 3.0f));
-    cutoff = std::max(400.0f, cutoff);
+
+    // Warmer, stable tone
+    static AudioUtils::LowPassFilter feedbackLPF1(800.0f, sampleRate);
+    static AudioUtils::LowPassFilter feedbackLPF2(800.0f, sampleRate);
+    float cutoff = 800.0f; // Fixed cutoff for natural decay
     feedbackLPF1.setCutoff(cutoff);
     feedbackLPF2.setCutoff(cutoff);
     float y1 = feedbackLPF1.process(x1);
     float y2 = feedbackLPF2.process(x2);
-    float pitchVariation = 1.0f - 0.07f * (time / (dur + 3.0f));
-    pitchVariation *= 1.0f + 0.005f * std::sin(2.0f * M_PI * 0.6f * time);
-    float fretNoise = rng.generatePinkNoise() * std::exp(-50.0f * time) * 0.05f;
-    float pickScrape = (time < 0.008f) ? rng.generateWhiteNoise() * 0.1f : 0.0f;
+
+    // Minimal pitch variation, no vibrato
+    float pitchVariation = 1.0f - 0.05f * (time / (dur + 3.0f)); // Subtle detune only
+
+    // Strong pluck, minimal noise
+    float fretNoise = rng.generatePinkNoise() * std::exp(-60.0f * time) * 0.02f;
+    float pickScrape = (time < 0.012f) ? rng.generateWhiteNoise() * 0.15f : 0.0f;
+
+    // Feedback for natural decay
     state1.delayLine[state1.writePos] = (y1 * 0.995f + fretNoise + pickScrape) * pitchVariation;
-    state2.delayLine[state2.writePos] = (y2 * 0.99f + fretNoise * 0.8f + pickScrape * 0.8f) * pitchVariation;
+    state2.delayLine[state2.writePos] = (y2 * 0.990f + fretNoise * 0.8f + pickScrape * 0.8f) * pitchVariation;
     state1.writePos = (state1.writePos + 1) % state1.delayLineSize;
     state2.writePos = (state2.writePos + 1) % state2.delayLineSize;
-    float attack = 0.008f, decay = 0.3f, sustain = 0.3f, release = 3.0f, env;
+
+    // Natural decay envelope
+    float attack = 0.008f, decay = 0.2f, sustain = 0.5f, release = 1.5f, env;
     if (time < attack) {
         env = time / attack;
     } else if (time < attack + decay) {
         env = 1.0f - (time - attack) / decay * (1.0f - sustain);
     } else if (time < dur) {
-        env = sustain + 0.1f * std::sin(2.0f * M_PI * 2.0f * time);
+        env = sustain * std::exp(-2.0f * (time - attack - decay) / dur);
     } else if (time < dur + release) {
-        env = sustain * std::exp(-(time - dur) / release);
+        env = sustain * std::exp(-4.0f * (time - dur) / release);
     } else {
         env = 0.0f;
     }
+
+    // Resonance for body
     float resonanceFreq = 300.0f;
     float resonanceFilter = std::sin(2.0f * M_PI * resonanceFreq * time) * 0.5f + 0.5f;
-    float resonanceNoise = rng.generatePinkNoise() * resonanceFilter * 0.1f * (time < dur ? 1.0f : std::exp(-(time - dur) / release));
+    float resonanceNoise = rng.generatePinkNoise() * resonanceFilter * 0.06f * (time < dur ? 1.0f : std::exp(-(time - dur) / release));
     output += resonanceNoise;
-    float harmonic1 = 0.7f * std::cos(2.0f * M_PI * freq * pitchVariation * time) * std::exp(-1.0f * time);
-    float harmonic2 = 0.4f * std::cos(2.0f * M_PI * 2.0f * freq * pitchVariation * time) * std::exp(-1.5f * time);
-    float harmonic3 = 0.2f * std::cos(2.0f * M_PI * 3.0f * freq * pitchVariation * time) * std::exp(-2.0f * time);
-    float harmonic4 = 0.1f * std::cos(2.0f * M_PI * 4.0f * freq * pitchVariation * time) * std::exp(-2.5f * time);
+
+    // Tamed harmonics with faster decay
+    float harmonic1 = 0.3f * std::cos(2.0f * M_PI * freq * pitchVariation * time) * std::exp(-1.5f * time);
+    float harmonic2 = 0.15f * std::cos(2.0f * M_PI * 2.0f * freq * pitchVariation * time) * std::exp(-2.0f * time);
+    float harmonic3 = 0.08f * std::cos(2.0f * M_PI * 3.0f * freq * pitchVariation * time) * std::exp(-2.5f * time);
+    float harmonic4 = 0.02f * std::cos(2.0f * M_PI * 4.0f * freq * pitchVariation * time) * std::exp(-3.0f * time);
     output += (harmonic1 + harmonic2 + harmonic3 + harmonic4) * env;
+
     output = (output + fretNoise + pickScrape) * env;
-    static AudioUtils::LowPassFilter bodyResonance(1200.0f, sampleRate);
+
+    // Warmer body resonance
+    static AudioUtils::LowPassFilter bodyResonance(800.0f, sampleRate);
     output = bodyResonance.process(output);
-    static AudioUtils::Reverb reverb(0.1f, 0.5f, 0.15f, sampleRate);
+
+    // Gritty overdrive
+    static AudioUtils::Distortion distortion(1.7f, 0.7f);
+    output = distortion.process(output);
+
+    // High-pass to avoid bass overlap
+    static AudioUtils::HighPassFilter outputHPF(100.0f, 0.707f, sampleRate);
+    output = outputHPF.process(output);
+
+    // Subtle reverb
+    static AudioUtils::Reverb reverb(0.1f, 0.3f, 0.1f, sampleRate);
     output = reverb.process(output);
+
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= 0.2f; // Balanced gain with bass
     return output;
 }
 
@@ -1362,6 +1387,7 @@ static float generateOrganWave(float sampleRate, float freq, float time, float d
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
     output *= 0.25f;
+	output *= 0.3f;
     return output;
 }
 
