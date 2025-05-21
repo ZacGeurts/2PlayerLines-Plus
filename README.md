@@ -3,6 +3,7 @@
 ![Screenshot](images/linesplus.png)<BR />
 A 2 player (controllers) line game.<BR />
 Quickstart: Steer with triggers and press buttons.<BR />
+If you have Linux you can grab the zip from the releases on the top right.<BR />
 Songgen is interesting on its own.<BR />
 Songview I uploaded on accident and can be ignored. Might make a editor for the .song files.<BR />
 <BR />
