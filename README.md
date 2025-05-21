@@ -1,4 +1,6 @@
 # Lines Plus
+![Banner](images/banner.png)<BR />
+![Screenshot](images/linesplus.png)<BR />
 A 2 player (controllers) line game.<BR />
 Songgen is interesting on its own.<BR />
 Songview I uploaded on accident and can be ignored. Might make a editor for the .song files.<BR />
