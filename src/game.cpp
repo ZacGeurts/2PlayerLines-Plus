@@ -67,7 +67,7 @@ Game::Game(const GameConfig& config)
 {
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
     window = SDL_CreateWindow("2PlayerLines-Plus", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              config.WIDTH, config.HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+                              config.WIDTH, config.HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_FULLSCREEN);
     if (!window) {
         if (config.ENABLE_DEBUG) SDL_Log("Failed to create window: %s", SDL_GetError());
         throw std::runtime_error("Window creation failed");
