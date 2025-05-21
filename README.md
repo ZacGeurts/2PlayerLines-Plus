@@ -4,7 +4,7 @@
 A 2 player (controllers) line game.<BR />
 Quickstart: Steer with triggers and press buttons.<BR />
 If you have Linux you can grab the zip from the releases on the top right.<BR />
-Songgen makes and plays .song files.<BR />
+Songgen creates and plays music .song files.<BR />
 Songview is broken. Editor player for the .song files.<BR />
 <BR />
 M starts and stops the music.
