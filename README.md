@@ -46,7 +46,8 @@ The generator is under somewhat constant update while I iron out code.<BR />
 The goal is to have a generator that is more or less hardcoded for modification rather than the ghost of AI just spitting out music.<BR />
 How does it work? ./songgen<BR />
 Non-linesplus files - songgen.h - makes structured songs (WIP). songgen.cpp reads .song format and plays using the instruments file. instruments.h intruments.h.<BR />
-<BR />TODO: Would benefit greatly with compression (500KB to 50KB per .song)).<BR /><BR />
+<BR />TODO: Would benefit greatly with compression (500KB to 50KB per .song)).<BR />
+I mean like ZIP compression or something open source. Text files compress to like 10% but I still read them with a text editor, so slows me down.<BR /><BR />
 Type `make` to build linesplus and songgen. Needs OpenGL (Mesa)) and SDL2.<BR />
 Type `make songgen` if you just want to see songgen build. Needs OpenGL (Mesa) and SDL2.<BR />
 Type `make clean` before rebuilding.<BR />
