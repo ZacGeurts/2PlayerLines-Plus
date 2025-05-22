@@ -58,15 +58,12 @@ void CircleManager::updateCircles(float dt, std::vector<Circle>& circles, std::m
 }
 
 void CircleManager::clearTrails(const std::vector<Circle>& circles, Player& player1, Player& player2) {
-    auto clearTrail = [&](std::vector<Vec2>& trail, const Circle& circle) {
+    auto clearTrail = [this](std::vector<Vec2>& trail, const Circle& circle) {
         std::vector<Vec2> newTrail;
-        bool insideCircle = false;
         for (size_t i = 0; i < trail.size(); ++i) {
             bool currentInside = (trail[i] - circle.pos).magnitude() < circle.radius;
             if (!currentInside) {
                 newTrail.push_back(trail[i]);
-            } else {
-                insideCircle = true;
             }
             // If transitioning from outside to inside or vice versa, add boundary points
             if (i < trail.size() - 1) {
