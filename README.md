@@ -9,6 +9,7 @@ Songgen creates and plays music .song files.<BR />
 Type `make` to build linesplus and songgen. Needs OpenGL (Mesa) and SDL2.<BR />
 `./linesplus` or use icon to play<BR />
 `./songgen` from a terminal to use songgen<BR />
+`Makefile` has more information if you open it with a text editor.<BR />
 <BR />
 Type `make songgen` if you just want to use songgen build.<BR />
 Type `make clean` before rebuilding.<BR />
