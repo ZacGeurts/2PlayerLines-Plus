@@ -1,6 +1,7 @@
 # Lines Plus
 ![Banner](images/banner.png)<BR />
 ![Screenshot](images/linesplus.png)<BR />
+This software is not free for profit. (see below)<BR />
 A 2 player (controllers) line game.<BR />
 Quickstart: Steer with triggers and press buttons.<BR />
 If you have Linux you can grab the zip from the releases on the top right.<BR />
