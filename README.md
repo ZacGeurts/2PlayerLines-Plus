@@ -5,7 +5,13 @@ A 2 player (controllers) line game.<BR />
 Quickstart: Steer with triggers and press buttons.<BR />
 If you have Linux you can grab the zip from the releases on the top right.<BR />
 Songgen creates and plays music .song files.<BR />
-Songview is broken. Editor player for the .song files.<BR />
+<BR />
+Type `make` to build linesplus and songgen. Needs OpenGL (Mesa) and SDL2.<BR />
+`./linesplus` or use icon to play<BR />
+`./songgen` from a terminal to use songgen<BR />
+<BR />
+Type `make songgen` if you just want to use songgen build.<BR />
+Type `make clean` before rebuilding.<BR />
 <BR />
 M starts and stops the music.
 Survivor gets 3 points.<BR />
@@ -21,9 +27,9 @@ You get one 2 second invincibility and invisibility per round by pressing A (X).
 Use this to test your opponent memory and time a trap.<BR />
 Beware, they can counter with their own.<BR />
 B X Y or circle square triangle pauses during gameplay.<BR />
-Q or ESC quits<BR />
+ESC quits<BR />
 Win condition is 50 points for a Set. Modify game.ini for additional options.<BR />
-There is a game.ini to modify settings.<BR />
+There is a game.ini file to modify settings.<BR />
 <BR />
 Below is the licensing.<BR />
 No liability if you use anything here. None of it can be sold commercially by anyone but me.<BR />
@@ -40,23 +46,23 @@ Royalties are required for songgen.cpp songgen.h and instruments.h instruments.d
 The other linesplus code is free and cannot be resold.<BR />
 Interested parties can find my contact information at https://github.com/ZacGeurts<BR />
 <BR />
-Why is this not free? Because Lines Plus is 3% of the product. The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
+The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
 All the songs in the universe? No way, that would be crazy. It does not sing like an artist or bang on a cooking pot.<BR />
 Somtimes sounds like it. I am making the instruments.h as a side project.<BR />
-It is difficult to add new instruments accurately. Many are progressing.<BR />
-The generator is under somewhat constant update while I iron out code.<BR />
-The goal is to have a generator that is more or less hardcoded for modification rather than the ghost of AI just spitting out music.<BR />
-How does it work? ./songgen<BR />
-Non-linesplus files - songgen.h - makes structured songs (WIP). songgen.cpp reads .song format and plays using the instruments file. instruments.h intruments.h.<BR />
-<BR />TODO: Would benefit greatly with compression (500KB to 50KB per .song)).<BR />
-I mean like ZIP compression or something open source. Text files compress to like 10% but I still read them with a text editor, so slows me down.<BR /><BR />
-Type `make` to build linesplus and songgen. Needs OpenGL (Mesa)) and SDL2.<BR />
-Type `make songgen` if you just want to see songgen build. Needs OpenGL (Mesa) and SDL2.<BR />
-Type `make clean` before rebuilding.<BR />
-`./linesplus`<BR /><BR />
-The new songview might cause build issues due to additional dependancies.<BR />
-`make linesplus`<BR />
-`make songgen`<BR />
-Build them seperate (like above) if you experience build issues.<BR />
-`make songview` builds, but currently has a broken display.<BR />
-If you still have issues try a makefile from before May 19, 2025.
+Space is infinite, matter is not. Music has rules (tempo, beats per minute, etc) and random noise is not music.<BR />
+How does it work? `./songgen` from a terminal.<BR />
+<BR />
+Test your instrment clout in instruments.h. Copy generateViolinWave code block and tell it what you do not like. Somethings like too flat, too wobbly, whatever<BR />
+Paste the new code block back in (save) and `make clean` then `make` to have your new instrument ready to hear.<BR />
+Change song1.song Instrment: to violin and `./songgen song1.song` to hear it.<BR />
+<BR />
+If you can make money with it, keep your bro in mind.<BR />
+This is not free for commercial use, and if you update my base, it is subject to terms if you try to profit.<BR />
+In short, you either pay me or you give it away for free.<BR />
+If you give it away free, and someone makes money off it, they have to pay me.<BR />
+If you make a free project, then be clear that it is using non free software.<BR />
+<BR />
+# Songgen files:
+songgen.h - makes structured songs<BR />
+songgen.cpp - reads .song format and plays using the instruments file<BR />
+instruments.h is intruments.h.<BR />
