@@ -1,3 +1,4 @@
+<div style="background-color: black">
 # Lines Plus
 ![Banner](images/banner.png)<BR />
 ![Screenshot](images/linesplus.png)<BR />
@@ -35,6 +36,7 @@ ESC quits<BR />
 Win condition is 50 points for a Set. Modify game.ini for additional options.<BR />
 There is a game.ini file to modify settings.<BR />
 <BR />
+</div>
 Below is the licensing.<BR />
 No liability if you use anything here. None of it can be sold commercially by anyone but me.<BR />
 How much does it cost? You are not allowed to sell it or distribute commercial products from it.<BR />
