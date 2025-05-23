@@ -30,7 +30,7 @@ You get one 2 second invincibility and invisibility per round by pressing A (X).
 Use this to test time and maybe ...<BR />
 Beware, they can counter with their own.<BR />
 B X Y or circle square triangle pauses during gameplay.<BR />
-I play pauses are cool and they work on both controllers.<BR />
+I play pauses are free and they work on both controllers.<BR />
 ESC quits<BR />
 Win condition is 50 points for a Set. Modify game.ini for additional options.<BR />
 There is a game.ini file to modify settings.<BR />
