@@ -48,7 +48,7 @@ Royalties are required for songgen.cpp songgen.h and instruments.h instruments.d
 The other linesplus code is free and cannot be resold.<BR />
 Interested parties can find my contact information at https://github.com/ZacGeurts<BR />
 <BR />
-The real meat is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
+Songgen is the songgen that pretty much makes more songs than grains of sand in the universe.<BR />
 All the songs in the universe? No way, that would be crazy. It does not sing like an artist or bang on a cooking pot.<BR />
 Somtimes sounds like it. I am making the instruments.h as a side project.<BR />
 Space is infinite, matter is not. Music has rules (tempo, beats per minute, etc) and random noise is not music.<BR />
