@@ -18,8 +18,9 @@ Type `make clean` before rebuilding.<BR />
 M starts and stops the music.
 Survivor gets 3 points.<BR />
 Squares are worth 1 point.<BR />
-Do not collide with other lines or (yellow) circles with your head.<BR />
-Bouncing circles erase lines and another appears every 5 seconds with a short no collision (magenta).<BR />
+
+Do not collide with other lines or ($${\color{yellow}Yellow}$$) circles with your head.<BR />
+Bouncing circles erase lines and another appears every 5 seconds with a short no collision ($${\color{magenta}Magenta}$$).<BR />
 You are invincible until first move unless you hit the wall on the other side.<BR />
 M starts and stops the music. I had a working ai.h. Tell it to prioritize the green square.<BR />
 F toggles fullscreen. M starts and stops the music.<BR />
