@@ -23,12 +23,13 @@ Bouncing circles erase lines and another appears every 5 seconds with a short no
 You are invincible until first move unless you hit the wall on the other side.<BR />
 M starts and stops the music. I had a working ai.h. Tell it to prioritize the green square.<BR />
 F toggles fullscreen. M starts and stops the music.<BR />
-1 and 2 will eventually toggle AI and 2 player. I had a smarter AI that beat a human, but I broke it when it could not beat me.<BR />
+1 and 2 keys toggle AI and 2 player. I had a smarter ai.h ai.cpp that beat a human, but I broke it when it could not beat me.<BR />
 Steer with controller triggers.<BR />
 You get one 2 second invincibility and invisibility per round by pressing A (X).<BR />
-Use this to test your opponent memory and time a trap.<BR />
+Use this to test time and maybe ...<BR />
 Beware, they can counter with their own.<BR />
 B X Y or circle square triangle pauses during gameplay.<BR />
+I play pauses are cool and they work on both controllers.<BR />
 ESC quits<BR />
 Win condition is 50 points for a Set. Modify game.ini for additional options.<BR />
 There is a game.ini file to modify settings.<BR />
