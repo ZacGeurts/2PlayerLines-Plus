@@ -1,4 +1,3 @@
-<div style="background-color: black">
 # Lines Plus
 ![Banner](images/banner.png)<BR />
 ![Screenshot](images/linesplus.png)<BR />
@@ -28,7 +27,7 @@ F toggles fullscreen. M starts and stops the music.<BR />
 1 and 2 keys toggle AI and 2 player. I had a smarter ai.h ai.cpp that beat a human, but I broke it when it could not beat me.<BR />
 Steer with controller triggers.<BR />
 You get one 2 second invincibility and invisibility per round by pressing A (X).<BR />
-Use this to test time and maybe ...<BR />
+Use this to jump some time.<BR />
 Beware, they can counter with their own.<BR />
 B X Y or circle square triangle pauses during gameplay.<BR />
 I play pauses are free and they work on both controllers.<BR />
@@ -36,7 +35,7 @@ ESC quits<BR />
 Win condition is 50 points for a Set. Modify game.ini for additional options.<BR />
 There is a game.ini file to modify settings.<BR />
 <BR />
-</div>
+<BR />
 Below is the licensing.<BR />
 No liability if you use anything here. None of it can be sold commercially by anyone but me.<BR />
 How much does it cost? You are not allowed to sell it or distribute commercial products from it.<BR />
