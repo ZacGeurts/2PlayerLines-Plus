@@ -85,7 +85,7 @@ SongData parseSongFile(const std::string& filename) {
     song.rootFreq = 440.0f;
     song.scaleName = "major";
     song.duration = 180.0f;
-    song.channels = 6;
+    song.channels = 8; // SDL Cap 6.1 is 7
     song.parts.reserve(7);
     song.sections.reserve(9);
 
@@ -244,7 +244,7 @@ SongData parseSongFile(const std::string& filename) {
     }
     in.close();
 
-    // Validate parsed data
+    // Validate parsed data - ignore me
     if (song.sections.empty()) {
         SDL_Log("No sections parsed, adding default section");
         song.sections.emplace_back("Default", 0.0f, song.duration, 0.0f);
@@ -260,6 +260,7 @@ SongData parseSongFile(const std::string& filename) {
         SDL_Log("No genres parsed, using default");
         song.genres = "Unknown";
     }
+	// back to fun stuff
 
     // Validate scaleName against known scales
     static const std::set<std::string> validScales = {
@@ -369,22 +370,26 @@ float interpolateAutomation(float t, const std::vector<std::pair<float, float>>&
     return defaultValue;
 }
 
+// I think it calculates somewhere using the 1.5 in the generation
 float getTailDuration(const std::string& instrument) {
-    if (instrument == "cymbal") return 2.0f;
+	// distance in length a note gets to be before cut off
+    if (instrument == "cymbal") return 1.5f; // I think 1.5 is cap
     if (instrument == "guitar") return 1.5f;
-    if (instrument == "syntharp") return 1.2f;
-    if (instrument == "subbass") return 0.8f;
-    if (instrument == "kick") return 0.5f;
-    if (instrument == "snare") return 0.6f;
-    if (instrument == "piano") return 2.0f;
-    if (instrument == "violin") return 2.5f;
-    if (instrument == "cello") return 3.0f;
-    if (instrument == "marimba") return 1.0f;
-    if (instrument == "steelguitar") return 1.8f;
-    if (instrument == "sitar") return 2.0f;
+    if (instrument == "syntharp") return 1.5f;
+    if (instrument == "subbass") return 1.5f;
+    if (instrument == "kick") return 1.5f;
+    if (instrument == "snare") return 1.5f;
+    if (instrument == "piano") return 1.5f;
+    if (instrument == "violin") return 1.5f;
+    if (instrument == "cello") return 1.5f;
+    if (instrument == "marimba") return 1.5f;
+    if (instrument == "steelguitar") return 1.5f;
+    if (instrument == "sitar") return 1.5f;
     return 1.5f; // Default for other instruments
+	// songgen.cpp is configured for 1.5 - fix it first - expert project ^ 2.0 cymbals
 }
 
+// makes speakers move below
 void audioCallback(void* userdata, Uint8* stream, int len) {
     PlaybackState* state = static_cast<PlaybackState*>(userdata);
     float* output = reinterpret_cast<float*>(stream);
@@ -559,7 +564,7 @@ void playSong(const std::string& filename, bool forceStereo) {
     SDL_zero(spec);
     spec.freq = 44100;
     spec.format = AUDIO_F32;
-    spec.channels = forceStereo ? 2 : 6;
+    spec.channels = forceStereo ? 2 : 8;
     spec.samples = 1024;
     spec.callback = audioCallback;
 
@@ -598,6 +603,7 @@ void playSong(const std::string& filename, bool forceStereo) {
     SDL_Log("Playback stopped: %s at timestamp %.2f", running ? "Song completed" : "User interrupted", state.currentTime);
 }
 
+// dunno
 int main(int argc, char* argv[]) {
     if (argc == 1) {
         printHelp();

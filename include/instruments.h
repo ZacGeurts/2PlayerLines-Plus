@@ -730,6 +730,7 @@ static float generateCymbalWave(float t, float freq, float dur) {
     return output;
 }
 
+// forgot why I asked for this
 struct VocalState {
     float current_freq = 0.0f;
     float current_dur = 0.0f;
@@ -739,6 +740,7 @@ struct VocalState {
     float prev_time = -1.0f;
 };
 
+// pick new voices, I think they should seperate further
 static float generateVocalWave(float t, float freq, int phoneme, float dur, int depth) {
     static AudioUtils::RandomGenerator rng;
     static VocalState male_state;
@@ -1035,6 +1037,7 @@ static float generateVocalWave(float t, float freq, int phoneme, float dur, int 
     return output;
 }
 
+// my Dad picked the flute and I messed with 1.5
 static float generateFluteWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter breathFilter(1600.0f, 300.0f, 44100.0f); // Lower, narrower for natural breath
@@ -1119,6 +1122,7 @@ static float generateFluteWave(float t, float freq, float dur) {
     return output;
 }
 
+// crank this one up
 static float generateTrumpetWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter breathFilter(2500.0f, 600.0f, 44100.0f); // Breath noise filter
@@ -1202,6 +1206,7 @@ static float generateTrumpetWave(float t, float freq, float dur) {
     return output;
 }
 
+// guitar
 static float generateBassWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     if (!std::isfinite(sampleRate) || sampleRate <= 0.0f || !std::isfinite(freq) || freq <= 0.0f) {
@@ -1326,6 +1331,7 @@ static float generateBassWave(float sampleRate, float freq, float time, float du
     return output;
 }
 
+// room for improvement
 static float generateGuitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     if (!std::isfinite(sampleRate) || sampleRate <= 0.0f || !std::isfinite(freq) || freq <= 0.0f) {
@@ -1432,6 +1438,7 @@ static float generateGuitarWave(float sampleRate, float freq, float time, float 
     return output;
 }
 
+// room for improvement
 static float generateSaxophoneWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter breathFilter(2500.0f, 600.0f, sampleRate); // Breath noise filter
@@ -1513,6 +1520,7 @@ static float generateSaxophoneWave(float sampleRate, float freq, float time, flo
     return output;
 }
 
+// gl
 static float generatePianoWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter stringFilter(1600.0f, 44100.0f); // Lowered cutoff for warmth
@@ -1624,6 +1632,7 @@ static float generatePianoWave(float sampleRate, float freq, float time, float d
     return output;
 }
 
+// room for improvement. Worked from alto Sax.
 static float generateViolinWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter bowFilter(2500.0f, 0.5f, 44100.0f);
@@ -1684,6 +1693,7 @@ static float generateViolinWave(float sampleRate, float freq, float time, float 
     return output;
 }
 
+// might have blow out somewhere but has strong notes.
 static float generateOrganWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter windFilter(1200.0f, 0.6f, 44100.0f);
@@ -1746,6 +1756,7 @@ static float generateOrganWave(float sampleRate, float freq, float time, float d
     return output;
 }
 
+// room for improvement
 static float generateCelloWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter bowFilter(1800.0f, 0.6f, 44100.0f);
@@ -1802,10 +1813,11 @@ static float generateCelloWave(float sampleRate, float freq, float time, float d
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= 0.25f; // These are added to adjust this instrument volume	
     return output;
 }
 
+// more this
 static float generateMarimbaWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter barFilter(1500.0f, 44100.0f);
@@ -1861,10 +1873,11 @@ static float generateMarimbaWave(float sampleRate, float freq, float time, float
     output *= env;
     output = reverb.process(output); // Subtle reverb for resonance
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= 0.7f; // These are added to adjust this instrument volume	
     return output;
 }
 
+// I hit the volume hard
 static float generateSteelGuitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter stringFilter(2000.0f, 44100.0f);
@@ -1922,10 +1935,11 @@ static float generateSteelGuitarWave(float sampleRate, float freq, float time, f
     output = (output + slideNoise) * env;
     output = reverb.process(output); // Moderate reverb for ambiance
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= 0.1f; // These are added to adjust this instrument volume	
     return output;
 }
 
+// seems accurate for a tone generator - challenge you to do better
 static float generateSitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter stringFilter(2500.0f, 44100.0f);
@@ -1995,7 +2009,7 @@ static float generateSitarWave(float sampleRate, float freq, float time, float d
     output = (output + buzz) * env;
     output = reverb.process(output); // Reverb for depth
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= 0.25f; // These are added to adjust this instrument volume	
     return output;
 }
 
