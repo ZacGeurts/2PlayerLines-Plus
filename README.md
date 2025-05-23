@@ -24,7 +24,7 @@ Squares are worth 1 point.<BR />
 Do not collide with other lines or ($${\color{yellow}Yellow}$$) circles with your head.<BR />
 Bouncing circles erase lines and another appears every 5 seconds with a short no collision ($${\color{magenta}Magenta}$$).<BR />
 You are invincible until first move unless you hit the wall on the other side.<BR />
-M starts and stops the music. I had a working ai.h. Tell it to prioritize the green square.<BR />
+M starts and stops the music. I had a working ai.h. Tell it to prioritize the ($${\color{green}Green}$$) square.<BR />
 F toggles fullscreen. M starts and stops the music.<BR />
 1 and 2 keys toggle AI and 2 player. I had a smarter ai.h ai.cpp that beat a human, but I broke it when it could not beat me.<BR />
 Steer with controller triggers.<BR />
