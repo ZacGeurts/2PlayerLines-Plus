@@ -25,7 +25,6 @@ struct GameConfig {
     float EXPLOSION_DURATION = 1.0f;
     float LASER_ZAP_DURATION = 0.5f;
     float WINNER_VOICE_DURATION = 1.0f;
-    float TECHNO_LOOP_DURATION = -1.0f;
     float GREEN_SQUARE_SIZE = 80.0f;
     float COLLECTIBLE_SIZE = 80.0f;
     float EXPLOSION_MAX_RADIUS = 20.0f;
@@ -37,7 +36,7 @@ struct GameConfig {
     bool ENABLE_DEBUG = true;
     float COLLECT_COOLDOWN = 0.5f;
     float FLASH_COOLDOWN = 2.5f;
-    float CIRCLE_SPAWN_INTERVAL = 5.0f; // Updated to 5 seconds
+    float CIRCLE_SPAWN_INTERVAL = 5.0f;
 };
 
 struct Vec2 {
@@ -127,15 +126,6 @@ struct BoopAudioData {
     const GameConfig* config;
     float t;
     AudioManager* manager;
-};
-
-struct TechnoAudioData {
-    SDL_AudioDeviceID deviceId;
-    bool* playing;
-    const GameConfig* config;
-    float t;
-    AudioManager* manager;
-    int songId;
 };
 
 extern const std::map<char, std::vector<bool>> FONT;

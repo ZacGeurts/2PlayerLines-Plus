@@ -44,9 +44,8 @@ void printHelp() {
     std::cout << "  ./songgen                            # Show this help message\n";
     std::cout << "\n";
     std::cout << "This makes song1.song if it does not exist then song2.song etc\n";
-    std::cout << "Delete song2.song and next song created is song2.song assuming song1 exists\n";
-    std::cout << "You can keep only song3.song etc and it will not cause issues with playback with linesplus game\n";
     std::cout << "Missing song numbers are merely skipped.\n";
+	std::cout << "Tt will not affect playback with linesplus game if only song3.song exists.\n";
 }
 
 std::string trim(const std::string& str) {
@@ -81,6 +80,7 @@ SongData parseSongFile(const std::string& filename) {
     }
 
     SongData song;
+    // Initialize with default values in case fields are missing (legacy files)
     song.bpm = 120.0f;
     song.rootFreq = 440.0f;
     song.scaleName = "major";
@@ -108,9 +108,31 @@ SongData parseSongFile(const std::string& filename) {
             if (token == "Song:") {
                 std::getline(ss, song.title);
                 song.title = trim(song.title);
-            } else if (token == "Genres:") {
+            } else if (token == "Genre:") {
                 std::getline(ss, song.genres);
                 song.genres = trim(song.genres);
+            } else if (token == "BPM:") {
+                ss >> song.bpm;
+                if (!std::isfinite(song.bpm) || song.bpm <= 0.0f) {
+                    SDL_Log("Invalid BPM at line %zu: %.2f, using default 120.0", lineNumber, song.bpm);
+                    song.bpm = 120.0f;
+                }
+            } else if (token == "Scale:") {
+                ss >> song.scaleName;
+                // Validate scale against known scales (optional, assuming scales map exists)
+                // Example: if (scales.find(song.scaleName) == scales.end()) { /* handle invalid scale */ }
+            } else if (token == "RootFrequency:") {
+                ss >> song.rootFreq;
+                if (!std::isfinite(song.rootFreq) || song.rootFreq <= 0.0f) {
+                    SDL_Log("Invalid RootFrequency at line %zu: %.2f, using default 440.0", lineNumber, song.rootFreq);
+                    song.rootFreq = 440.0f;
+                }
+            } else if (token == "Duration:") {
+                ss >> song.duration;
+                if (!std::isfinite(song.duration) || song.duration <= 0.0f) {
+                    SDL_Log("Invalid Duration at line %zu: %.2f, using default 180.0", lineNumber, song.duration);
+                    song.duration = 180.0f;
+                }
             } else if (token == "Sections:") {
                 ss >> expectedSections;
             } else if (token == "Section:") {
@@ -130,13 +152,13 @@ SongData parseSongFile(const std::string& filename) {
                 inNotes = inPanAutomation = inVolumeAutomation = inReverbMixAutomation = false;
                 if (!currentPart.instrument.empty()) {
                     song.parts.push_back(currentPart);
-                    //SDL_Log("Parsed part: %s with %zu notes", currentPart.instrument.c_str(), currentPart.notes.size());
+                    SDL_Log("Parsed part: %s with %zu notes", currentPart.instrument.c_str(), currentPart.notes.size());
                     currentPart = SongGen::Part();
                 }
             } else if (token == "Part:") {
                 if (!currentPart.instrument.empty()) {
                     song.parts.push_back(currentPart);
-                    //SDL_Log("Parsed part: %s with %zu notes", currentPart.instrument.c_str(), currentPart.notes.size());
+                    SDL_Log("Parsed part: %s with %zu notes", currentPart.instrument.c_str(), currentPart.notes.size());
                 }
                 currentPart = SongGen::Part();
                 std::getline(ss, currentPart.sectionName);
@@ -239,6 +261,16 @@ SongData parseSongFile(const std::string& filename) {
         song.genres = "Unknown";
     }
 
+    // Validate scaleName against known scales
+    static const std::set<std::string> validScales = {
+        "major", "minor", "dorian", "mixolydian", "blues", "pentatonic_minor",
+        "harmonic_minor", "whole_tone", "chromatic"
+    };
+    if (validScales.find(song.scaleName) == validScales.end()) {
+        SDL_Log("Invalid scale '%s', defaulting to 'major'", song.scaleName.c_str());
+        song.scaleName = "major";
+    }
+
     std::set<std::string> instruments;
     for (const auto& part : song.parts) {
         instruments.insert(part.instrument);
@@ -252,7 +284,7 @@ SongData parseSongFile(const std::string& filename) {
     SDL_Log("Loaded song: %s", filename.c_str());
     SDL_Log("Metadata:");
     SDL_Log("  Title: %s", song.title.c_str());
-    SDL_Log("  Genres: %s", song.genres.c_str());
+    SDL_Log("  Genre: %s", song.genres.c_str());
     SDL_Log("  BPM: %.2f", song.bpm);
     SDL_Log("  Scale: %s", song.scaleName.c_str());
     SDL_Log("  Root Frequency: %.2f Hz", song.rootFreq);
@@ -620,11 +652,30 @@ int main(int argc, char* argv[]) {
     try {
         // Generate the song with the first genre
         auto [title, parts, sections] = generator.generateSong(genres[0]);
+
+        // Set song parameters
+		float bpm = generator.getGenreBPM().find(genres[0]) != generator.getGenreBPM().end() ?
+            generator.getGenreBPM().at(genres[0]) : 120.0f;
+		std::string scale = "major";
+		if (generator.getGenreScales().find(genres[0]) != generator.getGenreScales().end() &&
+    		!generator.getGenreScales().at(genres[0]).empty()) {
+    		std::uniform_int_distribution<> dist(0, generator.getGenreScales().at(genres[0]).size() - 1);
+    		scale = generator.getGenreScales().at(genres[0])[dist(generator.getRNG())];
+		}
+        float rootFrequency = 440.0f; // Standard A4 pitch
+        float duration = 180.0f; // Default duration
+        // Optionally calculate duration from sections
+        if (!sections.empty()) {
+            duration = std::max_element(sections.begin(), sections.end(),
+                [](const auto& a, const auto& b) { return a.endTime < b.endTime; })->endTime;
+        }
+
         // Save the generated song to the file
-		std::string genreStr(argv[1]);
-		std::string genreStrUpper = genreStr;
-		std::transform(genreStrUpper.begin(), genreStrUpper.end(), genreStrUpper.begin(), ::toupper);
-        generator.saveToFile(title, genreStrUpper, parts, sections, filename);
+        std::string genreStr(argv[1]);
+        std::string genreStrUpper = genreStr;
+        std::transform(genreStrUpper.begin(), genreStrUpper.end(), genreStrUpper.begin(), ::toupper);
+        generator.saveToFile(title, genreStrUpper, bpm, scale, rootFrequency, duration, parts, sections, filename);
+
         // Verify the generated file
         std::ifstream checkFile(filename);
         if (!checkFile || checkFile.peek() == std::ifstream::traits_type::eof()) {

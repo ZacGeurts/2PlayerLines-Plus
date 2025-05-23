@@ -355,6 +355,7 @@ static float generateKickWave(float t, float freq, float dur) {
     AudioUtils::LowPassFilter filter(200.0f, 44100.0f);
     output = dist.process(output);
     output = filter.process(output);
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -470,6 +471,7 @@ static float generateSnareWave(float t, float dur) {
 
     output *= 0.6f * velocity; // Scale amplitude with velocity
     output = std::max(-1.0f, std::min(1.0f, output)); // Clip to avoid distortion
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -508,7 +510,7 @@ static float generateClapWave(float t, float dur) {
     static AudioUtils::Reverb reverb(0.03f, 0.3f, 0.2f); // Short reverb for space
     output = dist.process(output);
     output = reverb.process(output);
-
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -528,15 +530,16 @@ static float generateTomWave(float t, float freq, float dur) {
     AudioUtils::LowPassFilter filter(300.0f, 44100.0f);
     output = reverb.process(output);
     output = filter.process(output);
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
 static float generateSubBassWave(float t, float freq, float dur) {
-    // Clamp frequency to 20-180 Hz
-    freq = std::clamp(freq, 20.0f, 180.0f);
+    // Clamp frequency to 20-80 Hz for sub-bass focus
+    freq = std::clamp(freq, 20.0f, 80.0f);
 
-    // ADSR envelope parameters
-    float attack = 0.02f, decay = 0.15f, sustain = 0.8f, release = 0.25f, env;
+    // ADSR envelope parameters for punchy rap-style sub
+    float attack = 0.005f, decay = 0.1f, sustain = 0.6f, release = 0.25f, env;
 
     // Calculate envelope
     if (t < attack) {
@@ -549,15 +552,18 @@ static float generateSubBassWave(float t, float freq, float dur) {
         env = sustain * std::exp(-(t - dur) / release);
     }
 
-    // Generate waveform: sine for warmth, slight saw for edge
-    float sine = std::sin(2.0f * M_PI * freq * t) * 0.7f;
-    float saw = (std::fmod((freq * 0.99f) * t, 1.0f) - 0.5f) * 0.3f;
-    float output = env * (sine + saw);
+    // Generate waveform: sine for warmth, slight triangle for edge
+    float sine = std::sin(2.0f * M_PI * freq * t) * 0.85f;
+    float triangle = (2.0f / M_PI) * std::asin(std::sin(2.0f * M_PI * freq * 0.99f * t)) * 0.15f;
+    float output = env * (sine + triangle);
 
-    // Apply low-pass filter at 200 Hz to preserve 20-180 Hz range
-    static AudioUtils::LowPassFilter filter(200.0f, 44100.0f);
+    // Apply low-pass filter at 80 Hz to keep sub-bass clean
+    static AudioUtils::LowPassFilter filter(80.0f, 44100.0f);
     output = filter.process(output);
 
+    // Optional subtle saturation for perceived loudness
+    output = std::tanh(output * 1.2f);
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -614,7 +620,7 @@ static float generateSynthArpWave(float t, float freq, float dur) {
 
     // Clip and scale
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.3f;
+    output *= 0.90f; // volume. .10 is 10%
 
     return output;
 }
@@ -637,6 +643,7 @@ static float generateLeadSynthWave(float t, float freq, float dur) {
     output = dist.process(output);
     output = reverb.process(output);
     output = filter.process(output);
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -678,7 +685,7 @@ static float generatePadWave(float t, float freq, float dur) {
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= .25f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -1024,27 +1031,91 @@ static float generateVocalWave(float t, float freq, int phoneme, float dur, int 
     // Store current output for next iteration
     state.prev_output = output_current;
     
+	output *= 0.3f; // I add these for final volume adjustments
     return output;
 }
 
 static float generateFluteWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
-    float attack = 0.05f, decay = 0.1f, sustain = 0.8f, release = 0.2f, env;
-    if (t < attack) env = t / attack;
-    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    else if (t < dur) env = sustain;
-    else env = sustain * std::exp(-(t - dur) / release);
-    float breath = rng.generatePinkNoise() * std::exp(-10.0f * t / dur) * 0.35f;
-    AudioUtils::BandPassFilter breathFilter(2000.0f, 1.0f, 44100.0f);
-    breath = breathFilter.process(breath);
-    float vibrato = 1.0f + 0.01f * std::sin(2.0f * M_PI * 6.0f * t);
-    float sine = std::sin(2.0f * M_PI * freq * t * vibrato) * 0.65f;
-    float saw = (std::fmod(freq * t, 1.0f) - 0.5f) * 0.15f;
-    float output = env * (sine + saw + breath);
-    AudioUtils::Reverb reverb(0.1f, 0.45f, 0.25f);
-    AudioUtils::LowPassFilter filter(3000.0f, 44100.0f);
+    static AudioUtils::BandPassFilter breathFilter(1600.0f, 300.0f, 44100.0f); // Lower, narrower for natural breath
+
+    // Input validation
+    if (!std::isfinite(t) || t < 0.0f || !std::isfinite(freq) || freq <= 0.0f || !std::isfinite(dur) || dur <= 0.0f) {
+        SDL_Log("Invalid t %.2f, freq %.2f, or dur %.2f, returning 0.0", t, freq, dur);
+        return 0.0f;
+    }
+    freq = std::max(261.63f, std::min(2093.0f, freq)); // Flute range (C4 to C7)
+
+    // ADSR envelope for smoother, natural onset
+    float attack = 0.015f, decay = 0.05f, sustain = 0.9f, release = 0.12f, env;
+    if (t < attack) {
+        env = t / attack;
+    } else if (t < attack + decay) {
+        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    } else if (t < dur) {
+        env = sustain;
+    } else if (t < dur + release) {
+        env = sustain * std::exp(-(t - dur) / release);
+    } else {
+        env = 0.0f;
+    }
+
+    // No vibrato for steady pitch
+    float modulatedFreq = freq;
+
+    // Additive synthesis for warm, natural flute timbre
+    float harmonic1 = 1.0f * std::sin(2.0f * M_PI * modulatedFreq * t); // Strong fundamental
+    float harmonic2 = 0.25f * std::sin(2.0f * M_PI * 2.0f * modulatedFreq * t); // Softer 2nd harmonic
+    float harmonic3 = 0.08f * std::sin(2.0f * M_PI * 3.0f * modulatedFreq * t); // Minimal 3rd harmonic
+    float output = (harmonic1 + harmonic2 + harmonic3) * 0.3f * env; // Lower gain for warmth
+
+    // Check harmonics
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite harmonics at t %.2f, freq %.2f: %.2f", t, freq, output);
+        output = 0.0f;
+    }
+    output = std::max(-0.8f, std::min(0.8f, output)); // Tighter clipping for cleaner sound
+
+    // Very subtle breath noise for organic feel
+    float breathNoise = breathFilter.process(rng.generateWhiteNoise()) * 0.008f * (t < 0.04f ? 0.9f : 0.15f);
+    breathNoise = std::max(-0.15f, std::min(0.15f, breathNoise));
+    if (!std::isfinite(breathNoise)) {
+        SDL_Log("Non-finite breath noise at t %.2f, freq %.2f: %.2f", t, freq, breathNoise);
+        breathNoise = 0.0f;
+    }
+
+    // Minimal articulation noise for natural note starts
+    float articulation = (t < 0.004f) ? breathFilter.process(rng.generateWhiteNoise()) * 0.02f * env : 0.0f;
+    articulation = std::max(-0.15f, std::min(0.15f, articulation));
+    if (!std::isfinite(articulation)) {
+        SDL_Log("Non-finite articulation at t %.2f, freq %.2f: %.2f", t, freq, articulation);
+        articulation = 0.0f;
+    }
+
+    // Combine output
+    output = output + breathNoise * env + articulation;
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite combined output at t %.2f, freq %.2f: %.2f", t, freq, output);
+        output = 0.0f;
+    }
+
+    // Apply minimal reverb and high-pass filter for clarity
+    AudioUtils::Reverb reverb(0.02f, 0.15f, 0.1f); // Extremely light reverb
+    AudioUtils::HighPassFilter filter(200.0f, 0.707f, 44100.0f); // Remove low-end mud, Q=0.707
     output = reverb.process(output);
     output = filter.process(output);
+
+    // Soft clipping for natural dynamics
+    output = std::tanh(output * 0.7f); // Softer gain for less synth-like aggression
+    output *= 0.45f; // Moderate amplitude for balanced output
+
+    // Final validation
+    if (!std::isfinite(output)) {
+        SDL_Log("Non-finite final output at t %.2f, freq %.2f: %.2f", t, freq, output);
+        output = 0.0f;
+    }
+    output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -1127,7 +1198,7 @@ static float generateTrumpetWave(float t, float freq, float dur) {
         output = 0.0f;
     }
     output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
-
+	output *= 1.7f; // adjusts instrument volume
     return output;
 }
 
@@ -1251,7 +1322,7 @@ static float generateBassWave(float sampleRate, float freq, float time, float du
         SDL_Log("Non-zero output at note end: %.6f", output);
     }
 
-	output *= 5.0f;
+	output *= 5.0f; // adjusts instrument volume
     return output;
 }
 
@@ -1357,7 +1428,7 @@ static float generateGuitarWave(float sampleRate, float freq, float time, float 
     output = reverb.process(output);
 
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.2f; // Balanced gain with bass
+    output *= 0.2f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -1438,7 +1509,7 @@ static float generateSaxophoneWave(float sampleRate, float freq, float time, flo
         output = 0.0f;
     }
     output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
-
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -1549,6 +1620,7 @@ static float generatePianoWave(float sampleRate, float freq, float time, float d
 
     output = std::max(-1.0f, std::min(1.0f, output));
     output *= 0.3f * velocity;
+	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -1608,7 +1680,7 @@ static float generateViolinWave(float sampleRate, float freq, float time, float 
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    output *= 0.25f; // These are added to adjust this instrument volume
     return output;
 }
 
@@ -1670,7 +1742,7 @@ static float generateOrganWave(float sampleRate, float freq, float time, float d
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
     output *= 0.25f;
-	output *= 0.3f;
+	output *= 0.3f; // These are added to adjust this instrument volume	
     return output;
 }
 

@@ -41,7 +41,6 @@ GameConfig loadConfig(const std::string& filename) {
             else if (key == "EXPLOSION_DURATION") config.EXPLOSION_DURATION = value;
             else if (key == "LASER_ZAP_DURATION") config.LASER_ZAP_DURATION = value;
             else if (key == "WINNER_VOICE_DURATION") config.WINNER_VOICE_DURATION = value;
-            else if (key == "TECHNO_LOOP_DURATION") config.TECHNO_LOOP_DURATION = value;
             else if (key == "GREEN_SQUARE_SIZE") config.GREEN_SQUARE_SIZE = value;
             else if (key == "COLLECTIBLE_SIZE") config.COLLECTIBLE_SIZE = value;
             else if (key == "EXPLOSION_MAX_RADIUS") config.EXPLOSION_MAX_RADIUS = value;

@@ -71,7 +71,16 @@ namespace SongGen {
 
     class MusicGenerator {
     public:
-std::tuple<std::string, std::vector<Part>, std::vector<Section>> generateSong(Genre g, float totalDur = -1.0f, float rootFreq = 440.0f, float bpm = 0.0f) {
+	// Getter for genreBPM
+    const std::map<Genre, float>& getGenreBPM() const { return genreBPM; }
+
+    // Getter for genreScales
+    const std::map<Genre, std::vector<std::string>>& getGenreScales() const { return genreScales; }
+
+    // Getter for rng
+    std::mt19937& getRNG() { return rng; }
+	
+	std::tuple<std::string, std::vector<Part>, std::vector<Section>> generateSong(Genre g, float totalDur = -1.0f, float rootFreq = 440.0f, float bpm = 0.0f) {
     ::SDL_Log("Starting song generation for genre %s, requested duration %.2f seconds", genreNames[g].c_str(), totalDur);
     // Set random totalDur between 180 and 300 seconds if not specified
     if (totalDur < 0.0f) {
@@ -588,57 +597,61 @@ for (const auto& section : sections) {
     return {title, parts, sections};
 }
 
-        void saveToFile(const std::string& title, const std::string& genres, const std::vector<Part>& parts, const std::vector<Section>& sections, const std::string& filename) {
-            ::SDL_Log("Saving song '%s' to file %s", title.c_str(), filename.c_str());
-            std::ofstream out(filename);
-            if (!out.is_open()) {
-                ::SDL_Log("Failed to open file %s for writing", filename.c_str());
-                return;
-            }
+void saveToFile(const std::string& title, const std::string& genres, float bpm, const std::string& scale, float rootFrequency, float duration, const std::vector<Part>& parts, const std::vector<Section>& sections, const std::string& filename) {
+    ::SDL_Log("Saving song '%s' to file %s", title.c_str(), filename.c_str());
+    std::ofstream out(filename);
+    if (!out.is_open()) {
+        ::SDL_Log("Failed to open file %s for writing", filename.c_str());
+        return;
+    }
 
-            out << "Song: " << title << "\n";
-			out << "Genres: " << genres << "\n";
-						
-            out << "Sections: " << sections.size() << "\n";
-            for (const auto& section : sections) {
-                out << "Section: " << section.name << " " << section.startTime << " " << section.endTime
-                    << " Progress: " << section.progress << " Template: " << section.templateName << "\n";
-            }
-            out << "Parts: " << parts.size() << "\n";
-            for (const auto& part : parts) {
-                out << "Part: " << part.sectionName << "\n";
-                out << "Instrument: " << part.instrument << "\n";
-                out << "Pan: " << part.pan << "\n";
-                out << "ReverbMix: " << part.reverbMix << "\n";
-                out << "UseReverb: " << (part.useReverb ? "true" : "false") << "\n";
-                out << "ReverbDelay: " << part.reverbDelay << "\n";
-                out << "ReverbDecay: " << part.reverbDecay << "\n";
-                out << "ReverbMixFactor: " << part.reverbMixFactor << "\n";
-                out << "UseDistortion: " << (part.useDistortion ? "true" : "false") << "\n";
-                out << "DistortionDrive: " << part.distortionDrive << "\n";
-                out << "DistortionThreshold: " << part.distortionThreshold << "\n";
-                out << "Notes: " << part.notes.size() << "\n";
-                for (const auto& note : part.notes) {
-                    out << "Note: " << note.freq << " " << note.duration << " " << note.startTime
-                        << " Phoneme: " << note.phoneme << " Open: " << (note.open ? "true" : "false")
-                        << " Volume: " << note.volume << " Velocity: " << note.velocity << "\n";
-                }
-                out << "PanAutomation: " << part.panAutomation.size() << "\n";
-                for (const auto& [time, value] : part.panAutomation) {
-                    out << "PanPoint: " << time << " " << value << "\n";
-                }
-                out << "VolumeAutomation: " << part.volumeAutomation.size() << "\n";
-                for (const auto& [time, value] : part.volumeAutomation) {
-                    out << "VolumePoint: " << time << " " << value << "\n";
-                }
-                out << "ReverbMixAutomation: " << part.reverbMixAutomation.size() << "\n";
-                for (const auto& [time, value] : part.reverbMixAutomation) {
-                    out << "ReverbMixPoint: " << time << " " << value << "\n";
-                }
-            }
-            out.close();
-            ::SDL_Log("Song saved successfully to %s", filename.c_str());
+    out << "Song: " << title << "\n";
+    out << "Genre: " << genres << "\n";
+    out << "BPM: " << bpm << "\n";
+    out << "Scale: " << scale << "\n";
+    out << "RootFrequency: " << rootFrequency << "\n";
+    out << "Duration: " << duration << "\n";
+
+    out << "Sections: " << sections.size() << "\n";
+    for (const auto& section : sections) {
+        out << "Section: " << section.name << " " << section.startTime << " " << section.endTime
+            << " Progress: " << section.progress << " Template: " << section.templateName << "\n";
+    }
+    out << "Parts: " << parts.size() << "\n";
+    for (const auto& part : parts) {
+        out << "Part: " << part.sectionName << "\n";
+        out << "Instrument: " << part.instrument << "\n";
+        out << "Pan: " << part.pan << "\n";
+        out << "ReverbMix: " << part.reverbMix << "\n";
+        out << "UseReverb: " << (part.useReverb ? "true" : "false") << "\n";
+        out << "ReverbDelay: " << part.reverbDelay << "\n";
+        out << "ReverbDecay: " << part.reverbDecay << "\n";
+        out << "ReverbMixFactor: " << part.reverbMixFactor << "\n";
+        out << "UseDistortion: " << (part.useDistortion ? "true" : "false") << "\n";
+        out << "DistortionDrive: " << part.distortionDrive << "\n";
+        out << "DistortionThreshold: " << part.distortionThreshold << "\n";
+        out << "Notes: " << part.notes.size() << "\n";
+        for (const auto& note : part.notes) {
+            out << "Note: " << note.freq << " " << note.duration << " " << note.startTime
+                << " Phoneme: " << note.phoneme << " Open: " << (note.open ? "true" : "false")
+                << " Volume: " << note.volume << " Velocity: " << note.velocity << "\n";
         }
+        out << "PanAutomation: " << part.panAutomation.size() << "\n";
+        for (const auto& [time, value] : part.panAutomation) {
+            out << "PanPoint: " << time << " " << value << "\n";
+        }
+        out << "VolumeAutomation: " << part.volumeAutomation.size() << "\n";
+        for (const auto& [time, value] : part.volumeAutomation) {
+            out << "VolumePoint: " << time << " " << value << "\n";
+        }
+        out << "ReverbMixAutomation: " << part.reverbMixAutomation.size() << "\n";
+        for (const auto& [time, value] : part.reverbMixAutomation) {
+            out << "ReverbMixPoint: " << time << " " << value << "\n";
+        }
+    }
+    out.close();
+    ::SDL_Log("Song saved successfully to %s", filename.c_str());
+}
 
     private:
         std::mt19937 rng{std::random_device{}()};

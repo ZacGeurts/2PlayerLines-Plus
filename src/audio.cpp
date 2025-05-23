@@ -31,7 +31,7 @@ AudioManager::AudioManager(const GameConfig& config)
       hasReopenedMusicDevice(false),
       musicPlaying(false),
       musicThread(),
-      musicChannels(2), // Initialize to default, updated in reopenAudioDevice
+      musicChannels(6), // Initialize to default, updated in reopenAudioDevice
 #ifdef _WIN32
       songgenProcess(nullptr),
 #else
