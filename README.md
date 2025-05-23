@@ -59,7 +59,7 @@ Somtimes sounds like it. I am making the instruments.h as a side project.<BR />
 Space is infinite, matter is not. Music has rules (tempo, beats per minute, etc) and random noise is not music.<BR />
 How does it work? `./songgen` from a terminal.<BR />
 <BR />
-Test your instrment clout in instruments.h. Copy generateViolinWave code block and tell it what you do not like. Somethings like too flat, too wobbly, whatever<BR />
+Test your instrment clout in instruments.h. Test your best AI. Copy generateViolinWave code block and tell it what you do not like. Somethings like too flat, too wobbly, whatever<BR />
 Paste the new code block back in (save) and `make clean` then `make` to have your new instrument ready to hear.<BR />
 Change song1.song Instrument: to violin and `./songgen song1.song` to hear it.<BR />
 <BR />
