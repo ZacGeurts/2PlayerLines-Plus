@@ -15,6 +15,7 @@
 #include "player.h"
 #include "ai.h"
 
+
 // Constructor: Initialize game with given configuration
 Game::Game(const GameConfig& config)
     : window(nullptr),
@@ -124,7 +125,7 @@ Game::Game(const GameConfig& config)
 
     player1.pos = Vec2(200, orthoHeight / 2);
     player1.direction = Vec2(1, 0);
-    player1.color = {0, 0, 255, 255};
+    player1.SDLplayercolor = {0, 0, 255};
     player1.alive = true;
     player1.willDie = false;
     player1.hasMoved = false;
@@ -139,7 +140,7 @@ Game::Game(const GameConfig& config)
 
     player2.pos = Vec2(orthoWidth - 200, orthoHeight / 2);
     player2.direction = Vec2(-1, 0);
-    player2.color = {255, 0, 0, 255};
+    player2.SDLplayercolor = {255, 0, 0};
     player2.alive = true;
     player2.willDie = false;
     player2.hasMoved = false;
@@ -234,7 +235,7 @@ void Game::checkCollision(Player* player, Vec2 nextPos, float currentTimeSec, co
 
     if (!isBlack && !isMagenta && !isGreen) {
         player->willDie = true;
-        explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, currentTimeSec));
+        explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, dt, currentTimeSec, SDLexplosioncolor));
         audio.playExplosion(currentTimeSec);
         deathTime = currentTimeSec;
         if (config.ENABLE_DEBUG) {
@@ -332,7 +333,7 @@ void Game::run() {
                 // Start AI update
                 if (ai.getMode()) {
                     ai.startUpdate(player2, player1, collectible, circles, dt, rng, *this,
-                                   framebuffer, drawableWidth, drawableHeight);
+                                   framebuffer, drawableWidth, drawableHeight, SDLaicolor);
                 }
 
                 update(dt, currentTimeSec);
@@ -384,7 +385,7 @@ void Game::update(float dt, float currentTimeSec) {
             player2.noCollisionTimer = 0;
             player2.isInvincible = false;
             player2.canUseNoCollision = true;
-            player2.endFlash = new Flash(explosionManager.createFlash(player2.pos, rng, currentTimeSec, {255, 0, 255, 255}));
+            player2.endFlash = new Flash(explosionManager.createFlash(player2.pos, rng, dt, currentTimeSec, SDLexplosioncolor));
             audio.playLaserZap(currentTimeSec);
             if (config.ENABLE_DEBUG) {
                 SDL_Log("AI no-collision ended at time %f, canUseNoCollision=%d", currentTimeSec, player2.canUseNoCollision);
@@ -395,7 +396,7 @@ void Game::update(float dt, float currentTimeSec) {
     playerManager.updatePlayers(controllers, controllerCount, player1, player2, collectible, explosions, flashes,
                                score1, score2, roundScore1, roundScore2, rng, dt, currentTimeSec, audio,
                                collectibleManager, explosionManager, circleManager, circles, lastCircleSpawn, this,
-                               framebuffer, drawableWidth, drawableHeight);
+                               framebuffer, drawableWidth, drawableHeight, SDLplayercolor);
 
     // Handle deferred collectible respawn
     if (pendingCollectibleRespawn) {
@@ -508,10 +509,10 @@ void Game::respawnCircles() {
 // Activate no-collision mode for a player
 void Game::activateNoCollision(Player* player, float currentTimeSec) {
     if (player->canUseNoCollision && player->noCollisionTimer <= 0 && player->alive) {
-        player->noCollisionTimer = 2.0f;
-        player->canUseNoCollision = false;
+        player->noCollisionTimer = 2.0f; // 2 seconds
+        player->canUseNoCollision = false; // you used it
         player->isInvincible = true;
-        flashes.emplace_back(explosionManager.createFlash(player->pos, rng, currentTimeSec, {255, 0, 255, 255}));
+        flashes.emplace_back(explosionManager.createFlash(player->pos, rng, dt, currentTimeSec, SDLexplosioncolor));
         audio.playLaserZap(currentTimeSec);
         if (config.ENABLE_DEBUG) {
             SDL_Log("Player flash activated at time %f, noCollisionTimer=%f", currentTimeSec, player->noCollisionTimer);
