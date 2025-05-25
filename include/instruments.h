@@ -20,7 +20,6 @@
 #include <SDL2/SDL.h>
 
 #define DEBUG_LOG 0 // Set to 1 for debug logging
-#define M_PI 3.14159265358979323846
 
 // Forward declarations for wave generation functions
 static float generateKickWave(float t, float freq, float dur);
@@ -350,7 +349,7 @@ static float generateHiHatWave(float t, float freq, bool open, float dur) {
     output = reverb.process(output);
     output = dist.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.3f;
+    output *= 0.3f; // I add these for final volume adjustments
     return output;
 }
 
@@ -386,7 +385,7 @@ static float generateSnareWave(float t, float dur) {
     output = reverb.process(output);
     output *= 0.6f * velocity;
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 1.0f;
+    output *= 1.0f; // I add these for final volume adjustments
     return output;
 }
 
