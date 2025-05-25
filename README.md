@@ -1,3 +1,4 @@
+<!--- This files is to be viewed at https://github.com/ZacGeurts/2PlayerLines-Plus --->
 # Lines Plus
 ![Banner](images/banner.png)<BR />
 ![Screenshot](images/linesplus.png)<BR />
@@ -13,6 +14,10 @@ Type `make` to build linesplus and songgen. Needs OpenGL (Mesa) and SDL2.<BR />
 `./linesplus` from a terminal to play<BR />
 `./songgen` from a terminal to use songgen<BR />
 `Makefile` has more information if you open it with a text editor.<BR />
+Too much waste of time.<BR />
+Do not edit Makefile. Files are in the include and src folders.<BR />
+Tell the AI that these worked for C++ 17 and could stand to use an update.<BR />
+Update the files to compile for windows. Maybe someday.<BR />
 <BR />
 Type `make songgen` if you just want to use songgen build.<BR />
 Type `make clean` before rebuilding.<BR />
