@@ -4,29 +4,47 @@
 ![Screenshot](images/linesplus.png)<BR />
 This software is not free for profit. (see below)<BR />
 Rated ESRB Everyone, No in game purchases.<BR />
+Loud noises breaks PEGI 3 guidelines.<BR />
+This Software is Free to consume, not distribute.<BR />
 A 2 player (controllers) line game.<BR />
 Quickstart: Steer with triggers and press buttons.<BR />
 If you have Linux you can grab the zip from the releases on the top right.<BR />
 The Green code button at the top will download the zip to build the latest version.<BR />
+Releases are prebuilt and likely to be behind the build process while branches close up.<BR />
+If a branch is better, I will put it back into main. Always get main.<BR />
+Assume the branches are always closed, I left them in for posterity.<BR />
 Songgen creates and plays music .song files.<BR />
+Do not be mean to pets.<BR />
 This is what we have to work with https://www.szynalski.com/tone-generator
 <BR />
-Type `make` to build linesplus and songgen. Needs OpenGL (Mesa) and SDL2.<BR />
+# Requirements
+`sudo apt install build-essential libsdl2-dev libsdl2-image-dev libgl1-mesa-dev libpthread-stubs0-dev`<BR />
+Highly recommended - allows full processor cores simply. `make clean` and `make -j$(nproc)` once and use the up arrow.<BR />
+`sudo apt install nproc`<BR />
+`nproc` spits out the number of cpu cores we can compile with
+<BR />
+<BR />
+Type `make` to build `./linesplus` and `./songgen`. Needs OpenGL (Mesa) and SDL2.<BR />
 `./linesplus` from a terminal to play<BR />
 `./songgen` from a terminal to use songgen<BR />
-`Makefile` has more information if you open it with a text editor.<BR />
-Too much waste of time.<BR />
+`Makefile` puts the files together. Do not modify.<BR />
 Do not edit Makefile. Files are in the include and src folders.<BR />
 Tell the AI that these worked for C++ 17 and could stand to use an update.<BR />
 Update the files to compile for windows. Maybe someday.<BR />
+Download from the Green code button above or:<BR />
+`git clone https://github.com/ZacGeurts/2PlayerLines-Plus`<BR />
+`cd 2PlayerLines-Plus`<BR />
 <BR />
 Type `make songgen` if you just want to use songgen build.<BR />
 Type `make clean` before rebuilding.<BR />
 <BR />
-M starts and stops the music.
+./linesplus<BR />
+Steer with controller triggers.<BR />
+M starts and stops the music. <BR />
 Survivor gets 3 points.<BR />
-Squares are worth 1 point.<BR />
-
+$${\color{green}Green}$$ Squares are worth 1 point.<BR />
+$${\color{yellow}Circles}$$ are $${\color{yellow}Yellow}$$ and to be avoided.<BR />
+<BR />
 Do not collide with other lines or ($${\color{yellow}Yellow}$$) circles with your head.<BR />
 Bouncing circles erase lines and another appears every 5 seconds with a short no collision ($${\color{magenta}Magenta}$$).<BR />
 You are invincible until first move unless you hit the wall on the other side.<BR />
