@@ -31,11 +31,13 @@ Type `make` to build `./linesplus` and `./songgen`. Needs OpenGL (Mesa) and SDL2
 Do not edit Makefile. Files are in the include and src folders.<BR />
 Tell the AI that these worked for C++ 17 and could stand to use an update.<BR />
 Update the files to compile for windows. Maybe someday.<BR />
-Download from the Green code button above or:<BR />
+Download from the $${\color{green}Green}$$ code button above or:<BR />
 `git clone https://github.com/ZacGeurts/2PlayerLines-Plus`<BR />
-`cd 2PlayerLines-Plus`<BR />
+`cd 2PlayerLines-Plus` - I press 2 and tab key.<BR />
+`make` to build all files.<BR />
 <BR />
-Type `make songgen` if you just want to use songgen build.<BR />
+Type `make linesplus` requires a ./songgen build, or it errors.<BR />
+Type `make songgen` if you just want to use ./songgen build.<BR />
 Type `make clean` before rebuilding.<BR />
 <BR />
 ./linesplus<BR />
@@ -62,6 +64,7 @@ Win condition is 50 points for a Set. Modify game.ini for additional options.<BR
 There is a game.ini file to modify settings.<BR />
 <BR />
 <BR />
+Fork the code, do not branch it. It is not free to distribute.<BR />
 Below is the licensing.<BR />
 No liability if you use anything here. None of it can be sold commercially by anyone but me.<BR />
 How much does it cost? You are not allowed to sell it or distribute commercial products from it.<BR />
