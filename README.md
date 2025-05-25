@@ -74,7 +74,7 @@ How much does it cost? You are not allowed to sell it nor distribute commercial 
 This license updates and the software and all iterations are covered by the latest version.<BR />
 This is not free software. If it is used for commercial use then it requires negotiable royalty (1%+).<BR />
 This license covers this software across all iterations, including initial upload.<BR />
-Negotiations are with the original orange. The guy typing this out.<BR />
+Negotiations are with the original orange. The guy typing this out. https://github.com/ZacGeurts<BR />
 This is not free software and requires royalties for commercial use.<BR />
 If this helps you make money on your project, think of me.<BR />
 If you make a free project, enjoy.<BR />
