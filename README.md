@@ -9,6 +9,7 @@ Quickstart: Steer with triggers and press buttons.<BR />
 If you have Linux you can grab the zip from the releases on the top right.<BR />
 The Green code button at the top will download the zip to build the latest version.<BR />
 Songgen creates and plays music .song files.<BR />
+This is what we have to work with https://www.szynalski.com/tone-generator
 <BR />
 Type `make` to build linesplus and songgen. Needs OpenGL (Mesa) and SDL2.<BR />
 `./linesplus` from a terminal to play<BR />
