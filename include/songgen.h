@@ -19,6 +19,7 @@
 #include <sstream>
 #include <ctime>
 #include <SDL2/SDL.h>
+std::set<std::string> getInstruments(); // Explicit std::
 
 namespace SongGen {
     enum Genre {

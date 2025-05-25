@@ -389,7 +389,7 @@ float getTailDuration(const std::string& instrument) {
 	// songgen.cpp is configured for 1.5 - fix it first - expert project ^ 2.0 cymbals
 }
 
-// makes speakers move below
+// makes speakers move!
 void audioCallback(void* userdata, Uint8* stream, int len) {
     PlaybackState* state = static_cast<PlaybackState*>(userdata);
     float* output = reinterpret_cast<float*>(stream);

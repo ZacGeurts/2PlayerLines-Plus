@@ -16,12 +16,61 @@
 #include <map>
 #include <algorithm>
 #include <string>
+#include <set>
 #include <SDL2/SDL.h>
 
-// Debug logging control: set to 1 to enable instrument loading logs, 0 to disable
-#define DEBUG_LOG 0
+#define DEBUG_LOG 0 // Set to 1 for debug logging
+#define M_PI 3.14159265358979323846
+
+// Forward declarations for wave generation functions
+static float generateKickWave(float t, float freq, float dur);
+static float generateHiHatWave(float t, float freq, bool open, float dur);
+static float generateSnareWave(float t, float dur);
+static float generateClapWave(float t, float dur);
+static float generateTomWave(float t, float freq, float dur);
+static float generateSubBassWave(float t, float freq, float dur);
+static float generateSynthArpWave(float t, float freq, float dur);
+static float generateLeadSynthWave(float t, float freq, float dur);
+static float generatePadWave(float t, float freq, float dur);
+static float generateCymbalWave(float t, float freq, float dur);
+static float generateVocalWave(float t, float freq, int phoneme, float dur, int depth);
+static float generateFluteWave(float t, float freq, float dur);
+static float generateTrumpetWave(float t, float freq, float dur);
+static float generateGuitarWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateOrganWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateBassWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generatePianoWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateViolinWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateCelloWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateMarimbaWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateSteelGuitarWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateSitarWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+static float generateSaxophoneWave(float sampleRate, float freq, float time, float dur, Instruments::KarplusStrongState& state1, Instruments::KarplusStrongState& state2);
+
+// getTailDuration
+static float getTailDuration(const std::string& instrument) {
+    if (instrument == "cymbal") return 2.0f;
+    if (instrument == "guitar") return 1.5f;
+    if (instrument == "syntharp") return 1.2f;
+    if (instrument == "subbass") return 0.8f;
+    if (instrument == "kick") return 0.5f;
+    if (instrument == "snare") return 0.6f;
+    if (instrument == "piano") return 2.0f;
+    if (instrument == "violin") return 2.5f;
+    if (instrument == "cello") return 3.0f;
+    if (instrument == "marimba") return 1.0f;
+    if (instrument == "steelguitar") return 1.8f;
+    if (instrument == "sitar") return 2.0f;
+    return 1.5f; // default tail
+}
 
 namespace AudioUtils {
+const float SAMPLE_RATE = 44100.0f;
+const int CHANNELS = 8;
+const int BUFFER_SIZE = 128; // 2.9ms latency
+const int RING_BUFFER_COUNT = 4;
+
+// RandomGenerator
 class RandomGenerator {
     thread_local static std::mt19937 rng;
     std::uniform_real_distribution<float> dist;
@@ -36,89 +85,21 @@ public:
         b2 = 0.96900f * b2 + white * 0.1538520f;
         return 0.2f * (b0 + b1 + b2 + white * 0.1848f);
     }
-	float generateUniform(float min, float max) {
-        std::uniform_real_distribution<float> dist(min, max);
-        return dist(rng);
-    }
 };
+thread_local std::mt19937 RandomGenerator::rng(std::random_device{}());
 
-thread_local std::mt19937 AudioUtils::RandomGenerator::rng(std::random_device{}());
-
-class Reverb {
-    std::vector<float> delayBuffer;
-    size_t bufferSize;
-    size_t writePos;
-    float decay;
-    float mix;
-public:
-    Reverb(float delayTime = 0.1f, float decayFactor = 0.5f, float mixFactor = 0.3f, float sampleRate = 44100.0f)
-        : bufferSize(static_cast<size_t>(delayTime * sampleRate)), writePos(0),
-          decay(decayFactor), mix(mixFactor) {
-        delayBuffer.resize(bufferSize, 0.0f);
-    }
-    float process(float input) {
-        size_t readPos = (writePos + bufferSize - bufferSize / 2) % bufferSize;
-        float output = input + decay * delayBuffer[readPos];
-        delayBuffer[writePos] = input + decay * delayBuffer[readPos];
-        writePos = (writePos + 1) % bufferSize;
-        return input * (1.0f - mix) + output * mix;
-    }
-};
-
+// Distortion
 class Distortion {
-    float drive;
-    float threshold;
+    float drive, threshold;
 public:
-    Distortion(float driveFactor = 2.0f, float clipThreshold = 0.7f)
-        : drive(driveFactor), threshold(clipThreshold) {}
+    Distortion(float driveFactor = 2.0f, float clipThreshold = 0.7f) : drive(driveFactor), threshold(clipThreshold) {}
     float process(float input) {
         float x = input * drive;
         return std::max(std::min(x, threshold), -threshold) / threshold;
     }
 };
 
-class HighPassFilter {
-    float cutoffFreq, q, sampleRate;
-    float x1, x2, y1, y2; // Store two previous inputs and outputs for second-order filter
-    float b0, b1, b2, a1, a2; // Biquad coefficients
-public:
-    HighPassFilter(float cutoff, float qVal, float sr) : cutoffFreq(cutoff), q(qVal), sampleRate(sr), 
-        x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {
-        updateCoefficients();
-    }
-
-    void updateCoefficients() {
-        float w0 = 2.0f * M_PI * cutoffFreq / sampleRate;
-        float cosW0 = std::cos(w0);
-        float alpha = std::sin(w0) / (2.0f * q);
-        float a0 = 1.0f + alpha;
-        b0 = (1.0f + cosW0) / 2.0f / a0;
-        b1 = -(1.0f + cosW0) / a0;
-        b2 = (1.0f + cosW0) / 2.0f / a0;
-        a1 = -2.0f * cosW0 / a0;
-        a2 = (1.0f - alpha) / a0;
-    }
-
-    float process(float input) {
-        float output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
-        x2 = x1;
-        x1 = input;
-        y2 = y1;
-        y1 = output;
-        return output;
-    }
-
-    void setCutoff(float cutoff) {
-        cutoffFreq = cutoff;
-        updateCoefficients();
-    }
-
-    void setQ(float qVal) {
-        q = qVal;
-        updateCoefficients();
-    }
-};
-
+// LowPassFilter
 class LowPassFilter {
     float cutoffFreq, sampleRate, x1, y1;
 public:
@@ -126,69 +107,31 @@ public:
     float process(float input) {
         float alpha = 1.0f / (1.0f + 2.0f * M_PI * cutoffFreq / sampleRate);
         float output = alpha * input + (1.0f - alpha) * y1;
-        x1 = input;
-        y1 = output;
+        x1 = input; y1 = output;
         return output;
-    }
-    void setCutoff(float cutoff) {
-        cutoffFreq = cutoff;
     }
 };
 
+// BandPassFilter
 class BandPassFilter {
     float centerFreq, bandwidth, sampleRate, x1, x2, y1, y2;
 public:
-    BandPassFilter(float center, float bw, float sr)
-        : centerFreq(center), bandwidth(bw), sampleRate(sr), x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {}
+    BandPassFilter(float center, float bw, float sr) : centerFreq(center), bandwidth(bw), sampleRate(sr), 
+        x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {}
     float process(float input) {
         float w0 = 2.0f * M_PI * centerFreq / sampleRate;
         float alpha = std::sin(w0) * std::sinh(std::log(2.0f) / 2.0f * bandwidth * w0 / std::sin(w0));
         float b0 = alpha, b1 = 0.0f, b2 = -alpha;
         float a0 = 1.0f + alpha, a1 = -2.0f * std::cos(w0), a2 = 1.0f - alpha;
-        float output = (b0 / a0) * input + (b1 / a0) * x1 + (b2 / a0) * x2
-                     - (a1 / a0) * y1 - (a2 / a0) * y2;
-        x2 = x1; x1 = input;
-        y2 = y1; y1 = output;
+        float output = (b0 / a0) * input + (b1 / a0) * x1 + (b2 / a0) * x2 - (a1 / a0) * y1 - (a2 / a0) * y2;
+        x2 = x1; x1 = input; y2 = y1; y1 = output;
         return output;
     }
-    void setCenterFrequency(float center) {
-        centerFreq = center;
-    }
 };
-}
+} // namespace AudioUtils
 
 namespace Instruments {
-// Forward declarations for all instrument wave generation functions
-struct KarplusStrongState;
-struct InstrumentSample;
-struct WaveguideState;
-class SampleManager;
-
-static float generateKickWave(float t, float freq, float dur);
-static float generateHiHatWave(float t, float freq, bool open, float dur);
-static float generateSnareWave(float t, float dur);
-static float generateClapWave(float t, float dur);
-static float generateTomWave(float t, float freq, float dur);
-static float generateBassWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateSubBassWave(float t, float freq, float dur);
-static float generateSynthArpWave(float t, float freq, float dur);
-static float generateLeadSynthWave(float t, float freq, float dur);
-static float generatePadWave(float t, float freq, float dur);
-static float generateCymbalWave(float t, float freq, float dur);
-static float generateVocalWave(float t, float freq, int phoneme, float dur, int depth);
-static float generateFluteWave(float t, float freq, float dur);
-static float generateTrumpetWave(float t, float freq, float dur);
-static float generateGuitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateOrganWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generatePianoWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateViolinWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateCelloWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateMarimbaWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateSteelGuitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateSitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-static float generateSaxophoneWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2);
-
-// Per-note state for Karplus-Strong instruments to support polyphony
+// Structures
 struct KarplusStrongState {
     float lastFreq;
     size_t delayLineSize;
@@ -201,34 +144,20 @@ struct FormantFilter {
     float centerFreq, bandwidth, sampleRate;
     float b0, b1, b2, a1, a2;
     float x1, x2, y1, y2;
-
     FormantFilter(float freq, float bw, float sr) : centerFreq(freq), bandwidth(bw), sampleRate(sr),
-        x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {
-        updateCoefficients();
-    }
-
+        x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) { updateCoefficients(); }
     void updateCoefficients() {
-        float r = expf(-M_PI * bandwidth / sampleRate);
+        float r = std::exp(-M_PI * bandwidth / sampleRate);
         float theta = 2.0f * M_PI * centerFreq / sampleRate;
-        b0 = 1.0f - r;
-        b1 = 0.0f;
-        b2 = 0.0f;
-        a1 = -2.0f * r * cosf(theta);
-        a2 = r * r;
+        b0 = 1.0f - r; b1 = 0.0f; b2 = 0.0f;
+        a1 = -2.0f * r * std::cos(theta); a2 = r * r;
     }
-
     float process(float input) {
         float output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
-        x2 = x1; x1 = input;
-        y2 = y1; y1 = output;
+        x2 = x1; x1 = input; y2 = y1; y1 = output;
         return output;
     }
-
-    void setParameters(float freq, float bw) {
-        centerFreq = freq;
-        bandwidth = bw;
-        updateCoefficients();
-    }
+    void setParameters(float freq, float bw) { centerFreq = freq; bandwidth = bw; updateCoefficients(); }
 };
 
 struct WaveguideState {
@@ -236,7 +165,7 @@ struct WaveguideState {
     size_t delayLineSize = 0;
     size_t writePos = 0;
     float lastFreq = 0.0f;
-    float pressure = 0.0f; // Breath pressure
+    float pressure = 0.0f;
 };
 
 struct InstrumentSample {
@@ -249,240 +178,107 @@ struct InstrumentSample {
         : freq(f), dur(d), phoneme(p), open(o), samples(std::move(s)) {}
 };
 
-// Tail durations matching songgen.cpp's getTailDuration
-static float getTailDuration(const std::string& instrument) {
-    if (instrument == "cymbal") return 2.0f;
-    if (instrument == "guitar") return 1.5f;
-    if (instrument == "syntharp") return 1.2f;
-    if (instrument == "subbass") return 0.8f;
-    if (instrument == "kick") return 0.5f;
-    if (instrument == "snare") return 0.6f;
-    if (instrument == "piano") return 2.0f;
-    if (instrument == "violin") return 2.5f;
-    if (instrument == "cello") return 3.0f;
-    if (instrument == "marimba") return 1.0f;
-    if (instrument == "steelguitar") return 1.8f;
-    if (instrument == "sitar") return 2.0f;
-    return 1.5f;
-}
-
-// SampleManager class definition
-class SampleManager {
-    std::mutex mutex;
-    std::map<std::string, std::vector<InstrumentSample>> samples;
-
-static float generateSample(const std::string& instrument, float sampleRate, float freq, float dur, int phoneme, bool open, float t) {
-    if (instrument == "kick") return generateKickWave(t, freq, dur);
-    if (instrument == "hihat_closed") return generateHiHatWave(t, freq, open, dur);
-	if (instrument == "hihat_open") return generateHiHatWave(t, freq, open, dur);
-    if (instrument == "snare") return generateSnareWave(t, dur);
-    if (instrument == "clap") return generateClapWave(t, dur);
-    if (instrument == "tom") return generateTomWave(t, freq, dur);
-    if (instrument == "subbass") return generateSubBassWave(t, freq, dur);
-    if (instrument == "syntharp") return generateSynthArpWave(t, freq, dur);
-    if (instrument == "leadsynth") return generateLeadSynthWave(t, freq, dur);
-    if (instrument == "pad") return generatePadWave(t, freq, dur);
-    if (instrument == "cymbal") return generateCymbalWave(t, freq, dur);
-	if (instrument == "vocal_0") return generateVocalWave(t, freq, phoneme, dur, 0); // feminine
-    if (instrument == "vocal_1") return generateVocalWave(t, freq, phoneme, dur, 1); // masculine
-    if (instrument == "flute") return generateFluteWave(t, freq, dur);
-    if (instrument == "trumpet") return generateTrumpetWave(t, freq, dur);
-
-    thread_local static KarplusStrongState state1, state2;
-    if (t == 0.0f) {
-        state1 = KarplusStrongState();
-        state2 = KarplusStrongState();
-    }
-    if (instrument == "guitar") return generateGuitarWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "organ") return generateOrganWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "bass") return generateBassWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "piano") return generatePianoWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "violin") return generateViolinWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "cello") return generateCelloWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "marimba") return generateMarimbaWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "steelguitar") return generateSteelGuitarWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "sitar") return generateSitarWave(sampleRate, freq, t, dur, state1, state2);
-    if (instrument == "saxophone") return generateSaxophoneWave(sampleRate, freq, t, dur, state1, state2);
-    return 0.0f;
-}
-
-public:
-    SampleManager() {}
-
-    const std::vector<float>& getSample(const std::string& instrument, float sampleRate, float freq, float dur, int phoneme = -1, bool open = false) {
-        std::lock_guard<std::mutex> lock(mutex);
-        auto& instrumentSamples = samples[instrument];
-        for (const auto& sample : instrumentSamples) {
-            if (std::abs(sample.freq - freq) < 0.1f && std::abs(sample.dur - dur) < 0.01f &&
-                sample.phoneme == phoneme && sample.open == open) {
-                return sample.samples;
-            }
-        }
-        float tail = getTailDuration(instrument);
-        size_t sampleCount = static_cast<size_t>((dur + tail) * sampleRate);
-        std::vector<float> newSamples(sampleCount);
-        for (size_t i = 0; i < sampleCount; ++i) {
-            float t = i / sampleRate;
-            newSamples[i] = generateSample(instrument, sampleRate, freq, dur, phoneme, open, t);
-        }
-        instrumentSamples.emplace_back(freq, dur, phoneme, open, std::move(newSamples));
-        if (DEBUG_LOG) SDL_Log("Generated new sample for %s: freq=%.2f, dur=%.2f, phoneme=%d, open=%d", instrument.c_str(), freq, dur, phoneme, open);
-        return instrumentSamples.back().samples;
-    }
-};
-
-// Static SampleManager instance
-static SampleManager sampleManager;
-
-// Suppress unused function warnings pending confirmation of usage
+// Wave generation functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 
-// Existing instrument implementations (unchanged)
 static float generateKickWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
-    float attack = 0.01f, decay = 0.2f, sustain = 0.6f, release = 0.15f, env;
-    if (t < attack) env = t / attack;
-    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    else if (t < dur) env = sustain;
-    else env = sustain * std::exp(-(t - dur) / release);
-    float pitchMod = freq * (1.8f * std::exp(-20.0f * t / dur));
-    float sine = std::sin(2.0f * M_PI * pitchMod * t);
-    float saw = 0.3f * (std::fmod(pitchMod * t, 1.0f) - 0.5f);
-    float click = rng.generateWhiteNoise() * std::exp(-50.0f * t / dur) * 0.2f;
-    float output = env * (0.7f * sine + 0.2f * saw + 0.1f * click);
-    AudioUtils::Distortion dist(2.0f, 0.75f);
-    AudioUtils::LowPassFilter filter(200.0f, 44100.0f);
-    output = dist.process(output);
-    output = filter.process(output);
-	output *= 1.0f; // These are added to adjust this instrument volume
-    return output;
-}
-
-static float generateHiHatWave(float t, float freq, bool open, float dur) {
-    // Static instances to maintain state across samples
-    static AudioUtils::RandomGenerator rng;
-    static AudioUtils::HighPassFilter openFilter(6000.0f, 0.707f, 44100.0f);  // Lower cutoff for open
-    static AudioUtils::HighPassFilter closedFilter(10000.0f, 0.707f, 44100.0f); // Higher cutoff for closed
-    static AudioUtils::Reverb reverb(0.02f, 0.2f, 0.15f, 44100.0f);            // Short, subtle reverb
-    static AudioUtils::Distortion dist(1.2f, 0.8f);                            // Light distortion
-
-    // Define release time to ensure sound stops
-    float release = open ? 1.5f : 0.2f;
-    if (t > dur + release) {
-        return 0.0f; // Force zero output after duration + release
-    }
-
-    // Envelope with exponential decay
-    float decayTime = open ? 1.2f : 0.1f; // Longer decay for open, short for closed
-    float env = std::exp(-t / decayTime);
-
-    // Transient: Sharp attack with fast decay
-    float transient = rng.generateWhiteNoise() * std::exp(-100.0f * t);
-
-    // Body: Mix of white and pink noise, filtered for high frequencies
-    float whiteNoise = rng.generateWhiteNoise();
-    float pinkNoise = rng.generatePinkNoise();
-    float noise = 0.7f * whiteNoise + 0.3f * pinkNoise; // More white for brightness
-    AudioUtils::HighPassFilter& filter = open ? openFilter : closedFilter;
-    float body = filter.process(noise) * env;
-
-    // Tonal: Inharmonic sine waves for metallic resonance
-    float baseFreq = 2500.0f; // Fixed base frequency for consistency
-    float tonal = 0.0f;
-    float freqs[3] = {baseFreq, baseFreq * 1.618f, baseFreq * 2.618f}; // Golden ratio for inharmonicity
-    for (int i = 0; i < 3; i++) {
-        float phase = 2.0f * M_PI * freqs[i] * t;
-        tonal += 0.3f * std::sin(phase);
-    }
-    if (open) {
-        // Add shimmer to open hi-hat with amplitude modulation
-        float lowFreqNoise = rng.generatePinkNoise() * 0.1f;
-        tonal *= (1.0f + 0.2f * lowFreqNoise);
-    }
-    tonal *= env;
-
-    // Mix components
-    float output = transient + 0.5f * body + 0.5f * tonal;
-
-    // Apply effects
-    output = reverb.process(output);
-    output = dist.process(output);
-
-    // Scale amplitude and clip to [-1, 1]
-    output *= 0.8f;
-    output = std::max(-1.0f, std::min(1.0f, output));
-
-	output *= 0.3f; // I add these for final volume adjustments
-
-    return output;
-}
-
-static float generateSnareWave(float t, float dur) {
-    static AudioUtils::RandomGenerator rng;
-    
-    // Simulate dynamic variation (like velocity, 0.4 to 1.0)
-    float velocity = 0.7f + rng.generateUniform(-0.3f, 0.3f);
-    velocity = std::max(0.4f, std::min(1.0f, velocity));
-    if (dur < 0.05f) velocity *= 0.7f; // Short hits are softer
-
-    // ADSR envelope: sharper attack, quick decay, minimal sustain
-    float attack = 0.002f * (1.0f - 0.3f * velocity); // Louder hits have sharper attack
-    float decay = 0.05f; // Crisp decay
-    float sustain = 0.2f; // Low sustain for punch
-    float release = 0.08f; // Quick release
+    float attack = 0.005f;
+    float decay = 0.15f;
+    float sustain = 0.4f;
+    float release = 0.1f;
     float env;
     if (t < attack) {
         env = t / attack;
     } else if (t < attack + decay) {
         env = 1.0f - (t - attack) / decay * (1.0f - sustain);
     } else if (t < dur) {
-        env = sustain * std::exp(-10.0f * (t - attack - decay)); // Fast exponential drop
+        env = sustain;
     } else {
         env = sustain * std::exp(-(t - dur) / release);
     }
-
-    // Noise component (body of snare)
-    float noise = rng.generatePinkNoise() * 0.4f;
-    // Band-passed noise for high-frequency "crack"
-    static AudioUtils::BandPassFilter crackFilter(2000.0f, 1.5f, 44100.0f);
-    float crack = rng.generateWhiteNoise() * std::exp(-50.0f * t) * 0.3f * velocity;
-    crack = crackFilter.process(crack);
-
-    // Tonal component (shell resonance, using detuned triangle wave)
-    float toneFreq = 220.0f + rng.generateUniform(-20.0f, 20.0f); // Slight pitch variation
-    float phase = 2.0f * M_PI * toneFreq * t;
-    float tone = (1.0f - 2.0f * std::fmod(phase / M_PI, 1.0f)) * std::exp(-20.0f * t) * 0.2f * velocity;
-
-    // Snare wire rattle (filtered white noise with dynamic decay)
-    static AudioUtils::BandPassFilter rattleFilter(4000.0f, 1.0f, 44100.0f);
-    float rattleDecay = 0.1f + rng.generateUniform(-0.02f, 0.02f);
-    float rattle = rng.generateWhiteNoise() * std::exp(-t / rattleDecay) * 0.35f * velocity;
-    rattle = rattleFilter.process(rattle);
-
-    // Combine components
-    float output = env * (noise + crack + tone + rattle);
-
-    // Effects
-    AudioUtils::Distortion dist(1.5f, 0.5f); // Softer distortion for warmth
-    AudioUtils::Reverb reverb(0.1f, 0.5f, 0.25f); // Small room reverb
+    float baseFreq = freq * 0.8f;
+    float pitchDecay = std::exp(-15.0f * t / dur);
+    float pitchMod = baseFreq * (2.0f * pitchDecay + 0.5f);
+    float sine = std::sin(2.0f * M_PI * pitchMod * t);
+    float subSine = 0.3f * std::sin(2.0f * M_PI * (baseFreq * 0.5f) * t);
+    float clickEnv = std::exp(-80.0f * t);
+    float whiteNoise = rng.generateWhiteNoise();
+    float pinkNoise = rng.generatePinkNoise();
+    AudioUtils::BandPassFilter clickFilter(2500.0f, 1.0f, 44100.0f);
+    float click = clickFilter.process(0.6f * whiteNoise + 0.4f * pinkNoise) * clickEnv * 0.25f;
+    float output = env * (0.6f * sine + 0.2f * subSine + 0.2f * click);
+    float filterCutoff = 150.0f + 1000.0f * pitchDecay;
+    AudioUtils::LowPassFilter filter(filterCutoff, 44100.0f);
+    output = filter.process(output);
+    AudioUtils::Distortion dist(1.8f, 0.8f);
     output = dist.process(output);
-    output = reverb.process(output);
-
-    output *= 0.6f * velocity; // Scale amplitude with velocity
-    output = std::max(-1.0f, std::min(1.0f, output)); // Clip to avoid distortion
-	output *= 1.0f; // These are added to adjust this instrument volume
+    output = std::tanh(output * 1.2f);
+    output = std::max(-1.0f, std::min(1.0f, output * 0.9f));
     return output;
 }
 
-static float generateClapWave(float t, float dur) {
+namespace Instruments {
+// Structures
+struct KarplusStrongState {
+    float lastFreq;
+    size_t delayLineSize;
+    size_t writePos;
+    std::vector<float> delayLine;
+    KarplusStrongState() : lastFreq(0.0f), delayLineSize(0), writePos(0), delayLine() {}
+};
+
+struct FormantFilter {
+    float centerFreq, bandwidth, sampleRate;
+    float b0, b1, b2, a1, a2;
+    float x1, x2, y1, y2;
+    FormantFilter(float freq, float bw, float sr) : centerFreq(freq), bandwidth(bw), sampleRate(sr),
+        x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) { updateCoefficients(); }
+    void updateCoefficients() {
+        float r = expf(-M_PI * bandwidth / sampleRate);
+        float theta = 2.0f * M_PI * centerFreq / sampleRate;
+        b0 = 1.0f - r; b1 = 0.0f; b2 = 0.0f;
+        a1 = -2.0f * r * cosf(theta); a2 = r * r;
+    }
+    float process(float input) {
+        float output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1; x1 = input; y2 = y1; y1 = output;
+        return output;
+    }
+    void setParameters(float freq, float bw) { centerFreq = freq; bandwidth = bw; updateCoefficients(); }
+};
+
+struct WaveguideState {
+    std::vector<float> forwardWave, backwardWave;
+    size_t delayLineSize = 0;
+    size_t writePos = 0;
+    float lastFreq = 0.0f;
+    float pressure = 0.0f;
+};
+
+struct InstrumentSample {
+    float freq;
+    float dur;
+    int phoneme;
+    bool open;
+    std::vector<float> samples;
+    InstrumentSample(float f = 0.0f, float d = 0.0f, int p = -1, bool o = false, std::vector<float> s = {})
+        : freq(f), dur(d), phoneme(p), open(o), samples(std::move(s)) {}
+};
+
+// Wave generation functions (your implementations + corrected/missing ones)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
+static float generateKickWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
-
-    // Shorten duration for clap-like transient (80-150 ms typical)
-    dur = std::clamp(dur, 0.08f, 0.15f);
-
-    // Tight ADSR envelope for sharp attack and quick decay
-    float attack = 0.002f, decay = 0.03f, sustain = 0.2f, release = 0.05f, env;
+    // Envelope parameters for punchy, dynamic kick
+    float attack = 0.005f; // Sharper attack for immediate impact
+    float decay = 0.15f;   // Shorter decay for tight body
+    float sustain = 0.4f;  // Lower sustain to avoid muddiness
+    float release = 0.1f;  // Quick release for clean tail
+    float env;
     if (t < attack) {
         env = t / attack;
     } else if (t < attack + decay) {
@@ -493,24 +289,126 @@ static float generateClapWave(float t, float dur) {
         env = sustain * std::exp(-(t - dur) / release);
     }
 
-    // Layered noise bursts to simulate clap transients
+    // Pitch-modulated body (sine + subharmonic)
+    float baseFreq = freq * 0.8f; // Lower base frequency for deeper kick
+    float pitchDecay = std::exp(-15.0f * t / dur); // Faster pitch drop
+    float pitchMod = baseFreq * (2.0f * pitchDecay + 0.5f); // Dynamic pitch sweep
+    float sine = std::sin(2.0f * M_PI * pitchMod * t); // Main body
+    float subSine = 0.3f * std::sin(2.0f * M_PI * (baseFreq * 0.5f) * t); // Subharmonic for depth
+
+    // Noise component for click/snap
+    float clickEnv = std::exp(-80.0f * t); // Sharp transient
+    float whiteNoise = rng.generateWhiteNoise();
+    float pinkNoise = rng.generatePinkNoise();
+    AudioUtils::BandPassFilter clickFilter(2500.0f, 1.0f, 44100.0f); // Center at 2.5kHz for crispness
+    float click = clickFilter.process(0.6f * whiteNoise + 0.4f * pinkNoise) * clickEnv * 0.25f;
+
+    // Combine components
+    float output = env * (0.6f * sine + 0.2f * subSine + 0.2f * click);
+
+    // Dynamic low-pass filter to shape tone
+    float filterCutoff = 150.0f + 1000.0f * pitchDecay; // Sweep from 1150Hz to 150Hz
+    AudioUtils::LowPassFilter filter(filterCutoff, 44100.0f);
+    output = filter.process(output);
+
+    // Saturation and distortion for warmth and grit
+    AudioUtils::Distortion dist(1.8f, 0.8f); // Moderate distortion
+    output = dist.process(output);
+    output = std::tanh(output * 1.2f); // Soft clipping for warmth
+
+    // Final amplitude adjustment
+    output = std::max(-1.0f, std::min(1.0f, output * 0.9f)); // Prevent clipping
+    return output;
+}
+
+static float generateHiHatWave(float t, float freq, bool open, float dur) {
+    static AudioUtils::RandomGenerator rng;
+    static AudioUtils::HighPassFilter openFilter(6000.0f, 0.707f, 44100.0f);
+    static AudioUtils::HighPassFilter closedFilter(10000.0f, 0.707f, 44100.0f);
+    static AudioUtils::Reverb reverb(0.02f, 0.2f, 0.15f, 44100.0f);
+    static AudioUtils::Distortion dist(1.2f, 0.8f);
+    float release = open ? 1.5f : 0.2f;
+    if (t > dur + release) return 0.0f;
+    float decayTime = open ? 1.2f : 0.1f;
+    float env = std::exp(-t / decayTime);
+    float transient = rng.generateWhiteNoise() * std::exp(-100.0f * t);
+    float whiteNoise = rng.generateWhiteNoise();
+    float pinkNoise = rng.generatePinkNoise();
+    float noise = 0.7f * whiteNoise + 0.3f * pinkNoise;
+    AudioUtils::HighPassFilter& filter = open ? openFilter : closedFilter;
+    float body = filter.process(noise) * env;
+    float baseFreq = 2500.0f;
+    float tonal = 0.0f;
+    float freqs[3] = {baseFreq, baseFreq * 1.618f, baseFreq * 2.618f};
+    for (int i = 0; i < 3; i++) tonal += 0.3f * std::sin(2.0f * M_PI * freqs[i] * t);
+    if (open) {
+        float lowFreqNoise = rng.generatePinkNoise() * 0.1f;
+        tonal *= (1.0f + 0.2f * lowFreqNoise);
+    }
+    tonal *= env;
+    float output = transient + 0.5f * body + 0.5f * tonal;
+    output = reverb.process(output);
+    output = dist.process(output);
+    output = std::max(-1.0f, std::min(1.0f, output));
+    output *= 0.3f;
+    return output;
+}
+
+static float generateSnareWave(float t, float dur) {
+    static AudioUtils::RandomGenerator rng;
+    float velocity = 0.7f + rng.generateUniform(-0.3f, 0.3f);
+    velocity = std::max(0.4f, std::min(1.0f, velocity));
+    if (dur < 0.05f) velocity *= 0.7f;
+    float attack = 0.002f * (1.0f - 0.3f * velocity);
+    float decay = 0.05f;
+    float sustain = 0.2f;
+    float release = 0.08f;
+    float env;
+    if (t < attack) env = t / attack;
+    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    else if (t < dur) env = sustain * std::exp(-10.0f * (t - attack - decay));
+    else env = sustain * std::exp(-(t - dur) / release);
+    float noise = rng.generatePinkNoise() * 0.4f;
+    static AudioUtils::BandPassFilter crackFilter(2000.0f, 1.5f, 44100.0f);
+    float crack = rng.generateWhiteNoise() * std::exp(-50.0f * t) * 0.3f * velocity;
+    crack = crackFilter.process(crack);
+    float toneFreq = 220.0f + rng.generateUniform(-20.0f, 20.0f);
+    float phase = 2.0f * M_PI * toneFreq * t;
+    float tone = (1.0f - 2.0f * std::fmod(phase / M_PI, 1.0f)) * std::exp(-20.0f * t) * 0.2f * velocity;
+    static AudioUtils::BandPassFilter rattleFilter(4000.0f, 1.0f, 44100.0f);
+    float rattleDecay = 0.1f + rng.generateUniform(-0.02f, 0.02f);
+    float rattle = rng.generateWhiteNoise() * std::exp(-t / rattleDecay) * 0.35f * velocity;
+    rattle = rattleFilter.process(rattle);
+    float output = env * (noise + crack + tone + rattle);
+    AudioUtils::Distortion dist(1.5f, 0.5f);
+    AudioUtils::Reverb reverb(0.1f, 0.5f, 0.25f);
+    output = dist.process(output);
+    output = reverb.process(output);
+    output *= 0.6f * velocity;
+    output = std::max(-1.0f, std::min(1.0f, output));
+    output *= 1.0f;
+    return output;
+}
+
+static float generateClapWave(float t, float dur) {
+    static AudioUtils::RandomGenerator rng;
+    dur = std::clamp(dur, 0.08f, 0.15f);
+    float attack = 0.002f, decay = 0.03f, sustain = 0.2f, release = 0.05f, env;
+    if (t < attack) env = t / attack;
+    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    else if (t < dur) env = sustain;
+    else env = sustain * std::exp(-(t - dur) / release);
     float burst1 = (t < 0.002f) ? rng.generateWhiteNoise() * 1.0f : 0.0f;
     float burst2 = (t >= 0.002f && t < 0.004f) ? rng.generateWhiteNoise() * 0.8f : 0.0f;
     float burst3 = (t >= 0.004f && t < 0.006f) ? rng.generateWhiteNoise() * 0.6f : 0.0f;
-    float noise = rng.generatePinkNoise() * 0.4f; // Continuous pink noise for body
-
-    // Band-passed noise for tonal character (~200-2000 Hz)
+    float noise = rng.generatePinkNoise() * 0.4f;
     float tonal = rng.generateWhiteNoise() * std::sin(2.0f * M_PI * 800.0f * t) * 0.3f;
-
-    // Combine sound components
     float output = env * (burst1 + burst2 + burst3 + noise + tonal);
-
-    // Apply band-pass filter effect implicitly via tonal shaping
-    static AudioUtils::Distortion dist(1.4f, 0.6f); // Light distortion for grit
-    static AudioUtils::Reverb reverb(0.03f, 0.3f, 0.2f); // Short reverb for space
+    static AudioUtils::Distortion dist(1.4f, 0.6f);
+    static AudioUtils::Reverb reverb(0.03f, 0.3f, 0.2f);
     output = dist.process(output);
     output = reverb.process(output);
-	output *= 1.0f; // These are added to adjust this instrument volume
+    output *= 1.0f;
     return output;
 }
 
@@ -530,98 +428,44 @@ static float generateTomWave(float t, float freq, float dur) {
     AudioUtils::LowPassFilter filter(300.0f, 44100.0f);
     output = reverb.process(output);
     output = filter.process(output);
-	output *= 1.0f; // These are added to adjust this instrument volume
+    output *= 1.0f;
     return output;
 }
 
 static float generateSubBassWave(float t, float freq, float dur) {
-    // Clamp frequency to 20-80 Hz for sub-bass focus
     freq = std::clamp(freq, 20.0f, 80.0f);
-
-    // ADSR envelope parameters for punchy rap-style sub
     float attack = 0.005f, decay = 0.1f, sustain = 0.6f, release = 0.25f, env;
-
-    // Calculate envelope
-    if (t < attack) {
-        env = t / attack;
-    } else if (t < attack + decay) {
-        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    } else if (t < dur) {
-        env = sustain;
-    } else {
-        env = sustain * std::exp(-(t - dur) / release);
-    }
-
-    // Generate waveform: sine for warmth, slight triangle for edge
+    if (t < attack) env = t / attack;
+    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    else if (t < dur) env = sustain;
+    else env = sustain * std::exp(-(t - dur) / release);
     float sine = std::sin(2.0f * M_PI * freq * t) * 0.85f;
     float triangle = (2.0f / M_PI) * std::asin(std::sin(2.0f * M_PI * freq * 0.99f * t)) * 0.15f;
     float output = env * (sine + triangle);
-
-    // Apply low-pass filter at 80 Hz to keep sub-bass clean
     static AudioUtils::LowPassFilter filter(80.0f, 44100.0f);
     output = filter.process(output);
-
-    // Optional subtle saturation for perceived loudness
     output = std::tanh(output * 1.2f);
-	output *= 1.0f; // These are added to adjust this instrument volume
+    output *= 1.0f;
     return output;
 }
 
 static float generateSynthArpWave(float t, float freq, float dur) {
+    // Corrected to produce arpeggio synth sound
     static AudioUtils::RandomGenerator rng;
-    static AudioUtils::BandPassFilter formant1(800.0f, 1.2f, 44100.0f);
-    static AudioUtils::BandPassFilter formant2(2400.0f, 1.5f, 44100.0f);
-    static AudioUtils::BandPassFilter breathFilter(2000.0f, 0.7f, 44100.0f);
-
-    // Input validation
-    if (!std::isfinite(freq) || freq <= 0.0f) {
-        SDL_Log("Invalid freq %.2f, returning 0.0", freq);
-        return 0.0f;
-    }
-    freq = std::max(138.59f, std::min(880.0f, freq)); // Saxophone range (C#3 to A5)
-
-    // ADSR envelope
-    float attack = 0.003f, decay = 0.02f, sustain = 0.85f, release = 0.3f, env;
-    if (t < attack) {
-        env = t / attack;
-    } else if (t < attack + decay) {
-        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    } else if (t < dur) {
-        env = sustain;
-    } else if (t < dur + release) {
-        env = sustain * std::exp(-(t - dur) / release);
-    } else {
-        env = 0.0f;
-    }
-
-    // Vibrato
-    float vibratoFreq = 5.5f;
-    float vibratoDepth = 0.005f;
-    float vibrato = (t > 0.1f) ? std::sin(2.0f * M_PI * vibratoFreq * t) * vibratoDepth : 0.0f;
-    float modulatedFreq = freq * (1.0f + vibrato);
-
-    // Dynamic harmonics
-    float harmonic1 = 1.0f * std::cos(2.0f * M_PI * modulatedFreq * t) * env;
-    float harmonic3 = 0.8f * std::cos(2.0f * M_PI * 3.0f * modulatedFreq * t) * env;
-    float harmonic5 = 0.5f * std::cos(2.0f * M_PI * 5.0f * modulatedFreq * t) * env;
-    float harmonic7 = 0.3f * std::cos(2.0f * M_PI * 7.0f * modulatedFreq * t) * env;
-    float harmonic2 = 0.2f * std::cos(2.0f * M_PI * 2.0f * modulatedFreq * t) * env;
-    float output = (harmonic1 + harmonic2 + harmonic3 + harmonic5 + harmonic7) * 0.5f;
-
-    // Formant filters
-    output = formant1.process(output) * 1.2f + formant2.process(output) * 0.8f;
-
-    // Articulation noise
-    float articulation = (t < 0.005f) ? breathFilter.process(rng.generateWhiteNoise()) * 0.2f : 0.0f;
-
-    // Combine output
-    float breathNoise = breathFilter.process(rng.generateWhiteNoise()) * 0.1f * (t < 0.05f ? 1.5f : 1.0f);
-    output = (output + breathNoise * env + articulation) * env;
-
-    // Clip and scale
+    float attack = 0.01f, decay = 0.1f, sustain = 0.7f, release = 0.2f, env;
+    if (t < attack) env = t / attack;
+    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    else if (t < dur) env = sustain;
+    else env = sustain * std::exp(-(t - dur) / release);
+    float saw = (std::fmod(freq * t, 1.0f) - 0.5f) * 0.6f;
+    float square = (std::sin(2.0f * M_PI * freq * t) > 0.0f ? 1.0f : -1.0f) * 0.4f;
+    float output = env * (saw + square);
+    static AudioUtils::LowPassFilter filter(4000.0f, 44100.0f);
+    static AudioUtils::Reverb reverb(0.1f, 0.5f, 0.3f);
+    output = filter.process(output);
+    output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.90f; // volume. .10 is 10%
-
+    output *= 0.8f;
     return output;
 }
 
@@ -643,7 +487,7 @@ static float generateLeadSynthWave(float t, float freq, float dur) {
     output = dist.process(output);
     output = reverb.process(output);
     output = filter.process(output);
-	output *= 1.0f; // These are added to adjust this instrument volume
+    output *= 1.0f;
     return output;
 }
 
@@ -651,9 +495,7 @@ static float generatePadWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter filter(800.0f, 44100.0f);
     static AudioUtils::Reverb reverb(0.8f, 0.8f, 0.6f, 44100.0f);
-    if (!std::isfinite(t) || t < 0.0f || !std::isfinite(freq) || freq <= 0.0f || !std::isfinite(dur)) {
-        return 0.0f;
-    }
+    if (!std::isfinite(t) || t < 0.0f || !std::isfinite(freq) || freq <= 0.0f || !std::isfinite(dur)) return 0.0f;
     freq = std::max(32.7f, std::min(2093.0f, freq));
     float phase = 2.0f * M_PI * freq * t;
     float detune1 = 1.005f;
@@ -671,62 +513,36 @@ static float generatePadWave(float t, float freq, float dur) {
     output = filter.process(output);
     float attack = 0.5f, decay = 0.2f, sustain = 0.8f, release = 1.0f;
     float env;
-    if (t < attack) {
-        env = t / attack;
-    } else if (t < attack + decay) {
-        env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-    } else if (t < dur) {
-        env = sustain;
-    } else if (t < dur + release) {
-        env = sustain * std::exp(-(t - dur) / release);
-    } else {
-        env = 0.0f;
-    }
+    if (t < attack) env = t / attack;
+    else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+    else if (t < dur) env = sustain;
+    else if (t < dur + release) env = sustain * std::exp(-(t - dur) / release);
+    else env = 0.0f;
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= .25f; // These are added to adjust this instrument volume
+    output *= 0.25f;
     return output;
 }
 
 static float generateCymbalWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
-
-    // Clamp duration to 0.1-1.5 seconds for cymbal realism
     dur = std::clamp(dur, 0.1f, 1.5f);
-
-    // Use freq as base for metallic components, default to 6000 Hz if invalid
     freq = (freq > 0.0f) ? std::clamp(freq, 2000.0f, 10000.0f) : 6000.0f;
-
-    // Envelope with sharp attack and long tail
     float env = std::exp(-6.0f * t / dur) * (1.0f + 0.4f * std::sin(8.0f * M_PI * t / dur));
     env = std::max(0.0f, env);
-
-    // High-frequency noise for cymbal shimmer
     float whiteNoise = rng.generateWhiteNoise() * 0.7f;
     float pinkNoise = rng.generatePinkNoise() * 0.3f;
-
-    // Metallic inharmonic components (scaled by freq)
     float metallic1 = std::sin(2.0f * M_PI * freq * t) * 0.2f * std::exp(-4.0f * t / dur);
     float metallic2 = std::sin(2.0f * M_PI * (freq * 1.5f) * t) * 0.15f * std::exp(-5.0f * t / dur);
     float metallic3 = std::sin(2.0f * M_PI * (freq * 2.0f) * t) * 0.1f * std::exp(-6.0f * t / dur);
-
-    // Modulate noise to simulate cymbal's high-passed character
     float filterMod = 0.5f + 0.5f * std::sin(2.0f * M_PI * (8000.0f + 6000.0f * std::exp(-5.0f * t / dur)) * t);
     float noise = (whiteNoise + pinkNoise) * filterMod;
-
-    // Combine components
     float output = env * (noise + metallic1 + metallic2 + metallic3);
-
-    // Apply reverb for long, shimmering tail
     static AudioUtils::Reverb reverb(0.15f, 0.6f, 0.4f, 44100.0f);
     output = reverb.process(output);
-
-    // Clip output to prevent distortion
     output = std::max(-1.0f, std::min(1.0f, output));
-	
-	output *= 0.3f; // I add these for final volume adjustments
-
+    output *= 0.3f;
     return output;
 }
 
@@ -1037,7 +853,32 @@ static float generateVocalWave(float t, float freq, int phoneme, float dur, int 
     return output;
 }
 
-// my Dad picked the flute and I messed with 1.5
+// My Dad picked the flute and I messed with 1.5 second tail durations.
+// copy and paste generateFluteWave into AI and tell it how would like it fixed to sound better.
+// Then if it does not, you can tell it more like whatever you can do to make it more realistic using those three properties and an 8 channel tone generator.
+// tell it can look at AudioManager and the filters and stuff later if it cares, but it is all in one file already.
+//
+// this should never change: 
+//
+// static float generateFluteWave(float t, float freq, float dur) {
+// }
+// copy that portion from down below.
+//
+// This is enough for AI to design your instruments.
+//
+// it needs to understand how much duration. now and freq and dur
+// dur is go fix your code over in songen.h
+// types.h and structs if you a hotshot, go see queued branch on github instead.
+//
+// I listen to real flute videos before bossing it around most times.
+// make clean and make and generateFluteWave will work with the engine.
+// if it does not then I use CTRL-Z to undo changes.
+// if you lose the one I gave you, you can download it again. Might be a new update out.
+// my songgen.h instruments.h should be updating frequently.
+// you can fork the code and upload your changes to your own github page for free.
+ 
+// save. make clean make
+// copy below here.
 static float generateFluteWave(float t, float freq, float dur) {
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter breathFilter(1600.0f, 300.0f, 44100.0f); // Lower, narrower for natural breath
@@ -1121,6 +962,8 @@ static float generateFluteWave(float t, float freq, float dur) {
 	output *= 1.0f; // These are added to adjust this instrument volume
     return output;
 }
+// This is enough for AI to design your instruments.
+// You can try other instruments but only the ones here already can be used so do them individually so you can hear them inbetween and make sure it sounds better.
 
 // crank this one up
 static float generateTrumpetWave(float t, float freq, float dur) {
@@ -2012,6 +1855,120 @@ static float generateSitarWave(float sampleRate, float freq, float time, float d
     output *= 0.25f; // These are added to adjust this instrument volume	
     return output;
 }
+
+#pragma GCC diagnostic pop
+
+// SampleManager
+class SampleManager {
+    std::mutex mutex;
+    std::map<std::string, std::vector<InstrumentSample>> samples;
+    static float generateSample(const std::string& instrument, float sampleRate, float freq, float dur, int phoneme, bool open, float t) {
+        if (instrument == "kick") return generateKickWave(t, freq, dur);
+        if (instrument == "hihat_closed") return generateHiHatWave(t, freq, false, dur);
+        if (instrument == "hihat_open") return generateHiHatWave(t, freq, true, dur);
+        if (instrument == "snare") return generateSnareWave(t, dur);
+        if (instrument == "clap") return generateClapWave(t, dur);
+        if (instrument == "tom") return generateTomWave(t, freq, dur);
+        if (instrument == "subbass") return generateSubBassWave(t, freq, dur);
+        if (instrument == "syntharp") return generateSynthArpWave(t, freq, dur);
+        if (instrument == "leadsynth") return generateLeadSynthWave(t, freq, dur);
+        if (instrument == "pad") return generatePadWave(t, freq, dur);
+        if (instrument == "cymbal") return generateCymbalWave(t, freq, dur);
+        if (instrument == "vocal_0") return generateVocalWave(t, freq, phoneme, dur, 0);
+        if (instrument == "vocal_1") return generateVocalWave(t, freq, phoneme, dur, 1);
+        if (instrument == "flute") return generateFluteWave(t, freq, dur);
+        if (instrument == "trumpet") return generateTrumpetWave(t, freq, dur);
+        thread_local static KarplusStrongState state1, state2;
+        if (t == 0.0f) { state1 = KarplusStrongState(); state2 = KarplusStrongState(); }
+        if (instrument == "guitar") return generateGuitarWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "organ") return generateOrganWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "bass") return generateBassWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "piano") return generatePianoWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "violin") return generateViolinWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "cello") return generateCelloWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "marimba") return generateMarimbaWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "steelguitar") return generateSteelGuitarWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "sitar") return generateSitarWave(sampleRate, freq, t, dur, state1, state2);
+        if (instrument == "saxophone") return generateSaxophoneWave(sampleRate, freq, t, dur, state1, state2);
+        return 0.0f;
+    }
+public:
+    SampleManager() {}
+    const std::vector<float>& getSample(const std::string& instrument, float sampleRate, float freq, float dur, int phoneme = -1, bool open = false) {
+        std::lock_guard<std::mutex> lock(mutex);
+        auto& instrumentSamples = samples[instrument];
+        for (const auto& sample : instrumentSamples) {
+            if (std::abs(sample.freq - freq) < 0.1f && std::abs(sample.dur - dur) < 0.01f &&
+                sample.phoneme == phoneme && sample.open == open) {
+                return sample.samples;
+            }
+        }
+        float tail = getTailDuration(instrument);
+        size_t sampleCount = static_cast<size_t>((dur + tail) * sampleRate);
+        std::vector<float> newSamples(sampleCount);
+        for (size_t i = 0; i < sampleCount; ++i) {
+            float t = i / sampleRate;
+            newSamples[i] = generateSample(instrument, sampleRate, freq, dur, phoneme, open, t);
+        }
+        instrumentSamples.emplace_back(freq, dur, phoneme, open, std::move(newSamples));
+        return instrumentSamples.back().samples;
+    }
+};
+
+static SampleManager sampleManager;
+
+// Song structures
+struct AutomationPoint {
+    float time, value;
+};
+
+struct Note {
+    float startTime, duration, freq, volume, velocity;
+    int phoneme;
+    bool open;
+};
+
+struct Section {
+    std::string name;
+    float startTime, endTime;
+};
+
+struct Part {
+    std::string instrument;
+    std::vector<Note> notes;
+    std::vector<AutomationPoint> panAutomation, volumeAutomation, reverbMixAutomation;
+    float pan, reverbMix;
+    bool useDistortion, useReverb;
+};
+
+struct Song {
+    float duration;
+    int channels; // 2 for stereo, 6 for 5.1
+    std::vector<Section> sections;
+    std::vector<Part> parts;
+};
+
+struct ActiveNote {
+    size_t noteIndex;
+    float startTime, endTime;
+};
+
+struct PlaybackState {
+    Song song;
+    float currentTime;
+    size_t currentSectionIdx;
+    bool playing;
+    std::vector<size_t> nextNoteIndices;
+    std::vector<std::vector<ActiveNote>> activeNotes;
+    std::vector<AudioUtils::Reverb> reverbs;
+    std::vector<AudioUtils::Distortion> distortions;
+    PlaybackState() : currentTime(0.0f), currentSectionIdx(0), playing(false) {}
+};
+
+// Utility functions
+float interpolateAutomation(float t, const std::vector<AutomationPoint>& points, float defaultValue);
+size_t countNotesInSection(const Song& song, const Section& section);
+std::string getInstrumentsInSection(const Song& song, const Section& section);
 
 } // namespace Instruments
 
