@@ -10,14 +10,14 @@
 # - Run 'make songgen' to build only songgen (works on its own).
 # - Run 'make clean' to delete all built files and start fresh.
 #
-# AFTER BUILDING:
-# - Run './linesplus' to play linesplus. (or use icon)
+# AFTER running make:
+# - Run './linesplus' to play linesplus. F to toggle fullscreen.
 # - Run './songgen' for help
 # - Run './songgen rock' to create a song
 # - Run './songgen song1.song' to play song1
 #
 # REQUIREMENTS: (you may already have them installed)
-# Run this command ONCE if the build fails:
+# Run this sudo command ONCE if the make fails: Did you try make yet?
 #    NOTE: 'sudo' will ask for the password. Ask an adult for help if needed!
 #	 To install software on Linux it is common to require a password.
 #
@@ -163,7 +163,7 @@ clean:
 	)
 	@echo "*** removing machine files."
 	@echo "** Ready for a fresh build. Clean successful! All pre-built files removed.  ***"
-	@echo "* type 'make' or 'make -j$(nproc)' you are ready for the not boring ***"
+	@echo "* type 'make' or 'make -j\$$(nproc)' you are ready for the not boring ***"
 
 # nproc uses your full processor cores during the building process. You can specify -j16 or whatever.
 # nproc just tells you the number. $(programname)'sudo apt install nproc'
