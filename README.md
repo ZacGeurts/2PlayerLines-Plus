@@ -25,11 +25,12 @@ Highly recommended - allows full processor cores simply. `make clean` and `make 
 <BR />
 <BR />
 Type `make` to build `./linesplus` and `./songgen`. Needs OpenGL (Mesa) and SDL2.<BR />
+<BR />
 `./linesplus` from a terminal to play<BR />
 `./songgen` from a terminal to use songgen<BR />
 `Makefile` puts the files together. Do not modify.<BR />
 Do not edit Makefile. Files are in the include and src folders.<BR />
-Tell the AI that these worked for C++ 17 and could stand to use an update.<BR />
+Tell the AI that these worked for C++ 17 and only SDL2 and could stand to use an update.<BR />
 Update the files to compile for windows. Maybe someday.<BR />
 Download from the $${\color{green}Green}$$ code button above or:<BR />
 `git clone https://github.com/ZacGeurts/2PlayerLines-Plus`<BR />
@@ -38,7 +39,7 @@ Download from the $${\color{green}Green}$$ code button above or:<BR />
 `make` to build all files.<BR />
 <BR />
 Type `make linesplus` requires a ./songgen build, or it errors.<BR />
-Type `make songgen` if you just want to use ./songgen build.<BR />
+Type `make songgen` if you just want to use ./songgen build. Only uses SDL2<BR />
 Type `make clean` before rebuilding.<BR />
 <BR />
 ./linesplus<BR />
