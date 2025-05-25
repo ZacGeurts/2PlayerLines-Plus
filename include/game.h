@@ -18,6 +18,15 @@
 
 class Game {
 public:
+	
+	SDL_Color SDLaicolor = {255, 0, 0}; // red
+	SDL_Color SDLcirclecolor = {255, 0, 255}; // magenta
+	SDL_Color SDLplayercolor = {255, 0, 255}; // magenta
+	SDL_Color SDLexplosioncolor = {255, 0, 255}; // magenta
+	
+	// Forward declaration of PlayerManager
+	class PlayerManager;
+	
     Game(const GameConfig& config);
     ~Game();
     void run();
@@ -39,7 +48,7 @@ public:
     CircleManager circleManager;
     ExplosionManager explosionManager;
     InputManager inputManager;
-    PlayerManager playerManager;
+	PlayerManager playerManager;
     AI ai;
     GLuint splashTexture;
     bool isSplashScreen;

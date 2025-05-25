@@ -16,7 +16,7 @@ void CircleManager::spawnInitialCircle(std::mt19937& rng, std::vector<Circle>& c
     circle.prevPos = circle.pos;
     circle.vel = Vec2(distVel(rng), distVel(rng));
     circle.radius = config.CIRCLE_RADIUS;
-    circle.color = {255, 0, 255, 255}; // Magenta
+    circle.SDLcirclecolor = {255, 0, 255, 255}; // Magenta
     circle.magentaTimer = 0.0f;
     circle.isYellow = false;
     circles.push_back(circle);
@@ -41,7 +41,7 @@ void CircleManager::updateCircles(float dt, std::vector<Circle>& circles, std::m
         // Update color timer
         circle.magentaTimer += dt;
         if (circle.magentaTimer >= 3.0f && !circle.isYellow) {
-            circle.color = {255, 255, 0, 255}; // Yellow
+            circle.SDLcirclecolor = {255, 255, 0, 255}; // Yellow
             circle.isYellow = true; // Permanent yellow
         }
     }

@@ -57,7 +57,7 @@ SONGGEN_LDFLAGS = -lSDL2 -pthread
 # I like the Plane9 windowed program, it dances with music.
 # I listen to music with it on sometimes. Works with windows, This currently does not.
 # I had it add some WIN32 on the audio files. Too lazy for the rest with other activities and my AI keeps breaking it.
-# I use wine to run plane9. I use Port Proton to manage my windows emulators.
+# I use wine to run plane9. I use Port Proton to manage wine.
 # www.plane9.com
 # they have tools to make your own Plane9 'visualizers'. Shows audio and music with rainbows and math.
 SONGVIEW_LDFLAGS = -lSDL2 -lGL -lGLU -lfftw3
@@ -78,25 +78,30 @@ SONGGEN_EXEC = songgen
 # instruments.h and songgen.h, in order of difficulty and rewards for better instruments, to get started.
 SONGVIEW_EXEC = songview
 
-# Default target: build linesplus and songgen
+# Default target: build ./linesplus and ./songgen
 all: $(EXEC) $(SONGGEN_EXEC)
 	@echo "*** Successfully built linesplus and songgen! ***"
 	@echo "* Run './linesplus' to play or './songgen' to create a song. ***"
+	@echo "** When playing ***"
+	@echo "* Press F to exit fullscreen in ./linesplus. ***"
+	@echo "* Press M to mute ./songgen from ./linesplus. ***"
+	@echo "* Press ESC to exit ./linesplus. ***"
+	@echo "* Press CTRL-C to exit ./songgen. ***"
 
-# Build linesplus executable
+# Build ./linesplus
 $(EXEC): $(OBJECTS)
 	@echo "Building linesplus..."
 	@$(CC) $(OBJECTS) -o $(EXEC) $(LDFLAGS) || ( \
 		echo "*** Failed! Building linesplus failed. You might be missing some libraries. ***"; \
-		echo "Try running this command (ask an adult for help with 'sudo'):"; \
-		echo "  sudo apt install build-essential libsdl2-dev libsdl2-image-dev libgl1-mesa-dev libpthread-stubs0-dev"; \
-		echo "Then run 'make' again."; \
+		echo "*** Try running this command (ask an adult for help with 'sudo'):"; \
+		echo "sudo apt install build-essential libsdl2-dev libsdl2-image-dev libgl1-mesa-dev libpthread-stubs0-dev"; \
+		echo "* Then run 'make' again."; \
 		exit 1; \
 	)
 	@echo "*** linesplus built successfully! Run './linesplus' to play. ***"
 	@echo "* linesplus built successfully!"
 	
-# Build songgen executable
+# Build ./songgen
 $(SONGGEN_EXEC): $(SONGGEN_OBJ)
 	@echo "Building songgen..."
 	@$(CC) $(SONGGEN_OBJ) -o $(SONGGEN_EXEC) $(SONGGEN_LDFLAGS) || ( \

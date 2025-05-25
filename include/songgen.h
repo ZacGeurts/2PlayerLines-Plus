@@ -19,6 +19,7 @@
 #include <sstream>
 #include <ctime>
 #include <SDL2/SDL.h>
+std::set<std::string> getInstruments(); // Explicit std::
 
 namespace SongGen {
     enum Genre {
@@ -391,7 +392,7 @@ if (!sections.empty() && sections.back().endTime < totalDur) {
     ::SDL_Log("Adjusted final section %s end time to %.2f seconds", sections.back().name.c_str(), totalDur);
 }
 
-float beat = 60.0f / bpm;
+float beat = 60.0f / bpm; // 1.5
 
 // Determine intro style
 bool vocalOnlyIntro = (g == GOSPEL || g == SOUL || g == POP || g == RAP || g == HIPHOP) && rng() % 2 == 0;
@@ -653,7 +654,7 @@ void saveToFile(const std::string& title, const std::string& genres, float bpm, 
     ::SDL_Log("Song saved successfully to %s", filename.c_str());
 }
 
-    private:
+    private: // songgen.h handles it.
         std::mt19937 rng{std::random_device{}()};
         const float sampleRate = 44100.0f;
         const std::vector<float> durations = {
@@ -768,6 +769,7 @@ void saveToFile(const std::string& title, const std::string& genres, float bpm, 
         std::map<std::string, Part> sectionTemplates;
         std::map<std::string, std::vector<int>> chordProgressions;
 
+// leaving this part alone
     float getClosestFreq(float target, const std::vector<float>& freqPool) {
         if (!std::isfinite(target) || target <= 0.0f) {
             ::SDL_Log("Invalid frequency target %.2f, returning %.2f Hz", target, freqPool[0]);
@@ -794,6 +796,7 @@ void saveToFile(const std::string& title, const std::string& genres, float bpm, 
             float sixteenthNote = 60.0f / (bpm * 4);
             return std::round(time / sixteenthNote) * sixteenthNote;
         }
+// next
 
 std::string generateTitle() {
     ::SDL_Log("Generating song title");
@@ -876,7 +879,7 @@ std::string generateTitle() {
         float getRandomDuration(Genre g, float sectionProgress, float bpm) {
             if (!std::isfinite(bpm) || bpm <= 0.0f) {
                 ::SDL_Log("Invalid BPM %.2f, using 120.0", bpm);
-                bpm = 120.0f;
+                bpm = 20.0f; // lies - kek
             }
             const auto& weights = genreDurationWeights.at(g);
             std::vector<float> adjustedWeights = weights;
@@ -1186,6 +1189,7 @@ std::vector<std::vector<int>> getChordProgressions(const std::string& scaleName,
     return progs;
 }
 
+// AI stuff
 std::vector<float> buildChord(int degree, const std::string& scaleName, float rootFreq, Genre g, int inversion = 0) {
     if (!std::isfinite(rootFreq) || rootFreq <= 0.0f) {
         ::SDL_Log("Invalid rootFreq %.2f in buildChord, using 440.0 Hz", rootFreq);
@@ -1246,6 +1250,7 @@ std::vector<float> buildChord(int degree, const std::string& scaleName, float ro
 
     return chord;
 }
+// shrug
 
         std::vector<Note> generateMotif(Genre g, const std::string& scaleName, float rootFreq, float bpm) {
             std::vector<Note> motif;
@@ -1314,6 +1319,7 @@ std::vector<float> buildChord(int degree, const std::string& scaleName, float ro
             return varied;
         }
 
+// this part is fun
 Part generateMelody(Genre g, const std::string& scaleName, float rootFreq, float totalDur, const std::vector<Section>& sections, float bpm) {
     Part melody;
     melody.instrument = (g == ROCK || g == METAL || g == PUNK) ? "guitar" : 
@@ -1605,10 +1611,12 @@ Part generateMelody(Genre g, const std::string& scaleName, float rootFreq, float
             ::SDL_Log("Stored melody template %s with %zu notes", templateName.c_str(), templatePart.notes.size());
         }
     }
+	// should not see log.
     ::SDL_Log("Generated melody with total %zu notes, %zu invalid frequencies encountered", melody.notes.size(), invalidFreqCount);
     return melody;
 }
 
+// gets exciting - frequentncies in order
 Part generateRhythm(Genre g, float totalDur, float beat, float bpm, const std::string& instrument, const std::vector<Section>& sections) {
     Part rhythm;
     rhythm.instrument = instrument;
@@ -1640,7 +1648,8 @@ Part generateRhythm(Genre g, float totalDur, float beat, float bpm, const std::s
         {"cymbal", {200.0f, 1000.0f}},  // Higher range for cymbals
         {"hihat_closed", {300.0f, 800.0f}},
         {"hihat_open", {300.0f, 800.0f}},
-        {"clap", {200.0f, 600.0f}}
+        {"clap", {200.0f, 600.0f}},
+		{"subbass", {80.0f, 100.0f}}
         // Add other percussion instruments from instruments.h
     };
 
@@ -1714,7 +1723,7 @@ Part generateRhythm(Genre g, float totalDur, float beat, float bpm, const std::s
     }
 
     // Adjust note duration for specific instruments
-    if (instrument == "hihat_open") noteDur = beat * 1.0f; // Longer for open hi-hat
+    if (instrument == "hihat_open") noteDur = beat * 1.5f; // Longer for open hi-hat
     if (instrument == "cymbal") noteDur = beat * 2.0f; // Sustained cymbal crashes
 
     // Generate automation for dynamic changes

@@ -1,0 +1,167 @@
+# Ultimate Tone Generator for 8-Channel SDL Audio, Threaded Song Generation
+# ~700 lines, ultra-dense, no AI/MIDI, 12 instruments, genre-specific, SDL optimized
+# f_s=44.1kHz, 16-bit, 8 channels (4 stereo/8 mono), buffer=32-256 samples, latency=0.7-5.8ms
+# Threading: 8 threads, fixed-point 16.16, SIMD, ring buffers, genre support: classical, jazz, rock, electronic, world
+
+## 1. Pitch and Frequency
+f(n)=440*2^(n/12), n=semitones, e.g., C4(n=-9): f=440*2^(-9/12)≈261.63Hz
+Cents: f_new=f*2^(c/1200), e.g., +50cents: f=440*2^(50/1200)≈446.68Hz
+Just intonation: C=1/1, D=9/8, E=5/4, F=4/3, G=3/2, A=5/3, B=15/8
+Microtuning: 19-TET: f(n)=f0*2^(n/19); Indian 22-shruti: f(n)=f0*r_k, r_k={1,256/243,16/15,...,81/64}
+Harmonics: f_n=n*f0, n=1-50, e.g., 440Hz: 440,880,1320,1760Hz
+Pitch shift: f_new=f*2^(s/12), s=±0-12, e.g., A4 to C5(+3): f=440*2^(3/12)≈523.25Hz
+Glissando: f(t)=f0*2^(s*t/T/12), s=1-4, T=50-200ms, e.g., guitar bend: s=2, T=100ms
+Doppler: f(t)=f0*343/(343-v_s*cos(θ)), v_s=0-20m/s, θ=0-180°, e.g., v_s=10m/s, θ=0: f=440*343/(343-10)≈453.15Hz
+
+## 2. Waveforms
+Sine: y(t)=A*sin(2πft+φ), φ=0-2π, lookup (8192 samples, 16.16 fixed-point)
+Saw: y(t)=(2A/π)∑(n=1,N)[(-1)^(n+1)/n*sin(2πnft)], N=min(50,f_s/(2*f0)), e.g., 440Hz: N≈50
+Square: y(t)=(4A/π)∑(n=1,3,5,N)[1/n*sin(2πnft)]
+Triangle: y(t)=(8A/π^2)∑(n=1,3,5,N)[(-1)^((n-1)/2)/n^2*sin(2πnft)]
+Pulse: y(t)=A if 0≤t<D*T, -A if D*T≤t<T, D=0.1-0.9, T=1/f
+Noise: y(t)=rand(-A,A), white (flat), pink (f^-1), brown (f^-2), f_c=50-10000Hz
+Wavetable: y(t)=interp(W_i(f,t)), W_i=128-2048 samples, cubic interp, 1-5MB
+Band-limit: N=min(50,f_s/(2*f0)), step=1/f_s≈22.68μs
+
+## 3. Instrument Parameters (12 Distinct Timbres)
+Violin: f0=196-880Hz, saw+triangle, A_n=1/n^2, vibrato f=6Hz±15cents, bow noise (white, f_c=8kHz, A=0.05), sul ponticello (boost n=8-12, A_n=2/n), pizzicato (τ=50ms), attack=10ms, decay=1.2s, formant 800Hz,2000Hz,Q=2
+Cello: f0=65-523Hz, saw+triangle, A_n=1/n^1.5, vibrato f=5Hz±20cents, bow noise (f_c=6kHz, A=0.07), attack=15ms, decay=1.5s, formant 400Hz,1200Hz,Q=1.8
+Trumpet: f0=233-932Hz, saw+square, A_n=1/n, lip buzz (saw f0/2, A=0.1), mute (formant 1000Hz,Q=3), attack=5ms, decay=0.7s, formant 1200Hz,Q=1.5
+Saxophone: f0=103-830Hz, square+saw, growl (FM f_m=30Hz, β=1), key click (noise, 5ms, f_c=3kHz), attack=10ms, decay=0.6s, formant 600Hz,1800Hz,Q=1.8
+Flute: f0=261-2093Hz, triangle, A_1-3=0.8,0.3,0.1, breath noise (f_c=2kHz, A=0.05), attack=25ms, decay=0.5s, formant 700Hz,2000Hz
+Guitar: f0=82-1318Hz, saw, slides (f(t)=f0*2^(4*t/0.1/12)), hammer-on (noise, f_c=5kHz, A=0.1), harmonics (boost n=2,4, A_n=1.5/n), τ=0.3-1s
+Bass guitar: f0=41-330Hz, saw+pulse, D=0.3-0.6, slap (noise burst, f_c=4kHz, A=0.2), attack=5ms, decay=0.8s, formant 300Hz,900Hz,Q=2
+Piano: f0=27.5-4186Hz, saw+noise, detune ±3cents, τ=0.5-2s, hammer (f_c=3kHz, A=0.1), attack=2ms, decay=1-2s
+Vibraphone: f0=220-1760Hz, sine+triangle, A_1-3=0.9,0.2,0.05, tremolo (f=4Hz, m=0.3), attack=10ms, decay=1.5s, formant 1000Hz,Q=1.5
+Kick: Sine 50-100Hz+noise (f_c=200Hz), decay=40ms
+Snare: Noise (f_c=300Hz)+sine 180Hz, decay=25ms
+Sitar: f0=82-659Hz, saw+triangle, A_n=1/n^1.8, sympathetic resonance (sines f_n=n*f0, A_n=0.05/n, n=2-6), attack=20ms, decay=1s, formant 700Hz,1500Hz,Q=2
+Djembe: Noise (f_c=150Hz)+sine 100-200Hz, slap (f_c=2kHz, A=0.15), decay=30ms
+Synth lead: Square+pulse, D=0.2-0.8, PWM (f=1Hz), attack=5ms, decay=0.5s, formant 800Hz,Q=3
+Synth pad: Sine+triangle, attack=200ms, decay=2s, detune ±10cents, formant 500Hz,Q=1
+Organ: Sines (f0,2f0,4f0,8f0), A_n=0.8^n, Leslie AM/FM f=5Hz, depth=±5cents
+
+## 4. Physical Modeling
+Strings: Karplus-Strong, y[n]=x[n]+0.99*y[n-M], M=f_s/f0, e.g., 440Hz: M=44100/440≈100
+Bowed: y[n]=x[n]+0.99*y[n-M]-b*v[n], b=0.1-0.5, v=bow velocity (0.2-0.8)
+Plucked: y[n]=0.5*(y[n-M]+y[n-M-1]), M=f_s/f0, a=0.995, e.g., guitar/sitar
+Tubes: Waveguide, y[n]=0.95*y[n-M]+0.05*x[n], M=f_s/(c*L), L=0.1-2m, e.g., flute
+Membranes: y[m,n,t]=0.9*(y[m+1,n,t-1]+y[m-1,n,t-1]+y[m,n+1,t-1]+y[m,n-1,t-1]), for djembe/kick
+Reeds: y[n]=tanh(3*x[n]+0.9*y[n-1]), f0=100-1000Hz, for sax
+
+## 5. Modulation
+AM: y(t)=A*(1+m*sin(2πf_m*t))*sin(2πf_c*t), m=0-0.5, f_m=0.1-10Hz
+FM: y(t)=A*sin(2πf_c*t+β*sin(2πf_m*t)), β=0-5, f_m=0.1-50Hz
+Vibrato: f(t)=f0*2^(d*sin(2πf_v*t)/1200), d=5-30cents, f_v=4-8Hz
+Tremolo: A(t)=A*(1+m*sin(2πf_t*t)), m=0.1-0.4, f_t=2-8Hz
+PWM: D(t)=0.5+0.4*sin(2πf_pwm*t), f_pwm=0.5-2Hz, for synth lead
+LFO: y(t)=sin(2πf_LFO*t), f_LFO=0.1-20Hz, map to A,f_c,Q
+ADSR: A=1-500ms, D=10-1000ms, S=0-1, R=20-2000ms, e.g., piano: A=2ms,D=50ms,S=0.6,R=1500ms
+Multi-ADSR: ADSR1 (main) + ADSR2 (articulation), e.g., sax: ADSR2 A=5ms,D=10ms for key click
+
+## 6. Effects
+Reverb: FDN(8,τ_i=10-100ms,a_i=0.9-0.98), pre-delay=10-50ms, wet=0.2-0.4, 16-bit fixed-point
+Delay: y(t)=x(t)+a*y(t-τ), a=0.3-0.7, τ=50-500ms, feedback=0.5-0.9
+Chorus: y(t)=∑(x(t-τ_i(t))), τ_i(t)=5-20ms+sin(2πf_LFO*t), f_LFO=0.2-1.5Hz
+Flanger: y(t)=x(t)+x(t-τ(t)), τ(t)=0.1-10ms+sin(2πf_LFO*t), f_LFO=0.1-1Hz
+Phaser: y(t)=x(t)+∑(x(t)*e^(j*φ_n(f))), φ_n=4-8 all-pass stages, f_LFO=0.2-2Hz
+EQ: H(f)=1/(1+(f/f_c)^(2n)), f_c=100-10000Hz, n=1-2, e.g., guitar: boost 200Hz,+3dB
+Distortion: y(t)=tanh(k*x(t)+b), k=2-8, b=0.1-0.3, e.g., rock guitar: k=5
+Wah-wah: f_c(t)=500+4500*sin(2πf_LFO*t), f_LFO=0.5-2Hz, Q=3-5, for guitar
+Tape: Wow/flutter FM f=0.5-2Hz, depth=±1cent, saturation y(t)=tanh(2*x(t))
+Compressor: G=(x/θ)^(1/R) if x≥θ, R=2-6, θ=-20dB, attack=1ms, release=50ms
+
+## 7. Genre-Specific Synthesis
+Classical: Violin,cello,flute,piano; legato (crossfade 10-50ms), vibrato f=5-7Hz, reverb τ=1.5-2s, wet=0.3
+Jazz: Sax,trumpet,vibraphone; expressive dynamics (ADSR S=0.5-1, velocity-scaled), growl (FM β=1-2), delay τ=100ms, wet=0.2
+Rock: Guitar,bass guitar,drums; distortion k=4-6, power chords (f0,f0*3/2,f0*2), fast attack (2-5ms), reverb τ=0.8s
+Electronic: Synth lead,pad; PWM f=0.5-2Hz, filter sweep f_c=500-5000Hz, Q=2-5, delay τ=125ms, sync to BPM
+World: Sitar,djembe; 22-shruti tuning, sympathetic resonance (sines n=2-6, A_n=0.05/n), slap (noise f_c=2kHz), reverb τ=1s
+
+## 8. SDL Audio Output
+Format: f_s=44.1kHz, 16-bit, 8 channels (4 stereo/8 mono)
+Buffer: 32-256 samples, latency=0.7-5.8ms, e.g., 128 samples: latency=128/44100≈2.9ms
+Callback: SDL_AudioCallback(void* udata, Uint8* stream, int len), len=buffer*channels*2
+Mixing: stream[i]=clip(∑(y_k[i]),-32768,32767), k=1-8, fixed-point 16.16
+Channels: 4 stereo (violin, trumpet, piano, synth pad) or 8 mono (flute, guitar, kick, snare)
+Error: Handle underruns by filling zeros, log dropped samples
+
+## 9. Threading for Song Generation
+Threads: 8 (1 per channel), or 4 (1 per stereo pair)
+Task: Thread k computes y_k[n]=wave(t)+effects(t), n=0 to buffer-1
+Sync: SDL_LockAudio()/SDL_UnlockAudio(), mutex for stream write
+Queue: Ring buffer, 4 buffers/thread (128-1024 samples), swap every 2.9-23ms
+Scheduler: Align to BPM, e.g., 120BPM: t_beat=60/120=0.5s
+Note timing: t_note=beat*60/BPM, e.g., eighth note: t=0.25s
+Polyrhythm: m:n, LCM(t1,t2), e.g., 3:2, t1=0.5s, t2=0.75s, LCM=1.5s
+Swing: δ=0.1-0.3*t_beat, e.g., 120BPM: δ=0.2*0.25s=50ms
+Priority: High for kick/snare (rhythmic accuracy), low for pad (sustained)
+
+## 10. Psychoacoustics
+Loudness: L=k*I^0.3, target -16 to -12 LUFS, k=const
+JND: Δf/f≈0.003 (f<1kHz), 0.006 (f>1kHz), e.g., 440Hz: Δf≈1.32Hz
+Critical bands: BW=100Hz (f<500Hz), BW=0.2f (f>500Hz)
+Masking: f1 masks f2 if |f1-f2|<BW and A1>A2+10dB, reduce A_n if masked
+Formants: Violin=800,2000Hz; Cello=400,1200Hz; Sax=600,1800Hz; BW=50-150Hz
+Stereo: y_L(t)=x(t-τ), y_R(t)=x(t+τ), τ=0.1-0.8ms, e.g., violin τ=0.4ms
+Panning: y_L=A_L*x, y_R=A_R*x, A_L^2+A_R^2=1, e.g., 30°: A_L=cos(30°), A_R=sin(30°)
+Haas: τ<40ms=fused source, τ>40ms=echo
+Mic: Cardioid G(θ)=0.5+0.5*cos(θ), for guitar/sax
+
+## 11. Optimization
+Fixed-point: 16.16 for sin, A_n, filters, e.g., sin(x)=lookup(x*8192/(2π))
+SIMD: Vectorize y[n]=∑(A_k*sin(2πk*f0*n/f_s)), k=1-N, 8 samples/loop
+Lookup: Sin table (8192 samples), A_n=1/n^k (k=1-2, n=1-50), formant coeffs
+Buffer: Precompute 4 buffers/thread, swap via ring buffer
+Anti-aliasing: Oversample 2x (88.2kHz), LPF f_c=20kHz, downsample
+Clipping: y(t)=tanh(5*x(t)) if |x|>1
+Polyphony: Max 8 voices, multiplex >8 instruments, e.g., kick/snare share Ch4
+CPU: Target <8%/core, 8 threads, 2GHz CPU
+Phase: Align φ_n=0 for additive synthesis, avoid drift
+Underrun: Fill zeros, log events, prioritize rhythmic threads
+
+## 12. Channel Allocation
+Ch0-1: Violin/cello (stereo, τ=0.4ms, pan=30° left), classical
+Ch2-3: Trumpet/sax (stereo, τ=0.3ms, pan=30° right), jazz
+Ch4: Flute/vibraphone (mono, pan=15° left), classical/jazz
+Ch5: Guitar/bass (mono, pan=15° right), rock
+Ch6-7: Piano/synth pad (stereo, τ=0.5ms, pan=center), all genres
+Ch4/5: Kick/snare/djembe (mono, time-multiplexed), rock/world
+Ch6-7: Synth lead/organ (stereo, if piano inactive), electronic
+Multiplex: Switch instruments every 1-8 bars, crossfade 10-50ms
+
+## 13. Genre-Specific Song Structures
+Classical: 120BPM, 4/4, 8-bar loop, violin(C4,G4,E4,t=0,0.5,1s), cello(C3,G3,t=0,2s), flute(E5,t=1s), piano(Cmaj,t=0,4s), reverb τ=2s
+Jazz: 140BPM, 4/4, 12-bar blues, sax(G4,B4,D5,t=0,0.25,0.5s,growl β=1), vibraphone(G3,t=0,1s), bass(E2,A2,t=0,2s), snare(t=0.5,1.5s), delay τ=100ms
+Rock: 128BPM, 4/4, 8-bar loop, guitar(E3,G3,B3,t=0,0.5,1s,distortion k=5), bass(E2,t=0,1s), kick(t=0,2s), snare(t=1,3s), reverb τ=0.8s
+Electronic: 132BPM, 4/4, 16-bar loop, synth lead(C5,t=0,0.25s,PWM f=1Hz), pad(G3,t=0,4s), kick(t=0,0.5s), filter sweep f_c=500-5000Hz
+World: 110BPM, 4/4, 8-bar loop, sitar(C4,t=0,0.5s,sympathetic n=2-6), djembe(t=0,0.25s,slap A=0.15), flute(C5,t=1s,22-shruti), reverb τ=1s
+
+## 14. Example: Saxophone 440Hz (Ch2-3, Jazz)
+Wave: y(t)=(2/π)∑(n=1,20)[1/n*sin(2π*n*440*t)]+0.2*(4/π)∑(n=1,3,5,10)[1/n*sin(2π*n*440*t)]
+Growl: FM f_m=30Hz, β=1
+ADSR: A=10ms,D=40ms,S=0.8,R=600ms
+Formant: Boost 600Hz,1800Hz,Q=1.8,gain=+5dB
+Reverb: FDN(12,τ_i=15-100ms,a_i=0.95), wet=0.25
+Delay: τ=100ms, a=0.4, wet=0.2
+Stereo: y_L(t)=y(t-0.3ms), y_R(t)=y(t), pan=30° right
+Distortion: y(t)=tanh(4*x(t)+0.3)
+Mic: Cardioid, G(θ)=0.5+0.5*cos(30°)
+
+## 15. Example: Guitar 330Hz (Ch5, Rock)
+Wave: y(t)=(2/π)∑(n=1,20)[1/n*sin(2π*n*330*t)]
+Slide: f(t)=330*2^(2*t/0.1/12), T=100ms
+ADSR: A=5ms,D=30ms,S=0.7,R=800ms
+Formant: Boost 200Hz,900Hz,Q=2,gain=+3dB
+Distortion: y(t)=tanh(5*x(t)+0.2)
+Reverb: FDN(8,τ_i=10-80ms,a_i=0.9), wet=0.3
+Panning: Mono, pan=15° right
+Wah-wah: f_c(t)=500+4500*sin(2π*1.5*t), Q=4
+
+## 16. Error Handling
+Underrun: Fill stream[i]=0, log dropped samples, prioritize kick/snare threads
+Clipping: y(t)=tanh(5*x(t)) if |x|>1
+Phase drift: Reset φ_n=0 every 1s or note-on
+Overflow: Check stream[i] in [-32768,32767], scale by 0.9 if exceeded
+Thread sync: Timeout mutex at 1ms, fallback to previous buffer
+# End: Perfect for 8-channel SDL, 12 instruments, genres, threading, low latency
