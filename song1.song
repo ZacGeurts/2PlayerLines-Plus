@@ -1,5 +1,5 @@
-Song: Change flute
-Genre: Test Instrument
+Song: Change Instrument: flute in song1.song save and exit.
+Genre: Test Instrument (default trumpet)
 BPM: 100
 Scale: blues
 RootFrequency: 440
@@ -8,7 +8,7 @@ Sections: 16
 Section: Intro 0 9.6 Progress: 0 Template: Intro
 Parts: 64
 Part: Melody
-Instrument: flute
+Instrument: trumpet
 Pan: 0.3
 ReverbMix: 0.35
 UseReverb: true
