@@ -31,7 +31,7 @@ AudioManager::AudioManager(const GameConfig& config)
       hasReopenedMusicDevice(false),
       musicPlaying(false),
       musicThread(),
-      musicChannels(8), // Initialize to default, updated in reopenAudioDevice
+      musicChannels(6), // Initialize to default, updated in reopenAudioDevice
 #ifdef _WIN32
       songgenProcess(nullptr),
 #else
@@ -56,7 +56,7 @@ AudioManager::AudioManager(const GameConfig& config)
     desired.freq = 44100;
     desired.format = AUDIO_S16SYS;
     desired.samples = 1024;
-    desired.channels = 8; // SDL does 8
+    desired.channels = 6;
     desired.callback = nullptr;
     desired.userdata = nullptr;
 
@@ -69,18 +69,18 @@ AudioManager::AudioManager(const GameConfig& config)
         SDL_PauseAudioDevice(soundEffectDevice, 0);
     }
 
-    // Initialize music device (prefer 8, then 2)
-    reopenAudioDevice(musicDevice, soundEffectData, "music", 8, &musicChannels);
+    // Initialize music device (prefer 6, then 2)
+    reopenAudioDevice(musicDevice, soundEffectData, "music", 6, &musicChannels);
     if (musicDevice == 0) {
         SDL_Log("Failed to open music audio device, music will be disabled");
     } else {
         SDL_Log("Recognized: ID=%u, channels=%d", musicDevice, musicChannels);
+        SDL_PauseAudioDevice(musicDevice, 0);
     }
 
     srand(static_cast<unsigned>(SDL_GetTicks()));
 }
 
-// AudioManager some reason
 AudioManager::~AudioManager() {
     stopBackgroundMusic();
     if (soundEffectDevice != 0) {
@@ -96,44 +96,41 @@ AudioManager::~AudioManager() {
 
 void AudioManager::playBoop(float currentTimeSec) {
     if (soundEffectDevice == 0) {
-        SDL_Log("Cannot play boop: Device not initialized"); // probably broken computer - install pulse or alsa - usually pulse
+        SDL_Log("Cannot play boop: Device not initialized");
         return;
     }
     std::lock_guard<std::mutex> lock(soundEffectMutex);
-    boopPlaying = true; // said so
+    boopPlaying = true;
     std::vector<int16_t> samples;
-    generateBoopSamples(samples, currentTimeSec, 44100 * config.BOOP_DURATION, 8);
+    generateBoopSamples(samples, currentTimeSec, 44100 * config.BOOP_DURATION, 2);
     if (SDL_GetAudioDeviceStatus(soundEffectDevice) != SDL_AUDIO_PLAYING) {
         if (!hasReopenedSoundEffectDevice) {
-            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 8, nullptr);
+            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 2, nullptr);
             hasReopenedSoundEffectDevice = true;
         }
     }
-	boopPlaying = false; // not so
     if (SDL_QueueAudio(soundEffectDevice, samples.data(), samples.size() * sizeof(int16_t)) == 0) {
-        SDL_Log("Boop queued: %zu samples", samples.size()); // wolf whistle. queued
+        SDL_Log("Boop queued: %zu samples", samples.size());
     } else {
-        SDL_Log("Failed to queue boop: %s", SDL_GetError()); // flush?
+        SDL_Log("Failed to queue boop: %s", SDL_GetError());
     }
 }
 
-// breaks pegi 3 - this file is for linesplus
 void AudioManager::playExplosion(float currentTimeSec) {
     if (soundEffectDevice == 0) {
-        SDL_Log("Cannot play explosion: Device not initialized"); // queued - o7
+        SDL_Log("Cannot play explosion: Device not initialized");
         return;
     }
     std::lock_guard<std::mutex> lock(soundEffectMutex);
     explosionPlaying = true;
     std::vector<int16_t> samples;
-    generateExplosionSamples(samples, currentTimeSec, 44100 * config.EXPLOSION_DURATION, 8);
+    generateExplosionSamples(samples, currentTimeSec, 44100 * config.EXPLOSION_DURATION, 2);
     if (SDL_GetAudioDeviceStatus(soundEffectDevice) != SDL_AUDIO_PLAYING) {
         if (!hasReopenedSoundEffectDevice) {
-            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 8, nullptr);
+            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 2, nullptr);
             hasReopenedSoundEffectDevice = true;
         }
     }
-	explosionPlaying = false;
     if (SDL_QueueAudio(soundEffectDevice, samples.data(), samples.size() * sizeof(int16_t)) == 0) {
         SDL_Log("Explosion queued: %zu samples", samples.size());
     } else {
@@ -141,7 +138,6 @@ void AudioManager::playExplosion(float currentTimeSec) {
     }
 }
 
-// breaks pegi 3
 void AudioManager::playLaserZap(float currentTimeSec) {
     if (soundEffectDevice == 0) {
         SDL_Log("Cannot play laser zap: Device not initialized");
@@ -150,14 +146,13 @@ void AudioManager::playLaserZap(float currentTimeSec) {
     std::lock_guard<std::mutex> lock(soundEffectMutex);
     laserZapPlaying = true;
     std::vector<int16_t> samples;
-    generateLaserZapSamples(samples, currentTimeSec, 44100 * config.LASER_ZAP_DURATION, 8);
+    generateLaserZapSamples(samples, currentTimeSec, 44100 * config.LASER_ZAP_DURATION, 2);
     if (SDL_GetAudioDeviceStatus(soundEffectDevice) != SDL_AUDIO_PLAYING) {
         if (!hasReopenedSoundEffectDevice) {
-            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 8, nullptr);
+            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 2, nullptr);
             hasReopenedSoundEffectDevice = true;
         }
     }
-	laserZapPlaying = false;
     if (SDL_QueueAudio(soundEffectDevice, samples.data(), samples.size() * sizeof(int16_t)) == 0) {
         SDL_Log("Laser zap queued: %zu samples", samples.size());
     } else {
@@ -165,8 +160,6 @@ void AudioManager::playLaserZap(float currentTimeSec) {
     }
 }
 
-
-// breaks pegi 3
 void AudioManager::playWinnerVoice(float currentTimeSec) {
     if (soundEffectDevice == 0) {
         SDL_Log("Cannot play winner voice: Device not initialized");
@@ -175,14 +168,13 @@ void AudioManager::playWinnerVoice(float currentTimeSec) {
     std::lock_guard<std::mutex> lock(soundEffectMutex);
     winnerVoicePlaying = true;
     std::vector<int16_t> samples;
-    generateWinnerVoiceSamples(samples, currentTimeSec, 44100 * config.WINNER_VOICE_DURATION, 8);
+    generateWinnerVoiceSamples(samples, currentTimeSec, 44100 * config.WINNER_VOICE_DURATION, 2);
     if (SDL_GetAudioDeviceStatus(soundEffectDevice) != SDL_AUDIO_PLAYING) {
         if (!hasReopenedSoundEffectDevice) {
-            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 8, nullptr);
+            reopenAudioDevice(soundEffectDevice, soundEffectData, "sound effect", 2, nullptr);
             hasReopenedSoundEffectDevice = true;
         }
     }
-	winnerVoicePlaying = false;
     if (SDL_QueueAudio(soundEffectDevice, samples.data(), samples.size() * sizeof(int16_t)) == 0) {
         SDL_Log("Winner voice queued: %zu samples", samples.size());
     } else {
@@ -190,16 +182,16 @@ void AudioManager::playWinnerVoice(float currentTimeSec) {
     }
 }
 
-void AudioManager::startBackgroundMusic() { // some reason
+void AudioManager::startBackgroundMusic() {
     if (!musicPlaying) {
         musicPlaying = true;
         isFirstRun = true;
         musicThread = std::thread(&AudioManager::playSongsSequentially, this);
         SDL_Log("Background music thread started");
-    } // catch o7
+    }
 }
 
-void AudioManager::stopBackgroundMusic() { // nah
+void AudioManager::stopBackgroundMusic() {
     if (musicPlaying) {
         musicPlaying = false;
 #ifdef _WIN32
@@ -212,7 +204,7 @@ void AudioManager::stopBackgroundMusic() { // nah
         }
 #else
         if (songgenPid > 0) {
-            kill(songgenPid, SIGINT); // ship sunk - letter go
+            kill(songgenPid, SIGINT);
             int status;
             waitpid(songgenPid, &status, 0);
             songgenPid = 0;
@@ -228,7 +220,7 @@ void AudioManager::stopBackgroundMusic() { // nah
     }
 }
 
-void AudioManager::playSongsSequentially() { // throws them around everytime, this is a linesplus file
+void AudioManager::playSongsSequentially() {
     std::random_device rd;
     std::mt19937 rng(rd());
 
@@ -244,7 +236,7 @@ void AudioManager::playSongsSequentially() { // throws them around everytime, th
                 }
             }
             if (songFiles.empty()) {
-                SDL_Log("No .song files found, stopping background music"); // o7
+                SDL_Log("No .song files found, stopping background music");
                 musicPlaying = false;
                 break;
             }
@@ -253,7 +245,7 @@ void AudioManager::playSongsSequentially() { // throws them around everytime, th
             if (isFirstRun) {
                 std::shuffle(songFiles.begin(), songFiles.end(), rng);
                 currentSongIndex = 0;
-                std::string songList = "Shuffled songs: "; // told ya so - o7
+                std::string songList = "Shuffled songs: ";
                 for (const auto& s : songFiles) songList += s + ", ";
                 SDL_Log("%s", songList.c_str());
                 isFirstRun = false;
@@ -264,9 +256,8 @@ void AudioManager::playSongsSequentially() { // throws them around everytime, th
         std::string command = "./songgen " + song;
         if (musicChannels == 2) {
             command += " --stereo";
-        } // Says who? +8 No flag for 6 channels (5.1), as songgen defaults to 5.1
+        } // No flag for 6 channels (5.1), as songgen defaults to 5.1
 #ifdef _WIN32
-		// was yesterday. ?
         command = "songgen " + song + (musicChannels == 2 ? " --stereo" : (musicChannels == 8 ? " --7.1" : ""));
         STARTUPINFO si = { sizeof(si) };
         PROCESS_INFORMATION pi;
@@ -275,52 +266,52 @@ void AudioManager::playSongsSequentially() { // throws them around everytime, th
             CloseHandle(pi.hThread);
             SDL_Log("Executing: %s", command.c_str());
             SDL_PauseAudioDevice(soundEffectDevice, 1);
-            WaitForSingleObject(songgenProcess, INFINITE); // fair enough - o7
+            WaitForSingleObject(songgenProcess, INFINITE);
             SDL_PauseAudioDevice(soundEffectDevice, 0);
             CloseHandle(songgenProcess);
             songgenProcess = nullptr;
-            SDL_Log("Finished playing song: %s (channels=%d)", song.c_str(), musicChannels); // <-- we did it;
+            SDL_Log("Finished playing song: %s (channels=%d)", song.c_str(), musicChannels);
         } else {
-            SDL_Log("Failed to execute songgen for %s: Error %lu", song.c_str(), GetLastError()); // o7
+            SDL_Log("Failed to execute songgen for %s: Error %lu", song.c_str(), GetLastError());
         }
-#else // windows pipe dream ^ we down here v
-        pid_t pid = fork(); // huh
+#else
+        pid_t pid = fork();
         if (pid == 0) {
-            if (musicChannels == 8) {
+            if (musicChannels == 2) {
                 execl("./songgen", "songgen", song.c_str(), "--stereo", nullptr);
             } else {
-                execl("./songgen", "songgen", song.c_str(), nullptr); // Boss said 8 - o7 - Default to 5.1 for 6 channels
+                execl("./songgen", "songgen", song.c_str(), nullptr); // Default to 5.1 for 6 channels
             }
-            SDL_Log("Failed to execute songgen for %s: %s", song.c_str(), strerror(errno)); // impossible - o7
+            SDL_Log("Failed to execute songgen for %s: %s", song.c_str(), strerror(errno));
             exit(1);
-        } else if (pid > 0) { // who said we had a playback device? - o7
+        } else if (pid > 0) {
             songgenPid = pid;
-            SDL_Log("Executing: %s", command.c_str()); // says we did something right.
-            SDL_PauseAudioDevice(soundEffectDevice, 1); // who dares?
+            SDL_Log("Executing: %s", command.c_str());
+            SDL_PauseAudioDevice(soundEffectDevice, 1);
 			int status; // Added declaration
             waitpid(pid, &status, 0);
-            SDL_PauseAudioDevice(soundEffectDevice, 0); // boss said 8;
+            SDL_PauseAudioDevice(soundEffectDevice, 0);
             songgenPid = 0;
             if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                SDL_Log("Finished playing song: %s (channels=%d)", song.c_str(), musicChannels); // 8?
+                SDL_Log("Finished playing song: %s (channels=%d)", song.c_str(), musicChannels);
             } else {
-                SDL_Log("Songgen for %s exited abnormally: status %d", song.c_str(), status); // ditto v - o7
+                SDL_Log("Songgen for %s exited abnormally: status %d", song.c_str(), status);
             }
         } else {
-            SDL_Log("Failed to fork for songgen %s: %s", song.c_str(), strerror(errno)); // error no - o7
+            SDL_Log("Failed to fork for songgen %s: %s", song.c_str(), strerror(errno));
         }
 #endif
 
-        currentSongIndex = (currentSongIndex + 1) % songFiles.size(); // songFiles was shuffled earlier.
+        currentSongIndex = (currentSongIndex + 1) % songFiles.size();
         if (currentSongIndex == 0) {
-            SDL_Log("Completed song cycle, restarting with %s", songFiles[0].c_str()); // do not run it from the icon - f changes fullscreen - o7
+            SDL_Log("Completed song cycle, restarting with %s", songFiles[0].c_str());
         }
 
-        if (!musicPlaying) break; 
+        if (!musicPlaying) break;
     }
 }
 
-bool AudioManager::reopenAudioDevice(SDL_AudioDeviceID& device, AudioData& data, const char* deviceName, int preferredChannels, int* obtainedChannels) {
+bool AudioManager::reopenAudioDevice(SDL_AudioDeviceID& device, BoopAudioData& data, const char* deviceName, int preferredChannels, int* obtainedChannels) {
     if (device != 0) {
         SDL_CloseAudioDevice(device);
         device = 0;
@@ -335,13 +326,13 @@ bool AudioManager::reopenAudioDevice(SDL_AudioDeviceID& device, AudioData& data,
     desired.userdata = nullptr;
 
     device = SDL_OpenAudioDevice(nullptr, 0, &desired, &obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
-    if (device == 0 && preferredChannels >= 8) {
-        SDL_Log("Failed to open %s audio device with 8 channels: %s, attempting stereo", deviceName, SDL_GetError());
-        desired.channels = 8; // boss said 8;
+    if (device == 0 && preferredChannels >= 6) {
+        SDL_Log("Failed to open %s audio device with 6 channels: %s, attempting stereo", deviceName, SDL_GetError());
+        desired.channels = 2;
         device = SDL_OpenAudioDevice(nullptr, 0, &desired, &obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
     }
     if (device == 0) {
-        SDL_Log("Failed to open %s audio device: %s", deviceName, SDL_GetError()); // never happened
+        SDL_Log("Failed to open %s audio device: %s", deviceName, SDL_GetError());
         if (obtainedChannels) *obtainedChannels = 2;
         return false;
     }
@@ -368,7 +359,7 @@ void AudioManager::generateBoopSamples(std::vector<int16_t>& buffer, float start
         }
     }
     if (!buffer.empty()) {
-        SDL_Log("Generated %zu boop samples", buffer.size()); // empty handed
+        SDL_Log("Generated %zu boop samples", buffer.size());
     }
 }
 
@@ -426,6 +417,6 @@ void AudioManager::generateWinnerVoiceSamples(std::vector<int16_t>& buffer, floa
         }
     }
     if (!buffer.empty()) {
-        SDL_Log("Generated %zu winner voice samples", buffer.size()); // pats self on the back
+        SDL_Log("Generated %zu winner voice samples", buffer.size());
     }
 }

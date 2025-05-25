@@ -5,13 +5,15 @@
 #include <random>
 #include <vector>
 
+class AudioManager; // Forward declaration for audio
+
 class ExplosionManager {
-public:    
+public:
     ExplosionManager(const GameConfig& config);
-    void updateExplosions(std::vector<Explosion>& explosions, float dt, float currentTimeSec, SDL_Color color);
-    Explosion createExplosion(const Vec2& pos, std::mt19937& rng, float dt, float startTime, SDL_Color color);
-    Flash createFlash(const Vec2& pos, std::mt19937& rng, float dt, float startTime, const SDL_Color& color); // Changed to const reference
-    void updateFlashes(std::vector<Flash>& flashes, float dt, float currentTimeSec, SDL_Color color);
+    Explosion createExplosion(const Vec2& pos, std::mt19937& rng, float startTime) const;
+    Flash createFlash(const Vec2& pos, std::mt19937& rng, float startTime, const SDL_Color& color = {255, 255, 255, 255}) const;
+    void updateExplosions(std::vector<Explosion>& explosions, float dt, float currentTimeSec, AudioManager& audio) const; // Added
+    void updateFlashes(std::vector<Flash>& flashes, float currentTimeSec) const;
     void cleanupPlayerFlashes(Player& player1, Player& player2, float currentTimeSec) const;
 
 private:

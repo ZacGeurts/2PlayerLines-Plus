@@ -141,7 +141,7 @@ void RenderManager::renderGame(const Game& game, float currentTimeSec) const {
     if (!game.player2.isInvincible) drawTrail(game.player2);
     drawCollectibleGreenSquare(game.collectible);
     for (const auto& circle : game.circles) {
-        drawCircle(circle.pos.x, circle.pos.y, circle.radius, circle.SDLcolor);
+        drawCircle(circle.pos.x, circle.pos.y, circle.radius, circle.color);
     }
     drawPlayer(game.player1);
     drawPlayer(game.player2);

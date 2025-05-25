@@ -6,7 +6,6 @@
 #include <mutex>
 #include <thread>
 #include "types.h"
-#include "game.h"
 
 // Forward declaration of Game
 class Game;
@@ -17,7 +16,7 @@ public:
     ~AI();
     void startUpdate(Player& aiPlayer, const Player& opponent, const Collectible& collectible,
                      const std::vector<Circle>& circles, float dt, std::mt19937& rng, Game& game,
-                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, SDL_Color SDLaicolor);
+                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight);
     void waitForUpdate();
     void applyUpdate(Player& aiPlayer);
     void resetFlash() { flashUsed = false; }

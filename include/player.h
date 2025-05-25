@@ -2,7 +2,6 @@
 #define PLAYER_H
 
 #include "types.h"
-#include "game.h"
 #include "audio.h"
 #include "collectible.h"
 #include "collision.h"
@@ -12,8 +11,8 @@
 #include <random>
 #include <vector>
 
-struct Game; // Forward declaration
-SDL_Color SDLplayercolor = {255, 0, 255, 255}; // Magenta,
+// Forward declaration for Game
+struct Game;
 
 class PlayerManager {
 public:
@@ -24,7 +23,7 @@ public:
                        float dt, float currentTimeSec, AudioManager& audio, CollectibleManager& collectibleManager, 
                        ExplosionManager& explosionManager, CircleManager& circleManager, std::vector<Circle>& circles, 
                        std::chrono::steady_clock::time_point& lastCircleSpawn, Game* game,
-                       const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, SDL_Color SDLplayercolor);
+                       const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight);
 
 private:
     const GameConfig& config;

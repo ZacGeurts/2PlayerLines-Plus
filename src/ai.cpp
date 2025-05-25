@@ -1,5 +1,4 @@
 #include "game.h" // Include game.h for full Game definition
-#include "ai.h"
 #include <cmath>
 #include <algorithm>
 #include <vector>
@@ -34,7 +33,7 @@ AI::~AI() {
 
 void AI::startUpdate(Player& aiPlayer, const Player& opponent, const Collectible& collectible,
                      const std::vector<Circle>& circles, float dt, std::mt19937& rng, Game& game,
-                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, SDL_Color SDLaicolor) {
+                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
     if (!modeEnabled || !aiPlayer.alive || aiPlayer.willDie) return;
 
     if (updateThread.joinable()) {
@@ -83,19 +82,20 @@ void AI::applyUpdate(Player& aiPlayer) {
     bool willDie = false;
     bool hitOpponentHead = false;
     if (aiPlayer.hasMoved && !aiPlayer.isInvincible && !aiPlayer.spawnInvincibilityTimer) {
-        aiPlayer.pos = nextPos;
-        aiPlayer.direction = newDir;
-        aiPlayer.trail = aiPlayer.trail;
-        aiPlayer.alive = true;
-        aiPlayer.willDie = false;
-        aiPlayer.noCollisionTimer = aiPlayer.noCollisionTimer;
-        aiPlayer.isInvincible = aiPlayer.isInvincible;
-        aiPlayer.hitOpponentHead = false;
+        Player aiPlayerCopy = aiPlayer;
+        aiPlayerCopy.pos = nextPos;
+        aiPlayerCopy.direction = newDir;
+        aiPlayerCopy.trail = aiPlayer.trail;
+        aiPlayerCopy.alive = true;
+        aiPlayerCopy.willDie = false;
+        aiPlayerCopy.noCollisionTimer = aiPlayer.noCollisionTimer;
+        aiPlayerCopy.isInvincible = aiPlayer.isInvincible;
+        aiPlayerCopy.hitOpponentHead = false;
 
-        game->checkCollision(&aiPlayer, nextPos, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
-        if (aiPlayer.willDie) {
+        game->checkCollision(&aiPlayerCopy, nextPos, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+        if (aiPlayerCopy.willDie) {
             willDie = true;
-            hitOpponentHead = aiPlayer.hitOpponentHead;
+            hitOpponentHead = aiPlayerCopy.hitOpponentHead;
         }
     }
 
@@ -103,7 +103,7 @@ void AI::applyUpdate(Player& aiPlayer) {
     if (willDie) {
         aiPlayer.willDie = true;
         aiPlayer.deathPos = nextPos;
-        aiPlayer.hitOpponentHead = hitOpponentHead; // draw
+        aiPlayer.hitOpponentHead = hitOpponentHead;
     } else {
         aiPlayer.pos = nextPos;
         aiPlayer.hasMoved = true;
