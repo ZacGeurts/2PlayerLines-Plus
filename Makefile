@@ -98,8 +98,8 @@ $(EXEC): $(OBJECTS)
 		echo "* Then run 'make' again."; \
 		exit 1; \
 	)
-	@echo "*** linesplus built successfully! Run './linesplus' to play. ***"
-	@echo "* linesplus built successfully!"
+	@echo "*** linesplus built successfully! Requires building ./songgen."
+	@echo "* linesplus built successfully! Run './linesplus' to play. ***"	
 	
 # Build ./songgen
 $(SONGGEN_EXEC): $(SONGGEN_OBJ)

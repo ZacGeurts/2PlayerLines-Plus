@@ -66,14 +66,13 @@ void ExplosionManager::updateFlashes(std::vector<Flash>& flashes, float dt, floa
     flashes.erase(
         std::remove_if(flashes.begin(), flashes.end(),
             [&](const Flash& flash) {
-                return currentTimeSec - flash.startTime >= flash.duration; // Use flash.duration
+                return currentTimeSec - flash.startTime >= flash.duration;
             }),
         flashes.end());
-    // Update particle positions for remaining flashes
     for (auto& flash : flashes) {
         for (auto& particle : flash.particles) {
-            particle.pos += particle.vel * (currentTimeSec - particle.time);
-            particle.time = currentTimeSec;
+            particle.pos += particle.vel * dt; // Use dt for consistent movement
+            particle.time += dt; // For potential rendering effects
         }
     }
 }

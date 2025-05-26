@@ -11,6 +11,8 @@
 class AudioManager;
 extern float dt; // Declare delta time for other files
 
+// do not change these, use game.ini
+// game.ini will overwrite any changes
 struct GameConfig {
     int WIDTH = 1920;
     int HEIGHT = 1080;
@@ -24,17 +26,18 @@ struct GameConfig {
     float COLLISION_CHECK_SIZE = 10.0f;
     float BOOP_DURATION = 0.5f;
     float EXPLOSION_DURATION = 1.0f;
+	float INVINCIBILITY_DURATION = 2.0f;
     float LASER_ZAP_DURATION = 0.5f;
     float WINNER_VOICE_DURATION = 1.0f;
     float GREEN_SQUARE_SIZE = 80.0f;
     float COLLECTIBLE_SIZE = 80.0f;
-    float EXPLOSION_MAX_RADIUS = 20.0f;
+    float EXPLOSION_MAX_RADIUS = 40.0f;
     float PLAYER_SIZE = 10.0f;
     float TRAIL_SIZE = 5.0f;
-    float WINNING_SCORE = 100.0f;
+    float WINNING_SCORE = 50.0f;
     float GREEN_SQUARE_POINTS = 1.0f;
     float DEATH_POINTS = 3.0f;
-    bool ENABLE_DEBUG = true;
+    bool ENABLE_DEBUG = false;
     float COLLECT_COOLDOWN = 0.5f;
     float FLASH_COOLDOWN = 2.5f;
     float CIRCLE_SPAWN_INTERVAL = 5.0f;

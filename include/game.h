@@ -30,6 +30,12 @@ public:
     void reset();
     void respawnCircles();
     void activateNoCollision(Player* player, float currentTimeSec);
+	    bool shouldRespawnPlayer(Player* player, float currentTimeSec) {
+        return !player->alive && (currentTimeSec - deathTime >= 2.0f); // Respawn after 2 seconds
+    }
+    Vec2 getSpawnPosition() {
+        return Vec2(orthoWidth / 2, orthoHeight / 2); // Center of screen
+    }
     void resumeAfterWinner();
 	SDL_Color SDLaicolor = {255, 0, 0}; // red
 	SDL_Color SDLcirclecolor = {255, 0, 255}; // magenta

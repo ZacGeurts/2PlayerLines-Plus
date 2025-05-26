@@ -178,9 +178,6 @@ Game::~Game() {
     if (splashTexture != 0) {
         glDeleteTextures(1, &splashTexture);
     }
-    // Remove manual delete for endFlash; handled by std::unique_ptr
-    // if (player1.endFlash) delete player1.endFlash;
-    // if (player2.endFlash) player2.endFlash;
     for (int i = 0; i < 2; ++i) {
         if (controllers[i]) {
             SDL_GameControllerClose(controllers[i]);
@@ -221,7 +218,7 @@ void Game::checkCollision(Player* player, Vec2 nextPos, float currentTimeSec, co
         }
     }
 
-    // Framebuffer-based collision check
+    // Framebuffer-based collision check - black green magenta safe colors
     Vec2 checkPos = nextPos + player->direction * (config.PLAYER_SIZE / 2.0f);
     checkPos.x = std::max(10.0f, std::min(checkPos.x, orthoWidth - 10.0f));
     checkPos.y = std::max(10.0f, std::min(checkPos.y, orthoHeight - 10.0f));

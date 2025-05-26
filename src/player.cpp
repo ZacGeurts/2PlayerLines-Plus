@@ -36,22 +36,42 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
         if (player.noCollisionTimer > 0) {
             player.noCollisionTimer -= dt;
             player.isInvincible = true;
+            if (config.ENABLE_DEBUG) {
+                SDL_Log("Player %s noCollisionTimer: %f", (&player == &player1 ? "1" : "2"), player.noCollisionTimer);
+            }
             if (player.noCollisionTimer <= 0) {
                 player.noCollisionTimer = 0.0f;
                 player.isInvincible = false;
                 player.endFlash = std::make_unique<Flash>(
-                    explosionManager.createFlash(player.pos, rng, dt, currentTimeSec, player.color));
+                    explosionManager.createFlash(player.pos, rng, dt, currentTimeSec, {255, 0, 255, 255}));
+                flashes.emplace_back(*player.endFlash); // Add end flash
                 audio.playLaserZap(currentTimeSec);
                 if (config.ENABLE_DEBUG) {
-                    SDL_Log("No-collision ended for player %s at (%f, %f), time=%f, magenta flash triggered, canUseNoCollision=%d",
-                            (&player == &player1 ? "1" : "2"), player.pos.x, player.pos.y, currentTimeSec, player.canUseNoCollision);
+                    SDL_Log("No-collision ended for player %s at (%f, %f), time=%f, magenta flash triggered",
+                            (&player == &player1 ? "1" : "2"), player.pos.x, player.pos.y, currentTimeSec);
                 }
             }
         }
     }
 
-    // Update player positions and check collisions
+    // Check for player respawn or invincibility start
     for (auto& player : {&player1, &player2}) {
+        if (!player->alive && game->shouldRespawnPlayer(player, currentTimeSec)) {
+            player->alive = true;
+            player->pos = game->getSpawnPosition();
+            player->direction = Vec2(1, 0);
+            player->trail.clear();
+            player->noCollisionTimer = config.INVINCIBILITY_DURATION;
+            player->isInvincible = true;
+            flashes.emplace_back(
+                explosionManager.createFlash(player->pos, rng, dt, currentTimeSec, {255, 0, 255, 255}));
+            audio.playLaserZap(currentTimeSec);
+            if (config.ENABLE_DEBUG) {
+                SDL_Log("Invincibility started for player %s at (%f, %f), time=%f, magenta flash triggered",
+                        player == &player1 ? "1" : "2", player->pos.x, player->pos.y, currentTimeSec);
+            }
+        }
+
         if (!player->alive) continue;
 
         Vec2 nextPos = player->pos + player->direction * config.PLAYER_SPEED * dt;
@@ -63,7 +83,7 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
                 SDL_Log("Player %s set alive=false at (%f, %f), willDie=true",
                         player == &player1 ? "1" : "2", player->pos.x, player->pos.y);
             }
-            game->handlePlayerDeath(player, currentTimeSec); // Delegate scoring to Game
+            game->handlePlayerDeath(player, currentTimeSec);
             continue;
         }
 
@@ -78,11 +98,10 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
             }
         }
 
-        // Check wall collision only if not already dying
+        // Check wall collision
         if (!player->willDie && (nextPos.x < 10 || nextPos.x > game->orthoWidth - 10 ||
                                  nextPos.y < 10 || nextPos.y > game->orthoHeight - 10)) {
             player->willDie = true;
-            // Line 82: Fixed player.color to player->color
             explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, dt, currentTimeSec, player->color));
             audio.playExplosion(currentTimeSec);
             game->deathTime = currentTimeSec;
@@ -92,7 +111,7 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
             }
         }
 
-        // Update position and trail only if not dying
+        // Update position and trail
         if (!player->willDie) {
             player->pos = nextPos;
             player->trail.push_back(player->pos);
@@ -101,6 +120,6 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
 
     circleManager.updateCircles(dt, circles, rng, currentTimeSec, lastCircleSpawn, *game);
     circleManager.clearTrails(circles, player1, player2);
-    explosionManager.updateFlashes(flashes, dt, currentTimeSec, SDLplayercolor); // Consider using a specific color
+    explosionManager.updateFlashes(flashes, dt, currentTimeSec, {255, 0, 255, 255});
     explosionManager.cleanupPlayerFlashes(player1, player2, currentTimeSec);
 }

@@ -49,6 +49,7 @@ GameConfig loadConfig(const std::string& filename) {
             else if (key == "WINNING_SCORE") config.WINNING_SCORE = value;
             else if (key == "GREEN_SQUARE_POINTS") config.GREEN_SQUARE_POINTS = value;
             else if (key == "DEATH_POINTS") config.DEATH_POINTS = value;
+			else if (key == "INVINCIBILITY_DURATION") config.INVINCIBILITY_DURATION = value;
             else if (key == "ENABLE_DEBUG") config.ENABLE_DEBUG = static_cast<bool>(value);
         }
     }
