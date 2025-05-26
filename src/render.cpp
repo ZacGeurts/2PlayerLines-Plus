@@ -133,7 +133,7 @@ void RenderManager::renderGame(const Game& game, float currentTimeSec) const {
             float t = particle.time + elapsed / 0.3f;
             if (t > 1.0f) continue;
             Vec2 pos = particle.pos + particle.vel * t * 20.0f;
-            drawSquare(pos.x - 2, pos.y - 2, 4, flash.color);
+            drawSquare(pos.x - 2, pos.y - 2, 4, flash.SDLflashcolor);
         }
     }
     // Draw trails before circles to allow circles to overwrite them
@@ -141,7 +141,7 @@ void RenderManager::renderGame(const Game& game, float currentTimeSec) const {
     if (!game.player2.isInvincible) drawTrail(game.player2);
     drawCollectibleGreenSquare(game.collectible);
     for (const auto& circle : game.circles) {
-        drawCircle(circle.pos.x, circle.pos.y, circle.radius, circle.color);
+        drawCircle(circle.pos.x, circle.pos.y, circle.radius, circle.SDLcirclecolor);
     }
     drawPlayer(game.player1);
     drawPlayer(game.player2);

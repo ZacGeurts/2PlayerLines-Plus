@@ -13,11 +13,13 @@
 #include "circle.h"
 #include "explosion.h"
 #include "input.h"
-#include "player.h"
 #include "ai.h"
 
+// Forward declaration to avoid circular dependency
+class PlayerManager;
+
 class Game {
-public:
+public:	
     Game(const GameConfig& config);
     ~Game();
     void run();
@@ -29,6 +31,10 @@ public:
     void respawnCircles();
     void activateNoCollision(Player* player, float currentTimeSec);
     void resumeAfterWinner();
+	SDL_Color SDLaicolor = {255, 0, 0}; // red
+	SDL_Color SDLcirclecolor = {255, 0, 255}; // magenta
+	SDL_Color SDLplayercolor = {255, 0, 255}; // magenta
+	SDL_Color SDLexplosioncolor = {255, 0, 255}; // magenta
 
     SDL_Window* window;
     SDL_GLContext glContext;
@@ -39,7 +45,7 @@ public:
     CircleManager circleManager;
     ExplosionManager explosionManager;
     InputManager inputManager;
-    PlayerManager playerManager;
+	PlayerManager* playerManager;
     AI ai;
     GLuint splashTexture;
     bool isSplashScreen;
@@ -83,4 +89,5 @@ private:
     void render();
 };
 
+#include "player.h" // Include after Game class to avoid circular dependency
 #endif // GAME_H

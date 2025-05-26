@@ -9,6 +9,7 @@
 #include <memory>
 
 class AudioManager;
+extern float dt; // Declare delta time for other files
 
 struct GameConfig {
     int WIDTH = 1920;
@@ -37,7 +38,7 @@ struct GameConfig {
     float COLLECT_COOLDOWN = 0.5f;
     float FLASH_COOLDOWN = 2.5f;
     float CIRCLE_SPAWN_INTERVAL = 5.0f;
-};
+	};
 
 struct Vec2 {
     float x, y;
@@ -65,7 +66,7 @@ struct Flash;
 struct Player {
     Vec2 pos;
     Vec2 direction;
-    ::SDL_Color color;
+    SDL_Color color;
     std::vector<Vec2> trail;
     bool alive;
     bool willDie;
@@ -74,10 +75,10 @@ struct Player {
     float noCollisionTimer;
     bool canUseNoCollision;
     bool isInvincible;
-    Flash* endFlash;
     bool collectedGreenThisFrame;
     bool scoredDeathThisFrame;
     float spawnInvincibilityTimer;
+    std::unique_ptr<Flash> endFlash;
     bool hitOpponentHead;
 };
 
@@ -86,7 +87,7 @@ struct Circle {
     Vec2 vel;
     Vec2 prevPos;
     float radius;
-    ::SDL_Color color;
+	SDL_Color SDLcirclecolor;
     float magentaTimer;
     bool isYellow;
 };
@@ -100,27 +101,26 @@ struct Collectible {
 struct ExplosionParticle {
     Vec2 pos;
     Vec2 vel;
-    float time;
+    float dt;
+	float time;
 };
 
 struct Explosion {
     std::vector<ExplosionParticle> particles;
+	float dt;
     float startTime;
-    bool soundPlayed;
-    float soundStartTime;
+	SDL_Color SDLexplodecolor;
 };
 
 struct Flash {
     std::vector<ExplosionParticle> particles;
     float startTime;
-    bool soundPlayed;
-    float soundStartTime;
-    ::SDL_Color color;
+	SDL_Color SDLflashcolor = {255, 0, 255}; // magenta
     float maxRadius;
     float duration;
 };
 
-struct BoopAudioData {
+struct AudioData {
     SDL_AudioDeviceID deviceId;
     bool* playing;
     const GameConfig* config;

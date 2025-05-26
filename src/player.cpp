@@ -6,12 +6,12 @@
 PlayerManager::PlayerManager(const GameConfig& config) : config(config) {}
 
 void PlayerManager::updatePlayers(SDL_GameController* controllers[], int controllerCount, Player& player1, Player& player2,
-                                  Collectible& collectible, std::vector<Explosion>& explosions, std::vector<Flash>& flashes,
-                                  int& score1, int& score2, int& roundScore1, int& roundScore2, std::mt19937& rng,
-                                  float dt, float currentTimeSec, AudioManager& audio, CollectibleManager& collectibleManager,
-                                  ExplosionManager& explosionManager, CircleManager& circleManager, std::vector<Circle>& circles,
-                                  std::chrono::steady_clock::time_point& lastCircleSpawn, Game* game,
-                                  const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
+                                 Collectible& collectible, std::vector<Explosion>& explosions, std::vector<Flash>& flashes,
+                                 int& score1, int& score2, int& roundScore1, int& roundScore2, std::mt19937& rng,
+                                 float dt, float currentTimeSec, AudioManager& audio, CollectibleManager& collectibleManager,
+                                 ExplosionManager& explosionManager, CircleManager& circleManager, std::vector<Circle>& circles,
+                                 std::chrono::steady_clock::time_point& lastCircleSpawn, Game* game,
+                                 const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, SDL_Color SDLplayercolor) {
     // Handle controller input for turning
     for (int i = 0; i < controllerCount; ++i) {
         if (!controllers[i] || !SDL_GameControllerGetAttached(controllers[i])) {
@@ -20,12 +20,14 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
             }
             continue;
         }
-        Player& player = (i == 0) ? player1 : player2;
+        Player& player = (i == 0 ? player1 : player2);
         if (!player.alive) continue;
 
         Sint16 leftTrigger = SDL_GameControllerGetAxis(controllers[i], SDL_CONTROLLER_AXIS_TRIGGERLEFT);
         Sint16 rightTrigger = SDL_GameControllerGetAxis(controllers[i], SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-        if (leftTrigger > 0 || rightTrigger > 0) player.hasMoved = true;
+        if (leftTrigger > 0 || rightTrigger > 0) {
+            player.hasMoved = true;
+        }
         float turn = (rightTrigger - leftTrigger) / 32768.0f * config.TURN_SPEED * dt;
         float angle = atan2(player.direction.y, player.direction.x) + turn;
         player.direction = Vec2(cos(angle), sin(angle));
@@ -35,9 +37,10 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
             player.noCollisionTimer -= dt;
             player.isInvincible = true;
             if (player.noCollisionTimer <= 0) {
-                player.noCollisionTimer = 0;
+                player.noCollisionTimer = 0.0f;
                 player.isInvincible = false;
-                player.endFlash = new Flash(explosionManager.createFlash(player.pos, rng, currentTimeSec, {255, 0, 255, 255}));
+                player.endFlash = std::make_unique<Flash>(
+                    explosionManager.createFlash(player.pos, rng, dt, currentTimeSec, player.color));
                 audio.playLaserZap(currentTimeSec);
                 if (config.ENABLE_DEBUG) {
                     SDL_Log("No-collision ended for player %s at (%f, %f), time=%f, magenta flash triggered, canUseNoCollision=%d",
@@ -79,7 +82,8 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
         if (!player->willDie && (nextPos.x < 10 || nextPos.x > game->orthoWidth - 10 ||
                                  nextPos.y < 10 || nextPos.y > game->orthoHeight - 10)) {
             player->willDie = true;
-            explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, currentTimeSec));
+            // Line 82: Fixed player.color to player->color
+            explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, dt, currentTimeSec, player->color));
             audio.playExplosion(currentTimeSec);
             game->deathTime = currentTimeSec;
             if (config.ENABLE_DEBUG) {
@@ -97,6 +101,6 @@ void PlayerManager::updatePlayers(SDL_GameController* controllers[], int control
 
     circleManager.updateCircles(dt, circles, rng, currentTimeSec, lastCircleSpawn, *game);
     circleManager.clearTrails(circles, player1, player2);
-    explosionManager.updateFlashes(flashes, currentTimeSec);
+    explosionManager.updateFlashes(flashes, dt, currentTimeSec, SDLplayercolor); // Consider using a specific color
     explosionManager.cleanupPlayerFlashes(player1, player2, currentTimeSec);
 }

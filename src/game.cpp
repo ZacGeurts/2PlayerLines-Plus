@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <string>
 #include <stdexcept>
+#include <memory>
+#include "types.h"
 #include "render.h"
 #include "collectible.h"
 #include "collision.h"
@@ -14,6 +16,8 @@
 #include "circle.h"
 #include "player.h"
 #include "ai.h"
+
+float dt = 0.0f; // Define the global dt variable
 
 // Constructor: Initialize game with given configuration
 Game::Game(const GameConfig& config)
@@ -26,7 +30,7 @@ Game::Game(const GameConfig& config)
       circleManager(config),
       explosionManager(config),
       inputManager(),
-      playerManager(config),
+      playerManager(new PlayerManager(config)),
       ai(config, *this),
       splashTexture(0),
       isSplashScreen(true),
@@ -65,6 +69,7 @@ Game::Game(const GameConfig& config)
       collectibleCollectedThisFrame(false),
       pendingCollectibleRespawn(false)
 {
+    // SDL and OpenGL initialization (unchanged)
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
     window = SDL_CreateWindow("2PlayerLines-Plus", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               config.WIDTH, config.HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_FULLSCREEN);
@@ -124,7 +129,7 @@ Game::Game(const GameConfig& config)
 
     player1.pos = Vec2(200, orthoHeight / 2);
     player1.direction = Vec2(1, 0);
-    player1.color = {0, 0, 255, 255};
+    player1.color = SDL_Color{0, 0, 255, 255}; // Blue
     player1.alive = true;
     player1.willDie = false;
     player1.hasMoved = false;
@@ -132,14 +137,16 @@ Game::Game(const GameConfig& config)
     player1.noCollisionTimer = 0.0f;
     player1.canUseNoCollision = true;
     player1.isInvincible = false;
+    player1.spawnInvincibilityTimer = 0.0f;
     player1.endFlash = nullptr;
     player1.trail.clear();
     player1.collectedGreenThisFrame = false;
     player1.scoredDeathThisFrame = false;
+    player1.hitOpponentHead = false;
 
     player2.pos = Vec2(orthoWidth - 200, orthoHeight / 2);
     player2.direction = Vec2(-1, 0);
-    player2.color = {255, 0, 0, 255};
+    player2.color = SDL_Color{255, 0, 0, 255}; // Red
     player2.alive = true;
     player2.willDie = false;
     player2.hasMoved = false;
@@ -147,15 +154,17 @@ Game::Game(const GameConfig& config)
     player2.noCollisionTimer = 0.0f;
     player2.canUseNoCollision = true;
     player2.isInvincible = false;
+    player2.spawnInvincibilityTimer = 0.0f;
     player2.endFlash = nullptr;
     player2.trail.clear();
     player2.collectedGreenThisFrame = false;
     player2.scoredDeathThisFrame = false;
+    player2.hitOpponentHead = false;
 
     circleManager.spawnInitialCircle(rng, circles, *this);
     collectible = collectibleManager.spawnCollectible(rng, *this);
-    collectible.active = true; // Ensure collectible is active
-    collectible.size = config.COLLECTIBLE_SIZE; // Explicitly set size
+    collectible.active = true;
+    collectible.size = config.COLLECTIBLE_SIZE;
     audio.startBackgroundMusic();
     if (config.ENABLE_DEBUG) {
         SDL_Log("Initial collectible pos=(%f, %f), size=%f, active=%d, drawableWidth=%d, drawableHeight=%d",
@@ -166,17 +175,24 @@ Game::Game(const GameConfig& config)
 // Destructor: Clean up resources
 Game::~Game() {
     audio.stopBackgroundMusic();
-    if (splashTexture) glDeleteTextures(1, &splashTexture);
-    if (player1.endFlash) delete player1.endFlash;
-    if (player2.endFlash) delete player2.endFlash;
+    if (splashTexture != 0) {
+        glDeleteTextures(1, &splashTexture);
+    }
+    // Remove manual delete for endFlash; handled by std::unique_ptr
+    // if (player1.endFlash) delete player1.endFlash;
+    // if (player2.endFlash) player2.endFlash;
     for (int i = 0; i < 2; ++i) {
         if (controllers[i]) {
             SDL_GameControllerClose(controllers[i]);
             controllers[i] = nullptr;
         }
     }
-    if (glContext) SDL_GL_DeleteContext(glContext);
-    if (window) SDL_DestroyWindow(window);
+    if (glContext) {
+        SDL_GL_DeleteContext(glContext);
+    }
+    if (window) {
+        SDL_DestroyWindow(window);
+    }
 }
 
 // Check collision for a player at the next position
@@ -234,7 +250,7 @@ void Game::checkCollision(Player* player, Vec2 nextPos, float currentTimeSec, co
 
     if (!isBlack && !isMagenta && !isGreen) {
         player->willDie = true;
-        explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, currentTimeSec));
+        explosions.emplace_back(explosionManager.createExplosion(nextPos, rng, dt, currentTimeSec, SDLexplosioncolor));
         audio.playExplosion(currentTimeSec);
         deathTime = currentTimeSec;
         if (config.ENABLE_DEBUG) {
@@ -332,7 +348,7 @@ void Game::run() {
                 // Start AI update
                 if (ai.getMode()) {
                     ai.startUpdate(player2, player1, collectible, circles, dt, rng, *this,
-                                   framebuffer, drawableWidth, drawableHeight);
+                                   framebuffer, drawableWidth, drawableHeight, SDLaicolor);
                 }
 
                 update(dt, currentTimeSec);
@@ -384,18 +400,21 @@ void Game::update(float dt, float currentTimeSec) {
             player2.noCollisionTimer = 0;
             player2.isInvincible = false;
             player2.canUseNoCollision = true;
-            player2.endFlash = new Flash(explosionManager.createFlash(player2.pos, rng, currentTimeSec, {255, 0, 255, 255}));
+            player2.endFlash = std::make_unique<Flash>(
+                explosionManager.createFlash(player2.pos, rng, dt, currentTimeSec, SDLexplosioncolor));
             audio.playLaserZap(currentTimeSec);
             if (config.ENABLE_DEBUG) {
-                SDL_Log("AI no-collision ended at time %f, canUseNoCollision=%d", currentTimeSec, player2.canUseNoCollision);
+                SDL_Log("AI no-collision ended at time %f, canUseNoCollision=%d",
+                        currentTimeSec, player2.canUseNoCollision);
             }
         }
     }
 
-    playerManager.updatePlayers(controllers, controllerCount, player1, player2, collectible, explosions, flashes,
-                               score1, score2, roundScore1, roundScore2, rng, dt, currentTimeSec, audio,
-                               collectibleManager, explosionManager, circleManager, circles, lastCircleSpawn, this,
-                               framebuffer, drawableWidth, drawableHeight);
+    // Fixed: playerManager.updatePlayers to playerManager->updatePlayers
+    playerManager->updatePlayers(controllers, controllerCount, player1, player2, collectible, explosions, flashes,
+                                score1, score2, roundScore1, roundScore2, rng, dt, currentTimeSec, audio,
+                                collectibleManager, explosionManager, circleManager, circles, lastCircleSpawn, this,
+                                framebuffer, drawableWidth, drawableHeight, SDLplayercolor);
 
     // Handle deferred collectible respawn
     if (pendingCollectibleRespawn) {
@@ -403,7 +422,8 @@ void Game::update(float dt, float currentTimeSec) {
         collectible.active = true;
         pendingCollectibleRespawn = false;
         if (config.ENABLE_DEBUG) {
-            SDL_Log("Deferred collectible respawned at pos=(%f, %f), active=%d", collectible.pos.x, collectible.pos.y, collectible.active);
+            SDL_Log("Deferred collectible respawned at pos=(%f, %f), active=%d",
+                    collectible.pos.x, collectible.pos.y, collectible.active);
         }
     }
 
@@ -465,8 +485,42 @@ void Game::render() {
 
 // Reset game state
 void Game::reset() {
-    player1 = Player{Vec2(200, orthoHeight / 2), Vec2(1, 0), {0, 0, 255, 255}, {}, true, false, false, Vec2(0, 0), 0.0f, true, false, nullptr, false, false};
-    player2 = Player{Vec2(orthoWidth - 200, orthoHeight / 2), Vec2(-1, 0), {255, 0, 0, 255}, {}, true, false, false, Vec2(0, 0), 0.0f, true, false, nullptr, false, false};
+    player1 = Player{
+        Vec2(200, orthoHeight / 2),      // pos
+        Vec2(1, 0),                      // direction
+        SDL_Color{0, 0, 255, 255},      // color
+        {},                              // trail
+        true,                            // alive
+        false,                           // willDie
+        false,                           // hasMoved
+        Vec2(0, 0),                      // deathPos
+        0.0f,                            // noCollisionTimer
+        true,                            // canUseNoCollision
+        false,                           // isInvincible
+        false,                           // collectedGreenThisFrame
+        false,                           // scoredDeathThisFrame
+        0.0f,                            // spawnInvincibilityTimer
+        nullptr,                         // endFlash
+        false                            // hitOpponentHead
+    };
+    player2 = Player{
+        Vec2(orthoWidth - 200, orthoHeight / 2), // pos
+        Vec2(-1, 0),                      // direction
+        SDL_Color{255, 0, 0, 255},       // color
+        {},                              // trail
+        true,                            // alive
+        false,                           // willDie
+        false,                           // hasMoved
+        Vec2(0, 0),                      // deathPos
+        0.0f,                            // noCollisionTimer
+        true,                            // canUseNoCollision
+        false,                           // isInvincible
+        false,                           // collectedGreenThisFrame
+        false,                           // scoredDeathThisFrame
+        0.0f,                            // spawnInvincibilityTimer
+        nullptr,                         // endFlash
+        false                            // hitOpponentHead
+    };
 
     player1.trail.clear();
     player2.trail.clear();
@@ -495,7 +549,8 @@ void Game::reset() {
     glClear(GL_COLOR_BUFFER_BIT);
     glFinish();
     if (config.ENABLE_DEBUG) {
-        SDL_Log("Game reset, new collectible pos=(%f, %f), size=%f, active=%d", collectible.pos.x, collectible.pos.y, collectible.size, collectible.active);
+        SDL_Log("Game reset, new collectible pos=(%f, %f), size=%f, active=%d",
+                collectible.pos.x, collectible.pos.y, collectible.size, collectible.active);
     }
 }
 
@@ -508,10 +563,10 @@ void Game::respawnCircles() {
 // Activate no-collision mode for a player
 void Game::activateNoCollision(Player* player, float currentTimeSec) {
     if (player->canUseNoCollision && player->noCollisionTimer <= 0 && player->alive) {
-        player->noCollisionTimer = 2.0f;
-        player->canUseNoCollision = false;
+        player->noCollisionTimer = 2.0f; // 2 seconds
+        player->canUseNoCollision = false; // you used it
         player->isInvincible = true;
-        flashes.emplace_back(explosionManager.createFlash(player->pos, rng, currentTimeSec, {255, 0, 255, 255}));
+        flashes.emplace_back(explosionManager.createFlash(player->pos, rng, dt, currentTimeSec, SDLexplosioncolor));
         audio.playLaserZap(currentTimeSec);
         if (config.ENABLE_DEBUG) {
             SDL_Log("Player flash activated at time %f, noCollisionTimer=%f", currentTimeSec, player->noCollisionTimer);
