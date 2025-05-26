@@ -81,12 +81,25 @@ SONGVIEW_EXEC = songview
 # Default target: build ./linesplus and ./songgen
 all: $(EXEC) $(SONGGEN_EXEC)
 	@echo "*** Successfully built linesplus and songgen! ***"
-	@echo "* Run './linesplus' to play or './songgen' to create a song. ***"
-	@echo "** When playing ***"
-	@echo "* Press F to exit fullscreen in ./linesplus. ***"
-	@echo "* Press M to mute ./songgen from ./linesplus. ***"
-	@echo "* Press ESC to exit ./linesplus. ***"
-	@echo "* Press CTRL-C to exit ./songgen. ***"
+	@echo "***********************************************"
+	@echo "Run './linesplus' to play or './songgen' to create a song."
+	@echo "***********************************************"
+	@echo "*** When playing LINESPLUS 				   ***"
+	@echo " Press 1 or 2 to select number of players.  ***"
+	@echo " Steer with controller triggers. 		   ***"
+	@echo " Main button is ability.					   ***"
+	@echo " Other buttons pause.					   ***"
+	@echo " Press F to exit fullscreen.			   	   ***"
+	@echo " Press M to mute Songgen from Linesplus.    ***"
+	@echo " Press ESC to exit.						   ***"
+	@echo " ./linesplus to start					   ***"
+	@echo "***********************************************"
+	@echo "*** When playing with SONGGEN 			   ***"
+	@echo " ./songgen for Songgen help                 ***"
+	@echo " ./songgen song1.song to test			   ***"
+	@echo " ./songgen rock creates a rock song.		   ***"
+	@echo " Press CTRL-C to exit Songgen playback.     ***"
+	@echo "***********************************************"
 
 # Build ./linesplus
 $(EXEC): $(OBJECTS)
@@ -116,7 +129,7 @@ $(SONGGEN_EXEC): $(SONGGEN_OBJ)
 # Build songview executable (only when explicitly requested)
 # this is pre alpha
 $(SONGVIEW_EXEC): $(SONGVIEW_OBJ)
-	@echo "Building songview (warning: it's broken and will not work. kek)..."
+	@echo "Building songview (warning: it is broken and will not work. kek)..."
 	@$(CC) $(SONGVIEW_OBJ) -o $(SONGVIEW_EXEC) $(SONGVIEW_LDFLAGS) || ( \
 		echo "*** Building songview failed. It might be broken, or you might be missing libraries. ***"; \
 		echo "Try running this command (ask an adult for help with 'sudo'):"; \
