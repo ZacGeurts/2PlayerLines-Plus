@@ -98,8 +98,8 @@ $(EXEC): $(OBJECTS)
 		echo "* Then run 'make' again."; \
 		exit 1; \
 	)
-	@echo "*** linesplus built successfully! Requires building ./songgen."
-	@echo "* linesplus built successfully! Run './linesplus' to play. ***"	
+	@echo "*** linesplus built successfully! Run './linesplus' to play. Requires building ./songgen."
+	@echo "* Please wait if building ./songgen ***"	
 	
 # Build ./songgen
 $(SONGGEN_EXEC): $(SONGGEN_OBJ)
@@ -114,6 +114,7 @@ $(SONGGEN_EXEC): $(SONGGEN_OBJ)
 	@echo "** songgen built successfully! Run './songgen' to create a song. ***"
 
 # Build songview executable (only when explicitly requested)
+# this is pre alpha
 $(SONGVIEW_EXEC): $(SONGVIEW_OBJ)
 	@echo "Building songview (warning: it's broken and will not work. kek)..."
 	@$(CC) $(SONGVIEW_OBJ) -o $(SONGVIEW_EXEC) $(SONGVIEW_LDFLAGS) || ( \
@@ -154,7 +155,7 @@ clean:
 		echo "** you better not be hiding in there songview."; \
 		echo "* New builds will not build or be updated."; \
 		echo "we do not have rm permissions."; \
-		echo "we do not have remove permishuns."; \
+		echo "we cannot remove files."; \
 		echo "this is an error you should not be seeing"; \
 		echo "do not sudo this file if it has been altered, fix your code."; \
 		echo "*** Do not alter this Makefile"; \
@@ -163,7 +164,7 @@ clean:
 	)
 	@echo "*** removing machine files."
 	@echo "** Ready for a fresh build. Clean successful! All pre-built files removed.  ***"
-	@echo "* type 'make' or 'make -j\$$(nproc)' you are ready for the not boring ***"
+	@echo "* type 'make' or 'make -j\$$(nproc)' you are ready to continue ***"
 
 # nproc uses your full processor cores during the building process. You can specify -j16 or whatever.
 # nproc just tells you the number. $(programname)'sudo apt install nproc'

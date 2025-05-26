@@ -15,13 +15,14 @@
 #include "input.h"
 #include "ai.h"
 
-// Forward declaration to avoid circular dependency
+// Forward declarations
 class PlayerManager;
+class AI;
 
 class Game {
 public:	
     Game(const GameConfig& config);
-    ~Game();
+    ~Game();	
     void run();
     void checkCollision(Player* player, Vec2 nextPos, float currentTimeSec, const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight);
     void handleGreenSquareCollection(Player* player, float currentTimeSec);
@@ -30,20 +31,21 @@ public:
     void reset();
     void respawnCircles();
     void activateNoCollision(Player* player, float currentTimeSec);
-	    bool shouldRespawnPlayer(Player* player, float currentTimeSec) {
-        return !player->alive && (currentTimeSec - deathTime >= 2.0f); // Respawn after 2 seconds
+    bool shouldRespawnPlayer(Player* player, float currentTimeSec) {
+        return !player->alive && (currentTimeSec - deathTime >= 2.0f);
     }
     Vec2 getSpawnPosition() {
-        return Vec2(orthoWidth / 2, orthoHeight / 2); // Center of screen
+        return Vec2(orthoWidth / 2, orthoHeight / 2);
     }
     void resumeAfterWinner();
-	SDL_Color SDLaicolor = {255, 0, 0}; // red
-	SDL_Color SDLcirclecolor = {255, 0, 255}; // magenta
-	SDL_Color SDLplayercolor = {255, 0, 255}; // magenta
-	SDL_Color SDLexplosioncolor = {255, 0, 255}; // magenta
+    SDL_Color SDLaicolor = {255, 0, 0}; // red
+    SDL_Color SDLcirclecolor = {255, 0, 255}; // magenta
+    SDL_Color SDLplayercolor = {255, 0, 255}; // magenta
+    SDL_Color SDLexplosioncolor = {255, 0, 255}; // magenta
 
     SDL_Window* window;
     SDL_GLContext glContext;
+	const GameConfig& config;
     AudioManager audio;
     CollectibleManager collectibleManager;
     CollisionManager collisionManager;
@@ -51,8 +53,8 @@ public:
     CircleManager circleManager;
     ExplosionManager explosionManager;
     InputManager inputManager;
-	PlayerManager* playerManager;
-    AI ai;
+    PlayerManager* playerManager;
+    AI* ai;
     GLuint splashTexture;
     bool isSplashScreen;
     bool paused;
@@ -78,8 +80,7 @@ public:
     bool firstFrame;
     std::chrono::steady_clock::time_point lastCircleSpawn;
     std::chrono::steady_clock::time_point gameOverTime;
-    float lastWinnerVoiceTime;
-    const GameConfig& config;
+    float lastWinnerVoiceTime;    
     float deathTime;
     float orthoWidth;
     float orthoHeight;

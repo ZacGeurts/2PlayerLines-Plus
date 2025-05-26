@@ -58,11 +58,6 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
             int controllerIndex = event.cbutton.which;
             lastFrameButtons[controllerIndex][button] = true;
 
-            // Debug log for button press
-            if (button == SDL_CONTROLLER_BUTTON_A) {
-                SDL_Log("Controller %d 'A' button pressed (splash=%d, gameOver=%d, winner=%d)", controllerIndex, isSplashScreen, gameOverScreen, game->winnerDeclared);
-            }
-
             if (game->winnerDeclared) {
                 if (button == SDL_CONTROLLER_BUTTON_A) {
                     game->resumeAfterWinner();
@@ -108,12 +103,12 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
 
 void InputManager::handleAIModeInput(SDL_KeyboardEvent& keyEvent, Game* game) {
     switch (keyEvent.keysym.sym) {
-        case SDLK_1:
-            game->ai.setMode(true);
+        case SDLK_1:            
+            game->ai->setMode(true);
             SDL_Log("AI Mode set to ON (One-player mode)");
             break;
         case SDLK_2:
-            game->ai.setMode(false);
+            game->ai->setMode(false);
             SDL_Log("AI Mode set to OFF (Two-player mode)");
             break;
     }

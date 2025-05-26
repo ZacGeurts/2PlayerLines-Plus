@@ -4,8 +4,7 @@
 #include "types.h"
 #include <random>
 
-// Forward declaration
-struct Game;
+class Game; // Changed from struct to class
 
 class CollectibleManager {
 public:

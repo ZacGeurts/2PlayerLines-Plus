@@ -21,8 +21,11 @@ float dt = 0.0f; // Define the global dt variable
 
 // Constructor: Initialize game with given configuration
 Game::Game(const GameConfig& config)
-    : window(nullptr),
+    : SDLaicolor{255, 0, 0}, // red, per game.h
+      SDLplayercolor{255, 0, 255}, // magenta, per game.h
+      window(nullptr),
       glContext(nullptr),
+      config(config),
       audio(config),
       collectibleManager(config),
       collisionManager(config),
@@ -31,157 +34,125 @@ Game::Game(const GameConfig& config)
       explosionManager(config),
       inputManager(),
       playerManager(new PlayerManager(config)),
-      ai(config, *this),
-      splashTexture(0),
-      isSplashScreen(true),
-      paused(false),
+      ai(new AI(config, *this)),
+      splashTexture{0},
+      isSplashScreen{true},
+      paused{false},
       controllers{nullptr, nullptr},
-      controllerCount(0),
+      controllerCount{0},
       player1(),
       player2(),
       circles(),
       collectible(),
       explosions(),
       flashes(),
-      rng(),
-      lastBoopTime(0.0f),
-      score1(0),
-      score2(0),
-      roundScore1(0),
-      roundScore2(0),
-      setScore1(0),
-      setScore2(0),
-      gameOver(false),
-      gameOverScreen(false),
-      winnerDeclared(false),
-      firstFrame(true),
-      lastCircleSpawn(std::chrono::steady_clock::now()),
-      gameOverTime(std::chrono::steady_clock::now()),
-      lastWinnerVoiceTime(0.0f),
-      config(config),
-      deathTime(0.0f),
-      orthoWidth(1920.0f),
-      orthoHeight(1080.0f),
-      frameRendered(false),
-      winningScore(config.WINNING_SCORE),
-      greenSquarePoints(config.GREEN_SQUARE_POINTS),
-      deathPoints(config.DEATH_POINTS),
-      collectibleCollectedThisFrame(false),
-      pendingCollectibleRespawn(false)
-{
-    // SDL and OpenGL initialization (unchanged)
-    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
-    window = SDL_CreateWindow("2PlayerLines-Plus", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              config.WIDTH, config.HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_FULLSCREEN);
-    if (!window) {
-        if (config.ENABLE_DEBUG) SDL_Log("Failed to create window: %s", SDL_GetError());
-        throw std::runtime_error("Window creation failed");
+      rng(std::random_device()()),
+      lastBoopTime{0.0f},
+      score1{0},
+      score2{0},
+      roundScore1{0},
+      roundScore2{0},
+      setScore1{0},
+      setScore2{0},
+      gameOver{false},
+      gameOverScreen{false},
+      winnerDeclared{false},
+      firstFrame{true},
+      lastCircleSpawn{std::chrono::steady_clock::now()},
+      gameOverTime{std::chrono::steady_clock::now()},
+      lastWinnerVoiceTime{0.0f},
+      deathTime{0.0f},
+      orthoWidth{static_cast<float>(config.WIDTH)},
+      orthoHeight{static_cast<float>(config.HEIGHT)},
+      frameRendered{false},
+      winningScore{0.0f},
+      greenSquarePoints{0.0f},
+      deathPoints{0.0f},
+      collectibleCollectedThisFrame{false},
+      pendingCollectibleRespawn{false} {
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
+        SDL_Log("SDL_Init failed: %s", SDL_GetError());
+        throw std::runtime_error("Failed to initialize SDL");
     }
 
+    // Initialize SDL_image
+    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+        SDL_Log("IMG_Init failed: %s", IMG_GetError());
+        SDL_Quit();
+        throw std::runtime_error("Failed to initialize SDL_image");
+    }
+
+    // Create window
+    window = SDL_CreateWindow("2PlayerLines-Plus", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                              config.WIDTH, config.HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+    if (!window) {
+        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
+        IMG_Quit();
+        SDL_Quit();
+        throw std::runtime_error("Failed to create window");
+    }
+
+    // Create OpenGL context
     glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
-        if (config.ENABLE_DEBUG) SDL_Log("Failed to create GL context: %s", SDL_GetError());
+        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
         SDL_DestroyWindow(window);
-        throw std::runtime_error("GL context creation failed");
-    }
-    SDL_GL_SetSwapInterval(1);
-
-    int drawableWidth, drawableHeight;
-    SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
-    glViewport(0, 0, drawableWidth, drawableHeight);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, orthoWidth, orthoHeight, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    if (config.ENABLE_DEBUG) {
-        SDL_Log("Ortho setup: orthoWidth=%f, orthoHeight=%f, drawableWidth=%d, drawableHeight=%d",
-                orthoWidth, orthoHeight, drawableWidth, drawableHeight);
+        IMG_Quit();
+        SDL_Quit();
+        throw std::runtime_error("Failed to create OpenGL context");
     }
 
-    SDL_Surface* splashSurface = IMG_Load("splash.png");
-    if (!splashSurface) {
-        if (config.ENABLE_DEBUG) SDL_Log("Failed to load splash.png: %s", IMG_GetError());
-    } else {
-        glGenTextures(1, &splashTexture);
-        glBindTexture(GL_TEXTURE_2D, splashTexture);
-        GLenum format = (splashSurface->format->BytesPerPixel == 4) ? GL_RGBA : GL_RGB;
-        glTexImage2D(GL_TEXTURE_2D, 0, format, splashSurface->w, splashSurface->h, 0, format,
-                     GL_UNSIGNED_BYTE, splashSurface->pixels);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        SDL_FreeSurface(splashSurface);
-    }
+    // Set up OpenGL
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black background
 
+    // Initialize controllers
     for (int i = 0; i < SDL_NumJoysticks() && controllerCount < 2; ++i) {
         if (SDL_IsGameController(i)) {
             controllers[controllerCount] = SDL_GameControllerOpen(i);
             if (controllers[controllerCount]) {
+                SDL_Log("Controller %d opened: %s", controllerCount, SDL_GameControllerName(controllers[controllerCount]));
                 controllerCount++;
+            } else {
+                SDL_Log("Failed to open controller %d: %s", i, SDL_GetError());
             }
         }
     }
-
-    std::random_device rd;
-    rng = std::mt19937(rd());
-
-    player1.pos = Vec2(200, orthoHeight / 2);
-    player1.direction = Vec2(1, 0);
-    player1.color = SDL_Color{0, 0, 255, 255}; // Blue
-    player1.alive = true;
-    player1.willDie = false;
-    player1.hasMoved = false;
-    player1.deathPos = Vec2(0, 0);
-    player1.noCollisionTimer = 0.0f;
-    player1.canUseNoCollision = true;
-    player1.isInvincible = false;
-    player1.spawnInvincibilityTimer = 0.0f;
-    player1.endFlash = nullptr;
-    player1.trail.clear();
-    player1.collectedGreenThisFrame = false;
-    player1.scoredDeathThisFrame = false;
-    player1.hitOpponentHead = false;
-
-    player2.pos = Vec2(orthoWidth - 200, orthoHeight / 2);
-    player2.direction = Vec2(-1, 0);
-    player2.color = SDL_Color{255, 0, 0, 255}; // Red
-    player2.alive = true;
-    player2.willDie = false;
-    player2.hasMoved = false;
-    player2.deathPos = Vec2(0, 0);
-    player2.noCollisionTimer = 0.0f;
-    player2.canUseNoCollision = true;
-    player2.isInvincible = false;
-    player2.spawnInvincibilityTimer = 0.0f;
-    player2.endFlash = nullptr;
-    player2.trail.clear();
-    player2.collectedGreenThisFrame = false;
-    player2.scoredDeathThisFrame = false;
-    player2.hitOpponentHead = false;
-
-    circleManager.spawnInitialCircle(rng, circles, *this);
-    collectible = collectibleManager.spawnCollectible(rng, *this);
-    collectible.active = true;
-    collectible.size = config.COLLECTIBLE_SIZE;
-    audio.startBackgroundMusic();
-    if (config.ENABLE_DEBUG) {
-        SDL_Log("Initial collectible pos=(%f, %f), size=%f, active=%d, drawableWidth=%d, drawableHeight=%d",
-                collectible.pos.x, collectible.pos.y, collectible.size, collectible.active, drawableWidth, drawableHeight);
+    if (controllerCount == 0 && config.ENABLE_DEBUG) {
+        SDL_Log("No controllers detected");
     }
+
+    // Load splash texture
+    SDL_Surface* surface = IMG_Load("assets/splash.png"); // Adjust path as needed
+    if (!surface) {
+        SDL_Log("IMG_Load failed: %s", IMG_GetError());
+        SDL_GL_DeleteContext(glContext);
+        SDL_DestroyWindow(window);
+        IMG_Quit();
+        SDL_Quit();
+        throw std::runtime_error("Failed to load splash.png");
+    }
+
+    glGenTextures(1, &splashTexture);
+    glBindTexture(GL_TEXTURE_2D, splashTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    SDL_FreeSurface(surface);
 }
 
-// Destructor: Clean up resources
 Game::~Game() {
-    audio.stopBackgroundMusic();
-    if (splashTexture != 0) {
+    if (splashTexture) {
         glDeleteTextures(1, &splashTexture);
     }
-    for (int i = 0; i < 2; ++i) {
+    delete ai;
+    delete playerManager;
+    for (int i = 0; i < controllerCount; ++i) {
         if (controllers[i]) {
             SDL_GameControllerClose(controllers[i]);
-            controllers[i] = nullptr;
         }
     }
     if (glContext) {
@@ -190,7 +161,10 @@ Game::~Game() {
     if (window) {
         SDL_DestroyWindow(window);
     }
+    IMG_Quit();
+    SDL_Quit();
 }
+
 
 // Check collision for a player at the next position
 void Game::checkCollision(Player* player, Vec2 nextPos, float currentTimeSec, const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
@@ -314,13 +288,12 @@ void Game::handlePlayerDeath(Player* player, float currentTimeSec) {
     }
 }
 
-// Main game loop
 void Game::run() {
     bool running = true;
     auto lastTime = std::chrono::steady_clock::now();
     while (running) {
         auto currentTime = std::chrono::steady_clock::now();
-        float dt = std::chrono::duration<float>(currentTime - lastTime).count();
+        dt = std::chrono::duration<float>(currentTime - lastTime).count();
         float currentTimeSec = std::chrono::duration<float>(currentTime.time_since_epoch()).count();
         lastTime = currentTime;
 
@@ -342,19 +315,13 @@ void Game::run() {
                 std::vector<unsigned char> framebuffer(framebufferSize);
                 glReadPixels(0, 0, drawableWidth, drawableHeight, GL_RGB, GL_UNSIGNED_BYTE, framebuffer.data());
 
-                // Start AI update
-                if (ai.getMode()) {
-                    ai.startUpdate(player2, player1, collectible, circles, dt, rng, *this,
-                                   framebuffer, drawableWidth, drawableHeight, SDLaicolor);
-                }
+                // Update players (AI handled in PlayerManager)
+                playerManager->updatePlayers(controllers, controllerCount, player1, player2, collectible, explosions, flashes,
+                                             score1, score2, roundScore1, roundScore2, rng, dt, currentTimeSec, audio,
+                                             collectibleManager, explosionManager, circleManager, circles, lastCircleSpawn, this,
+                                             framebuffer, drawableWidth, drawableHeight, SDLplayercolor);
 
                 update(dt, currentTimeSec);
-
-                // Wait for AI to finish
-                if (ai.getMode()) {
-                    ai.waitForUpdate();
-                    ai.applyUpdate(player2);
-                }
             } else if (gameOverScreen && !winnerDeclared && std::chrono::duration<float>(currentTime - gameOverTime).count() > 5.0f) {
                 reset();
             } else if (winnerDeclared && currentTimeSec - lastWinnerVoiceTime >= config.WINNER_VOICE_DURATION) {
@@ -369,7 +336,6 @@ void Game::run() {
     }
 }
 
-// Update game state
 void Game::update(float dt, float currentTimeSec) {
     // Reset per-frame flags
     player1.collectedGreenThisFrame = false;
@@ -378,27 +344,15 @@ void Game::update(float dt, float currentTimeSec) {
     player2.scoredDeathThisFrame = false;
     collectibleCollectedThisFrame = false;
 
-    // Read framebuffer
-    int drawableWidth, drawableHeight;
-    SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
-    size_t framebufferSize = static_cast<size_t>(drawableWidth) * drawableHeight * 3;
-    if (framebufferSize > std::vector<unsigned char>().max_size()) {
-        SDL_Log("Error: Framebuffer size %zu exceeds max vector size %zu",
-                framebufferSize, std::vector<unsigned char>().max_size());
-        throw std::length_error("Framebuffer too large for vector");
-    }
-    std::vector<unsigned char> framebuffer(framebufferSize);
-    glReadPixels(0, 0, drawableWidth, drawableHeight, GL_RGB, GL_UNSIGNED_BYTE, framebuffer.data());
-
     // Update AI noCollisionTimer
-    if (ai.getMode() && player2.noCollisionTimer > 0) {
+    if (ai->getMode() && player2.noCollisionTimer > 0) {
         player2.noCollisionTimer -= dt;
         if (player2.noCollisionTimer <= 0) {
             player2.noCollisionTimer = 0;
             player2.isInvincible = false;
             player2.canUseNoCollision = true;
             player2.endFlash = std::make_unique<Flash>(
-                explosionManager.createFlash(player2.pos, rng, dt, currentTimeSec, SDLexplosioncolor));
+                explosionManager.createFlash(player2.pos, rng, dt, currentTimeSec, {255, 0, 255, 255}));
             audio.playLaserZap(currentTimeSec);
             if (config.ENABLE_DEBUG) {
                 SDL_Log("AI no-collision ended at time %f, canUseNoCollision=%d",
@@ -406,12 +360,6 @@ void Game::update(float dt, float currentTimeSec) {
             }
         }
     }
-
-    // Fixed: playerManager.updatePlayers to playerManager->updatePlayers
-    playerManager->updatePlayers(controllers, controllerCount, player1, player2, collectible, explosions, flashes,
-                                score1, score2, roundScore1, roundScore2, rng, dt, currentTimeSec, audio,
-                                collectibleManager, explosionManager, circleManager, circles, lastCircleSpawn, this,
-                                framebuffer, drawableWidth, drawableHeight, SDLplayercolor);
 
     // Handle deferred collectible respawn
     if (pendingCollectibleRespawn) {
@@ -451,7 +399,6 @@ void Game::update(float dt, float currentTimeSec) {
     }
 }
 
-// Render the game
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
     int drawableWidth, drawableHeight;
@@ -469,6 +416,9 @@ void Game::render() {
     }
 
     if (isSplashScreen) {
+        if (splashTexture == 0 && config.ENABLE_DEBUG) {
+            SDL_Log("Warning: splashTexture is 0, cannot render splash screen");
+        }
         renderManager.renderSplashScreen(splashTexture);
     } else if (gameOverScreen) {
         renderManager.renderGameOver(*this, orthoWidth, orthoHeight);
@@ -528,7 +478,7 @@ void Game::reset() {
     collectible.active = true; // Ensure collectible is active
     explosions.clear();
     flashes.clear();
-    ai.resetFlash();
+    ai->resetFlash();
 
     roundScore1 = roundScore2 = 0;
     if (winnerDeclared) {
