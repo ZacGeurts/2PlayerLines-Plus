@@ -1,5 +1,6 @@
 #include "audio.h"
 #include "instruments.h"
+#include "types.h"
 #include <cmath>
 #include <algorithm>
 #include <iostream>
@@ -16,6 +17,8 @@
 #else
 #include <processthreadsapi.h>
 #endif
+
+bool DEBUG_QUEUE = 0;
 
 AudioManager::AudioManager(const GameConfig& config)
     : soundEffectDevice(0),
@@ -184,7 +187,7 @@ void AudioManager::playWinnerVoice(float currentTimeSec) {
     }
 	winnerVoicePlaying = false;
     if (SDL_QueueAudio(soundEffectDevice, samples.data(), samples.size() * sizeof(int16_t)) == 0) {
-        SDL_Log("Winner voice queued: %zu samples", samples.size());
+        if (DEBUG_QUEUE) SDL_Log("Winner voice queued: %zu samples", samples.size());
     } else {
         SDL_Log("Failed to queue winner voice: %s", SDL_GetError());
     }
@@ -212,7 +215,7 @@ void AudioManager::stopBackgroundMusic() { // nah
         }
 #else
         if (songgenPid > 0) {
-            kill(songgenPid, SIGINT); // ship sunk - letter go
+            kill(songgenPid, SIGINT); // presses CTRL-C for you to exit songgen
             int status;
             waitpid(songgenPid, &status, 0);
             songgenPid = 0;
@@ -228,7 +231,7 @@ void AudioManager::stopBackgroundMusic() { // nah
     }
 }
 
-void AudioManager::playSongsSequentially() { // throws them around everytime, this is a linesplus file
+void AudioManager::playSongsSequentially() { // shuffles them around everytime, this is a linesplus file
     std::random_device rd;
     std::mt19937 rng(rd());
 
@@ -264,7 +267,7 @@ void AudioManager::playSongsSequentially() { // throws them around everytime, th
         std::string command = "./songgen " + song;
         if (musicChannels == 2) {
             command += " --stereo";
-        } // Says who? +8 No flag for 6 channels (5.1), as songgen defaults to 5.1
+        } // Says who? +8! No flag for 6 channels (5.1), as songgen defaults to 5.1
 #ifdef _WIN32
 		// was yesterday. ?
         command = "songgen " + song + (musicChannels == 2 ? " --stereo" : (musicChannels == 8 ? " --7.1" : ""));
@@ -368,7 +371,7 @@ void AudioManager::generateBoopSamples(std::vector<int16_t>& buffer, float start
         }
     }
     if (!buffer.empty()) {
-        SDL_Log("Generated %zu boop samples", buffer.size()); // empty handed
+        if (DEBUG_QUEUE) SDL_Log("Generated %zu boop samples", buffer.size()); // empty handed
     }
 }
 
@@ -387,7 +390,7 @@ void AudioManager::generateExplosionSamples(std::vector<int16_t>& buffer, float 
         }
     }
     if (!buffer.empty()) {
-        SDL_Log("Generated %zu explosion samples", buffer.size());
+        if (DEBUG_QUEUE) SDL_Log("Generated %zu explosion samples", buffer.size());
     }
 }
 
@@ -407,7 +410,7 @@ void AudioManager::generateLaserZapSamples(std::vector<int16_t>& buffer, float s
         }
     }
     if (!buffer.empty()) {
-        SDL_Log("Generated %zu laser zap samples", buffer.size());
+        if (DEBUG_QUEUE) SDL_Log("Generated %zu laser zap samples", buffer.size());
     }
 }
 
@@ -426,6 +429,6 @@ void AudioManager::generateWinnerVoiceSamples(std::vector<int16_t>& buffer, floa
         }
     }
     if (!buffer.empty()) {
-        SDL_Log("Generated %zu winner voice samples", buffer.size()); // pats self on the back
+        if (DEBUG_QUEUE) SDL_Log("Generated %zu winner voice samples", buffer.size()); // pats self on the back
     }
 }

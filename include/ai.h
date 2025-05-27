@@ -1,67 +1,54 @@
 #ifndef AI_H
 #define AI_H
 
+#include "types.h"
 #include <vector>
 #include <random>
-#include <mutex>
 #include <thread>
-#include "types.h"
-#include "game.h"
+#include <mutex>
 
-// Forward declaration of Game
 class Game;
 
 class AI {
 public:
-    AI(const GameConfig& config, Game& game);
-    ~AI();
-    void startUpdate(Player& aiPlayer, const Player& opponent, const Collectible& collectible,
-                     const std::vector<Circle>& circles, float dt, std::mt19937& rng, Game& game,
-                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, SDL_Color SDLaicolor);
-    void waitForUpdate();
-    void applyUpdate(Player& aiPlayer);
-    void resetFlash() { flashUsed = false; }
-    bool getMode() const { return modeEnabled; }
-    void setMode(bool enabled) { modeEnabled = enabled; }
-
-private:
     struct LineCheckResult {
-        std::string color;
-        Vec2 hitPos;
-        bool greenVisible;
-        bool hasDanger;
         float distance;
+        bool hasDanger;
+        bool greenVisible;
+        Vec2 hitPos;
+        std::string color;
     };
 
     struct RaycastResult {
         LineCheckResult centerLine;
         LineCheckResult leftLine;
-        Vec2 leftDir;
         LineCheckResult rightLine;
+        Vec2 leftDir;
         Vec2 rightDir;
     };
 
-    const GameConfig& config;
-    Game* game; // Store Game pointer
-    std::vector<unsigned char> framebuffer;
-    int drawableWidth;
-    int drawableHeight;
-    bool flashUsed;
-    bool modeEnabled;
-    std::mutex mutex;
-    std::thread updateThread;
-    float leftTrigger;
-    float rightTrigger;
-    bool aButton;
-    bool updateReady;
-    Vec2 newDirection;
-    bool shouldDie;
-    Vec2 newPosition;
-    bool hasMoved;
-    bool hitOpponentHeadResult;
-    float currentTimeSec;
-    size_t frameCount;
+    struct PathNode {
+        Vec2 pos;
+        float gCost;
+        float fCost;
+        std::shared_ptr<PathNode> parent;
 
+        bool operator>(const PathNode& other) const { return fCost > other.fCost; }
+    };
+
+    AI(const GameConfig& config, Game& game);
+    ~AI();
+
+    bool getMode() const { return modeEnabled; }
+    void setMode(bool enabled) { modeEnabled = enabled; }
+    void resetFlash() { flashUsed = false; }
+    void startUpdate(Player& aiPlayer, const Player& opponent, const Collectible& collectible,
+                     const std::vector<Circle>& circles, float dt, std::mt19937& rng, Game& game,
+                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, SDL_Color);
+    void waitForUpdate();
+    void applyUpdate(Player& aiPlayer);
+
+private:
     void simulateControllerInput(const Player& aiPlayer, const Collectible& collectible,
                                 const std::vector<Circle>& circles, const Player& opponent,
                                 float dt, std::mt19937& rng, Game& game,
@@ -78,6 +65,28 @@ private:
                               int drawableWidth, int drawableHeight) const;
     std::string getPixelColor(const Vec2& pos, Game& game, float currentTimeSec,
                               const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) const;
+    float heuristic(const Vec2& a, const Vec2& b) const;
+    bool isPositionSafe(const Vec2& pos, const std::vector<Circle>& circles, const Player& opponent, Game& game);
+    std::vector<Vec2> findPathAStar(const Vec2& start, const Vec2& goal, const std::vector<Circle>& circles,
+                                    const Player& opponent, Game& game, const std::vector<unsigned char>& framebuffer,
+                                    int drawableWidth, int drawableHeight);
+
+    const GameConfig& config;
+    Game* game;
+    std::vector<unsigned char> framebuffer;
+    int drawableWidth;
+    int drawableHeight;
+    bool flashUsed;
+    bool modeEnabled;
+    float leftTrigger;
+    float rightTrigger;
+    bool aButton;
+    std::thread updateThread;
+    std::mutex mutex;
+    bool updateReady;
+    Vec2 newDirection;
+    float currentTimeSec;
+    int frameCount;
 };
 
 #endif // AI_H

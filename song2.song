@@ -16,7 +16,7 @@ Section: Verse5 178.286 205.714 Progress: 0.9 Template: Verse
 Section: Outro 205.714 231.594 Progress: 1 Template: Outro
 Parts: 22
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: piano
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -436,7 +436,7 @@ ReverbMixPoint: 185.143 0.27
 ReverbMixPoint: 192 0.28
 ReverbMixPoint: 198.857 0.29
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: piano
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -1604,7 +1604,7 @@ ReverbMixPoint: 212.571 0.5
 ReverbMixPoint: 219.429 0.5
 ReverbMixPoint: 226.286 0.5
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: piano
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -4174,7 +4174,7 @@ ReverbMixPoint: 185.143 0.27
 ReverbMixPoint: 192 0.28
 ReverbMixPoint: 198.857 0.29
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: piano
 Pan: -0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -4710,7 +4710,7 @@ ReverbMixPoint: 185.143 0.27
 ReverbMixPoint: 192 0.28
 ReverbMixPoint: 198.857 0.29
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: piano
 Pan: -0.4
 ReverbMix: 0.5
 UseReverb: true

@@ -1,0 +1,4618 @@
+Song: Golden Ray Above Glowing Breeze
+Genre: CLASSICAL
+BPM: 80
+Scale: harmonic_minor
+RootFrequency: 440
+Duration: 190.47
+Sections: 8
+Section: Intro 0 12 Progress: 0 Template: Intro
+Section: PartA 12 36 Progress: 0.25 Template: Verse
+Section: PartB 36 60 Progress: 0.5 Template: Chorus
+Section: PartA2 60 84 Progress: 0.75 Template: Verse
+Section: Chorus3 84 108 Progress: 0.8 Template: Chorus
+Section: Chorus4 108 132 Progress: 0.9 Template: Chorus
+Section: Chorus5 132 156 Progress: 1 Template: Chorus
+Section: Outro 156 190.47 Progress: 1 Template: Outro
+Parts: 24
+Part: Melody
+Instrument: cello
+Pan: 0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: true
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 11
+Note: 440 1 0 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.9
+Note: 493.88 0.460224 0.9375 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.804
+Note: 493.88 0.443182 1.3125 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.836
+Note: 493.88 0.443182 1.6875 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.912
+Note: 493.88 0.0525565 6.13494 Phoneme: -1 Open: false Volume: 0.21 Velocity: 0.732
+Note: 440 0.210226 6.1875 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.732
+Note: 440 0.443182 6.375 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.922
+Note: 440 0.443182 6.75 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.886
+Note: 783.99 0.125 10.375 Phoneme: -1 Open: false Volume: 0.21 Velocity: 0.724
+Note: 587.33 0.5 10.5 Phoneme: -1 Open: false Volume: 0.3 Velocity: 0.724
+Note: 493.88 0.75 11.0625 Phoneme: -1 Open: false Volume: 0.27 Velocity: 0.724
+PanAutomation: 48
+PanPoint: 0 1
+PanPoint: 3 1
+PanPoint: 6 1
+PanPoint: 9 0.31
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.32
+PanPoint: 66 1
+PanPoint: 72 0.34
+PanPoint: 78 1
+PanPoint: 84 0.34
+PanPoint: 90 0.31
+PanPoint: 96 0.3
+PanPoint: 102 0.31
+PanPoint: 108 0.33
+PanPoint: 114 0.31
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+PanPoint: 156 0.34
+PanPoint: 164.618 0.34
+PanPoint: 173.235 1
+PanPoint: 181.853 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 52
+VolumePoint: 0 0
+VolumePoint: 0 0.2625
+VolumePoint: 3 0.2325
+VolumePoint: 5 0.2625
+VolumePoint: 6 0.285
+VolumePoint: 9 0.24
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 36 0.495
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.345
+VolumePoint: 60 0.405
+VolumePoint: 66 0.396
+VolumePoint: 66 0.36
+VolumePoint: 72 0.315
+VolumePoint: 72 0.387
+VolumePoint: 78 0.345
+VolumePoint: 78 0.432
+VolumePoint: 84 0.465
+VolumePoint: 84 0.594
+VolumePoint: 90 0.585
+VolumePoint: 90 0.48
+VolumePoint: 96 0.603
+VolumePoint: 96 0.4875
+VolumePoint: 102 0.603
+VolumePoint: 102 0.5175
+VolumePoint: 108 0.594
+VolumePoint: 108 0.48
+VolumePoint: 114 0.585
+VolumePoint: 114 0.4875
+VolumePoint: 120 0.4875
+VolumePoint: 120 0.603
+VolumePoint: 126 0.45
+VolumePoint: 126 0.603
+VolumePoint: 132 0.594
+VolumePoint: 132 0.495
+VolumePoint: 138 0.4875
+VolumePoint: 138 0.585
+VolumePoint: 144 0.4575
+VolumePoint: 144 0.603
+VolumePoint: 150 0.5025
+VolumePoint: 150 0.603
+VolumePoint: 156 0.24
+VolumePoint: 164.618 0.24
+VolumePoint: 173.235 0.24
+VolumePoint: 181.853 0.255
+VolumePoint: 185.47 0.2625
+VolumePoint: 190.47 0
+ReverbMixAutomation: 48
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 3 0.51
+ReverbMixPoint: 6 0.52
+ReverbMixPoint: 9 0.54
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.51
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.52
+ReverbMixPoint: 78 0.54
+ReverbMixPoint: 84 0.52
+ReverbMixPoint: 90 0.51
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.54
+ReverbMixPoint: 108 0.5
+ReverbMixPoint: 114 0.51
+ReverbMixPoint: 120 0.54
+ReverbMixPoint: 126 0.54
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.52
+ReverbMixPoint: 144 0.5
+ReverbMixPoint: 150 0.52
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 164.618 0.51
+ReverbMixPoint: 173.235 0.51
+ReverbMixPoint: 181.853 0.5
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: false
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 17
+Note: 110 0.886364 0 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.9565
+Note: 196 1 0.9375 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.943
+Note: 174.61 0.460224 1.875 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.904
+Note: 146.83 0.460224 2.25 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.892
+Note: 110 0.5 2.625 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.9415
+Note: 130.81 0.5 3.1875 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.9895
+Note: 174.61 1 3.75 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.9565
+Note: 146.83 0.886364 4.6875 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.8515
+Note: 110 0.25 5.625 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.853
+Note: 130.81 0.272727 5.8125 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.862
+Note: 174.61 0.886364 6 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.937
+Note: 110 0.460224 7.875 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.925
+Note: 164.81 1 8.25 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.985
+Note: 130.81 0.886364 9.75 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.9895
+Note: 174.61 0.210226 11.25 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.9415
+Note: 174.61 0.25 11.4375 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.9475
+Note: 146.83 0.1875 11.8125 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.859
+PanAutomation: 48
+PanPoint: 0 0.005
+PanPoint: 3 0.015
+PanPoint: 6 -0.005
+PanPoint: 9 -0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.015
+PanPoint: 66 0.015
+PanPoint: 72 -0.005
+PanPoint: 78 0.015
+PanPoint: 84 -0.015
+PanPoint: 90 0.005
+PanPoint: 96 -0.025
+PanPoint: 102 -0.025
+PanPoint: 108 -0.015
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 -0.025
+PanPoint: 132 -0.015
+PanPoint: 138 -0.015
+PanPoint: 144 0.015
+PanPoint: 150 -0.015
+PanPoint: 156 -0.025
+PanPoint: 164.618 -0.005
+PanPoint: 173.235 -0.005
+PanPoint: 181.853 0.015
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 52
+VolumePoint: 0 0
+VolumePoint: 0 0.39
+VolumePoint: 3 0.3525
+VolumePoint: 5 0.39
+VolumePoint: 6 0.405
+VolumePoint: 9 0.36
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 36 0.39
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.3825
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.405
+VolumePoint: 66 0.39
+VolumePoint: 72 0.36
+VolumePoint: 72 0.3675
+VolumePoint: 78 0.39
+VolumePoint: 78 0.345
+VolumePoint: 84 0.3825
+VolumePoint: 84 0.39
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.345
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.36
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.3525
+VolumePoint: 108 0.39
+VolumePoint: 108 0.3375
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.345
+VolumePoint: 120 0.3375
+VolumePoint: 120 0.3675
+VolumePoint: 126 0.36
+VolumePoint: 126 0.3525
+VolumePoint: 132 0.39
+VolumePoint: 132 0.3975
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.3525
+VolumePoint: 144 0.39
+VolumePoint: 144 0.3675
+VolumePoint: 150 0.3975
+VolumePoint: 150 0.3525
+VolumePoint: 156 0.3825
+VolumePoint: 164.618 0.375
+VolumePoint: 173.235 0.3975
+VolumePoint: 181.853 0.3975
+VolumePoint: 185.47 0.39
+VolumePoint: 190.47 0
+ReverbMixAutomation: 48
+ReverbMixPoint: 0 0.19
+ReverbMixPoint: 3 0.15
+ReverbMixPoint: 6 0.17
+ReverbMixPoint: 9 0.15
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.16
+ReverbMixPoint: 72 0.19
+ReverbMixPoint: 78 0.15
+ReverbMixPoint: 84 0.18
+ReverbMixPoint: 90 0.15
+ReverbMixPoint: 96 0.17
+ReverbMixPoint: 102 0.16
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.16
+ReverbMixPoint: 126 0.19
+ReverbMixPoint: 132 0.16
+ReverbMixPoint: 138 0.15
+ReverbMixPoint: 144 0.16
+ReverbMixPoint: 150 0.18
+ReverbMixPoint: 156 0.17
+ReverbMixPoint: 164.618 0.16
+ReverbMixPoint: 173.235 0.17
+ReverbMixPoint: 181.853 0.19
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18
+Part: Arpeggio
+Instrument: piano
+Pan: -0.4
+ReverbMix: 0.3
+UseReverb: true
+ReverbDelay: 0.1
+ReverbDecay: 0.6
+ReverbMixFactor: 0.3
+UseDistortion: false
+DistortionDrive: 1.3
+DistortionThreshold: 0.8
+Notes: 57
+Note: 440 0.375 12 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.834
+Note: 659.25 0.375 12.375 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.81
+Note: 440 0.375 12.75 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.802
+Note: 440 0.375 13.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.752
+Note: 523.25 0.375 13.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.712
+Note: 698.46 0.375 13.875 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.71
+Note: 1046.5 0.375 14.25 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.754
+Note: 440 0.375 15 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.808
+Note: 587.33 0.375 15.375 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.756
+Note: 1046.5 0.375 15.75 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.854
+Note: 493.88 0.375 16.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.732
+Note: 698.46 0.375 16.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.878
+Note: 493.88 0.375 16.875 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.792
+Note: 440 0.375 17.625 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.836
+Note: 659.25 0.375 18 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.734
+Note: 440 0.375 18.375 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.864
+Note: 440 0.375 18.75 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.816
+Note: 698.46 0.375 19.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.85
+Note: 523.25 0.375 19.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.886
+Note: 698.46 0.375 19.875 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.718
+Note: 698.46 0.375 20.25 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.818
+Note: 440 0.375 20.625 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.806
+Note: 587.33 0.375 21 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.788
+Note: 1046.5 0.375 21.375 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.818
+Note: 493.88 0.375 22.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.822
+Note: 698.46 0.375 22.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.85
+Note: 493.88 0.375 22.875 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.746
+Note: 493.88 0.375 23.25 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.826
+Note: 440 0.375 23.625 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.862
+Note: 659.25 0.375 24 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.826
+Note: 440 0.375 24.375 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.74
+Note: 440 0.375 24.75 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.868
+Note: 523.25 0.375 25.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.742
+Note: 698.46 0.375 25.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.778
+Note: 1046.5 0.375 25.875 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.834
+Note: 587.33 0.375 26.625 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.734
+Note: 440 0.375 27 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.814
+Note: 587.33 0.375 27.375 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.802
+Note: 493.88 0.375 27.75 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.856
+Note: 698.46 0.375 28.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.754
+Note: 493.88 0.375 28.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.752
+Note: 493.88 0.375 28.875 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.766
+Note: 440 0.375 29.25 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.746
+Note: 659.25 0.375 29.625 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.75
+Note: 440 0.375 30 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.81
+Note: 523.25 0.375 30.75 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.796
+Note: 698.46 0.375 31.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.856
+Note: 698.46 0.375 31.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.848
+Note: 1046.5 0.375 31.875 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.892
+Note: 587.33 0.375 32.25 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.878
+Note: 440 0.375 32.625 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.862
+Note: 587.33 0.375 33 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.882
+Note: 698.46 0.375 33.75 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.804
+Note: 493.88 0.375 34.125 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.828
+Note: 987.77 0.375 34.5 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.752
+Note: 659.25 0.375 35.25 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.774
+Note: 440 0.375 35.625 Phoneme: -1 Open: false Volume: 0.24375 Velocity: 0.876
+PanAutomation: 48
+PanPoint: 0 1
+PanPoint: 3 -0.38
+PanPoint: 6 -0.38
+PanPoint: 9 -0.37
+PanPoint: 12 -0.4
+PanPoint: 18 1
+PanPoint: 24 -0.38
+PanPoint: 30 1
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 -0.39
+PanPoint: 66 -0.36
+PanPoint: 72 -0.38
+PanPoint: 78 1
+PanPoint: 84 -0.4
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 -0.37
+PanPoint: 108 -0.4
+PanPoint: 114 1
+PanPoint: 120 -0.36
+PanPoint: 126 -0.38
+PanPoint: 132 1
+PanPoint: 138 -0.36
+PanPoint: 144 1
+PanPoint: 150 1
+PanPoint: 156 -0.39
+PanPoint: 164.618 -0.39
+PanPoint: 173.235 -0.39
+PanPoint: 181.853 1
+PanPoint: 60 -0.4
+PanPoint: 66 1
+PanPoint: 72 -0.38
+PanPoint: 78 1
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 52
+VolumePoint: 0 0
+VolumePoint: 0 0.255
+VolumePoint: 3 0.285
+VolumePoint: 5 0.255
+VolumePoint: 6 0.2925
+VolumePoint: 9 0.2925
+VolumePoint: 12 0.225
+VolumePoint: 18 0.285
+VolumePoint: 24 0.225
+VolumePoint: 30 0.2325
+VolumePoint: 36 0.2475
+VolumePoint: 42 0.24
+VolumePoint: 48 0.2475
+VolumePoint: 54 0.2475
+VolumePoint: 60 0.285
+VolumePoint: 60 0.225
+VolumePoint: 66 0.285
+VolumePoint: 66 0.27
+VolumePoint: 72 0.2925
+VolumePoint: 72 0.225
+VolumePoint: 78 0.2925
+VolumePoint: 78 0.2325
+VolumePoint: 84 0.2325
+VolumePoint: 84 0.2475
+VolumePoint: 90 0.24
+VolumePoint: 90 0.225
+VolumePoint: 96 0.2475
+VolumePoint: 96 0.285
+VolumePoint: 102 0.2475
+VolumePoint: 102 0.2775
+VolumePoint: 108 0.2475
+VolumePoint: 108 0.285
+VolumePoint: 114 0.24
+VolumePoint: 114 0.2625
+VolumePoint: 120 0.2625
+VolumePoint: 120 0.2475
+VolumePoint: 126 0.2325
+VolumePoint: 126 0.2475
+VolumePoint: 132 0.2475
+VolumePoint: 132 0.2775
+VolumePoint: 138 0.255
+VolumePoint: 138 0.24
+VolumePoint: 144 0.285
+VolumePoint: 144 0.2475
+VolumePoint: 150 0.225
+VolumePoint: 150 0.2475
+VolumePoint: 156 0.2475
+VolumePoint: 164.618 0.225
+VolumePoint: 173.235 0.2775
+VolumePoint: 181.853 0.2925
+VolumePoint: 185.47 0.255
+VolumePoint: 190.47 0
+ReverbMixAutomation: 48
+ReverbMixPoint: 0 0.31
+ReverbMixPoint: 3 0.39
+ReverbMixPoint: 6 0.36
+ReverbMixPoint: 9 0.39
+ReverbMixPoint: 12 0.36
+ReverbMixPoint: 18 0.35
+ReverbMixPoint: 24 0.3
+ReverbMixPoint: 30 0.39
+ReverbMixPoint: 36 0.35
+ReverbMixPoint: 42 0.32
+ReverbMixPoint: 48 0.32
+ReverbMixPoint: 54 0.32
+ReverbMixPoint: 60 0.38
+ReverbMixPoint: 66 0.39
+ReverbMixPoint: 72 0.35
+ReverbMixPoint: 78 0.33
+ReverbMixPoint: 84 0.34
+ReverbMixPoint: 90 0.35
+ReverbMixPoint: 96 0.3
+ReverbMixPoint: 102 0.32
+ReverbMixPoint: 108 0.38
+ReverbMixPoint: 114 0.32
+ReverbMixPoint: 120 0.37
+ReverbMixPoint: 126 0.33
+ReverbMixPoint: 132 0.37
+ReverbMixPoint: 138 0.34
+ReverbMixPoint: 144 0.31
+ReverbMixPoint: 150 0.34
+ReverbMixPoint: 156 0.32
+ReverbMixPoint: 164.618 0.3
+ReverbMixPoint: 173.235 0.39
+ReverbMixPoint: 181.853 0.36
+ReverbMixPoint: 60 0.36
+ReverbMixPoint: 66 0.35
+ReverbMixPoint: 72 0.3
+ReverbMixPoint: 78 0.39
+ReverbMixPoint: 84 0.35
+ReverbMixPoint: 90 0.32
+ReverbMixPoint: 96 0.32
+ReverbMixPoint: 102 0.32
+ReverbMixPoint: 108 0.35
+ReverbMixPoint: 114 0.32
+ReverbMixPoint: 120 0.32
+ReverbMixPoint: 126 0.32
+ReverbMixPoint: 132 0.35
+ReverbMixPoint: 138 0.32
+ReverbMixPoint: 144 0.32
+ReverbMixPoint: 150 0.32
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: true
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 26
+Note: 110 0.886364 12 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9535
+Note: 174.61 1 12.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9475
+Note: 146.83 0.950182 13.875 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.8815
+Note: 123.47 0.272727 15.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.874
+Note: 110 0.5 16.875 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9565
+Note: 174.61 1.094 17.4375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9265
+Note: 146.83 0.886364 19.5 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9805
+Note: 123.47 0.272727 21.375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.943
+Note: 110 0.25 21.5625 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9235
+Note: 174.61 0.272727 21.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9235
+Note: 146.83 0.136364 21.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.901
+Note: 146.83 0.460224 22.125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9475
+Note: 123.47 1 22.5 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.8785
+Note: 110 0.849137 24 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.991
+Note: 174.61 0.5 24.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.925
+Note: 146.83 0.210226 25.5 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.8545
+Note: 110 0.134726 30.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9445
+Note: 146.83 0.460224 30.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.871
+Note: 123.47 1 31.3125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.892
+Note: 110 0.5 32.25 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9385
+Note: 174.61 0.5 32.8125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.994
+Note: 146.83 0.886364 33.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9355
+Note: 123.47 0.47 34.6875 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9715
+Note: 110 0.219896 35.25 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9175
+Note: 110 0.415122 35.4375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.991
+Note: 174.61 0.1875 35.8125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9145
+PanAutomation: 56
+PanPoint: 0 -0.015
+PanPoint: 3 -0.005
+PanPoint: 6 0.005
+PanPoint: 9 0.015
+PanPoint: 12 0.005
+PanPoint: 18 -0.005
+PanPoint: 24 0.015
+PanPoint: 30 0.005
+PanPoint: 36 0.005
+PanPoint: 42 -0.005
+PanPoint: 48 -0.005
+PanPoint: 54 -0.015
+PanPoint: 60 0.005
+PanPoint: 66 -0.025
+PanPoint: 72 -0.025
+PanPoint: 78 -0.005
+PanPoint: 84 -0.005
+PanPoint: 90 -0.005
+PanPoint: 96 -0.025
+PanPoint: 102 0.015
+PanPoint: 108 0.005
+PanPoint: 114 -0.005
+PanPoint: 120 0.015
+PanPoint: 126 -0.005
+PanPoint: 132 0.005
+PanPoint: 138 0.005
+PanPoint: 144 0.015
+PanPoint: 150 0.015
+PanPoint: 156 0.015
+PanPoint: 164.618 -0.005
+PanPoint: 173.235 -0.005
+PanPoint: 181.853 -0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.3525
+VolumePoint: 3 0.405
+VolumePoint: 5 0.3525
+VolumePoint: 6 0.39
+VolumePoint: 9 0.39
+VolumePoint: 12 0.345
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 18 0.3975
+VolumePoint: 24 0.39
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 30 0.345
+VolumePoint: 36 0.36
+VolumePoint: 36 0.39
+VolumePoint: 42 0.3825
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.39
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.375
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.3375
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.405
+VolumePoint: 66 0.405
+VolumePoint: 72 0.3675
+VolumePoint: 72 0.345
+VolumePoint: 78 0.3375
+VolumePoint: 78 0.345
+VolumePoint: 84 0.39
+VolumePoint: 84 0.3525
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.3825
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.375
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.3375
+VolumePoint: 108 0.39
+VolumePoint: 108 0.36
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.405
+VolumePoint: 120 0.3675
+VolumePoint: 120 0.345
+VolumePoint: 126 0.3525
+VolumePoint: 126 0.3375
+VolumePoint: 132 0.39
+VolumePoint: 132 0.345
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.3975
+VolumePoint: 144 0.3675
+VolumePoint: 144 0.375
+VolumePoint: 150 0.3525
+VolumePoint: 150 0.3975
+VolumePoint: 156 0.375
+VolumePoint: 164.618 0.3525
+VolumePoint: 173.235 0.345
+VolumePoint: 181.853 0.36
+VolumePoint: 185.47 0.3525
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.16
+ReverbMixPoint: 3 0.15
+ReverbMixPoint: 6 0.18
+ReverbMixPoint: 9 0.15
+ReverbMixPoint: 12 0.16
+ReverbMixPoint: 18 0.15
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.18
+ReverbMixPoint: 36 0.17
+ReverbMixPoint: 42 0.15
+ReverbMixPoint: 48 0.15
+ReverbMixPoint: 54 0.15
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.18
+ReverbMixPoint: 72 0.15
+ReverbMixPoint: 78 0.16
+ReverbMixPoint: 84 0.19
+ReverbMixPoint: 90 0.15
+ReverbMixPoint: 96 0.15
+ReverbMixPoint: 102 0.15
+ReverbMixPoint: 108 0.18
+ReverbMixPoint: 114 0.15
+ReverbMixPoint: 120 0.18
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.15
+ReverbMixPoint: 144 0.15
+ReverbMixPoint: 150 0.17
+ReverbMixPoint: 156 0.19
+ReverbMixPoint: 164.618 0.16
+ReverbMixPoint: 173.235 0.15
+ReverbMixPoint: 181.853 0.15
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18
+Part: Melody
+Instrument: cello
+Pan: -0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 18
+Note: 587.33 0.5 36 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9
+Note: 659.25 0.954 38.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 659.25 0.702 39.5625 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.88
+Note: 659.25 0.443182 40.3125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.906
+Note: 659.25 0.443182 40.6875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.886
+Note: 440 0.443182 43.5 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.93
+Note: 440 0.443182 43.875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.912
+Note: 587.33 0.443182 48.5625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.846
+Note: 587.33 0.400637 48.9375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.91
+Note: 440 0.5 51.5625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.734
+Note: 659.25 0.75 52.125 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.734
+Note: 659.25 0.445841 52.875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.946
+Note: 659.25 0.443182 53.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.926
+Note: 440 0.886364 55.875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.858
+Note: 587.33 0.75 56.8125 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.858
+Note: 587.33 0.5 57.5625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.7
+Note: 659.25 0.125 58 Phoneme: -1 Open: false Volume: 0.2625 Velocity: 0.86
+Note: 523.25 0.5 58.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.86
+PanAutomation: 56
+PanPoint: 0 -0.3
+PanPoint: 3 1
+PanPoint: 6 -0.29
+PanPoint: 9 1
+PanPoint: 12 -0.29
+PanPoint: 18 -0.29
+PanPoint: 24 1
+PanPoint: 30 1
+PanPoint: 36 -0.26
+PanPoint: 42 -0.26
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 1
+PanPoint: 66 -0.27
+PanPoint: 72 -0.3
+PanPoint: 78 1
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 -0.28
+PanPoint: 102 -0.3
+PanPoint: 108 -0.29
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 -0.3
+PanPoint: 138 1
+PanPoint: 144 -0.28
+PanPoint: 150 -0.3
+PanPoint: 156 1
+PanPoint: 164.618 1
+PanPoint: 173.235 -0.3
+PanPoint: 181.853 -0.26
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.24
+VolumePoint: 3 0.225
+VolumePoint: 5 0.24
+VolumePoint: 6 0.27
+VolumePoint: 9 0.2325
+VolumePoint: 12 0.3225
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.345
+VolumePoint: 24 0.345
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.3
+VolumePoint: 36 0.4575
+VolumePoint: 36 0.495
+VolumePoint: 42 0.51
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.4725
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.4725
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.3075
+VolumePoint: 60 0.405
+VolumePoint: 66 0.33
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.33
+VolumePoint: 78 0.3375
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.465
+VolumePoint: 90 0.585
+VolumePoint: 90 0.495
+VolumePoint: 96 0.603
+VolumePoint: 96 0.4875
+VolumePoint: 102 0.603
+VolumePoint: 102 0.465
+VolumePoint: 108 0.594
+VolumePoint: 108 0.5175
+VolumePoint: 114 0.585
+VolumePoint: 114 0.5025
+VolumePoint: 120 0.603
+VolumePoint: 120 0.4725
+VolumePoint: 126 0.603
+VolumePoint: 126 0.51
+VolumePoint: 132 0.594
+VolumePoint: 132 0.4575
+VolumePoint: 138 0.585
+VolumePoint: 138 0.48
+VolumePoint: 144 0.603
+VolumePoint: 144 0.45
+VolumePoint: 150 0.603
+VolumePoint: 150 0.48
+VolumePoint: 156 0.225
+VolumePoint: 164.618 0.27
+VolumePoint: 173.235 0.24
+VolumePoint: 181.853 0.27
+VolumePoint: 185.47 0.24
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.54
+ReverbMixPoint: 3 0.5
+ReverbMixPoint: 6 0.54
+ReverbMixPoint: 9 0.51
+ReverbMixPoint: 12 0.5
+ReverbMixPoint: 18 0.52
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.52
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.53
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.51
+ReverbMixPoint: 72 0.53
+ReverbMixPoint: 78 0.54
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.5
+ReverbMixPoint: 96 0.53
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.54
+ReverbMixPoint: 114 0.53
+ReverbMixPoint: 120 0.51
+ReverbMixPoint: 126 0.51
+ReverbMixPoint: 132 0.52
+ReverbMixPoint: 138 0.5
+ReverbMixPoint: 144 0.53
+ReverbMixPoint: 150 0.53
+ReverbMixPoint: 156 0.52
+ReverbMixPoint: 164.618 0.52
+ReverbMixPoint: 173.235 0.53
+ReverbMixPoint: 181.853 0.51
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: false
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 28
+Note: 110 0.210226 36 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8665
+Note: 146.83 1 37.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9235
+Note: 164.81 0.259091 38.0625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9925
+Note: 110 0.460224 38.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8725
+Note: 174.61 0.459304 38.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.982
+Note: 146.83 0.545 39 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.991
+Note: 164.81 0.803046 41.0625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9565
+Note: 110 1 42 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.955
+Note: 174.61 0.125 42.9375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9355
+Note: 174.61 0.210226 43.3125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8515
+Note: 174.61 0.866864 43.5 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9685
+Note: 146.83 1 45.75 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.889
+Note: 164.81 0.5 46.6875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 0.460224 47.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 174.61 0.930682 47.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 146.83 0.966 50.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9865
+Note: 164.81 0.5 51.5625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9595
+Note: 110 0.25 52.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.943
+Note: 174.61 0.25 54.1875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.907
+Note: 146.83 0.226624 54.375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 146.83 0.267818 54.5625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.865
+Note: 164.81 0.886364 55.6875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9115
+Note: 110 0.464826 56.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8995
+Note: 174.61 0.484 57 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8635
+Note: 146.83 0.47219 57.5625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9715
+Note: 164.81 0.460224 57.9375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 1 58.3125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 174.61 0.460224 59.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9775
+PanAutomation: 56
+PanPoint: 0 -0.025
+PanPoint: 3 -0.025
+PanPoint: 6 -0.005
+PanPoint: 9 -0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.015
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.005
+PanPoint: 48 -0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.005
+PanPoint: 66 0.015
+PanPoint: 72 -0.025
+PanPoint: 78 -0.015
+PanPoint: 84 -0.005
+PanPoint: 90 -0.015
+PanPoint: 96 -0.015
+PanPoint: 102 -0.015
+PanPoint: 108 -0.005
+PanPoint: 114 -0.025
+PanPoint: 120 -0.005
+PanPoint: 126 -0.005
+PanPoint: 132 -0.015
+PanPoint: 138 -0.015
+PanPoint: 144 -0.015
+PanPoint: 150 -0.025
+PanPoint: 156 -0.025
+PanPoint: 164.618 -0.005
+PanPoint: 173.235 -0.015
+PanPoint: 181.853 -0.025
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.345
+VolumePoint: 3 0.39
+VolumePoint: 5 0.345
+VolumePoint: 6 0.36
+VolumePoint: 9 0.39
+VolumePoint: 12 0.3525
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 18 0.405
+VolumePoint: 24 0.3825
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 30 0.345
+VolumePoint: 36 0.3825
+VolumePoint: 36 0.39
+VolumePoint: 42 0.3525
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.36
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.3525
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.39
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.3375
+VolumePoint: 66 0.405
+VolumePoint: 72 0.3675
+VolumePoint: 72 0.3825
+VolumePoint: 78 0.36
+VolumePoint: 78 0.345
+VolumePoint: 84 0.39
+VolumePoint: 84 0.3675
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.3975
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.3975
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.3675
+VolumePoint: 108 0.39
+VolumePoint: 108 0.375
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.36
+VolumePoint: 120 0.3675
+VolumePoint: 120 0.36
+VolumePoint: 126 0.3525
+VolumePoint: 126 0.3825
+VolumePoint: 132 0.39
+VolumePoint: 132 0.3525
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.3975
+VolumePoint: 144 0.3675
+VolumePoint: 144 0.36
+VolumePoint: 150 0.3525
+VolumePoint: 150 0.405
+VolumePoint: 156 0.345
+VolumePoint: 164.618 0.39
+VolumePoint: 173.235 0.405
+VolumePoint: 181.853 0.3825
+VolumePoint: 185.47 0.345
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.16
+ReverbMixPoint: 3 0.15
+ReverbMixPoint: 6 0.18
+ReverbMixPoint: 9 0.19
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.17
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.19
+ReverbMixPoint: 36 0.17
+ReverbMixPoint: 42 0.18
+ReverbMixPoint: 48 0.18
+ReverbMixPoint: 54 0.16
+ReverbMixPoint: 60 0.17
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.19
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.17
+ReverbMixPoint: 96 0.18
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.18
+ReverbMixPoint: 126 0.19
+ReverbMixPoint: 132 0.16
+ReverbMixPoint: 138 0.19
+ReverbMixPoint: 144 0.15
+ReverbMixPoint: 150 0.18
+ReverbMixPoint: 156 0.16
+ReverbMixPoint: 164.618 0.16
+ReverbMixPoint: 173.235 0.16
+ReverbMixPoint: 181.853 0.17
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18
+Part: Harmony
+Instrument: pad
+Pan: 0
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.1
+ReverbDecay: 0.9
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 2
+DistortionThreshold: 0.3
+Notes: 12
+Note: 587.33 6 36 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.62
+Note: 440 6 36 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.622
+Note: 587.33 6 36 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.71
+Note: 493.88 6 42 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.68
+Note: 659.25 6 42 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.658
+Note: 1046.5 6 42 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.764
+Note: 440 6 48 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.714
+Note: 880 6 48 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.73
+Note: 1046.5 6 48 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.63
+Note: 698.46 6 54 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.694
+Note: 523.25 6 54 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.708
+Note: 698.46 6 54 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.784
+PanAutomation: 32
+PanPoint: 0 0
+PanPoint: 6 0
+PanPoint: 12 0
+PanPoint: 18 0
+PanPoint: 24 0
+PanPoint: 30 0
+PanPoint: 36 0
+PanPoint: 42 0
+PanPoint: 48 0
+PanPoint: 54 0
+PanPoint: 60 0
+PanPoint: 66 0
+PanPoint: 72 0
+PanPoint: 78 0
+PanPoint: 84 0
+PanPoint: 90 0
+PanPoint: 96 0
+PanPoint: 102 0
+PanPoint: 108 0
+PanPoint: 114 0
+PanPoint: 120 0
+PanPoint: 126 0
+PanPoint: 132 0
+PanPoint: 138 0
+PanPoint: 144 0
+PanPoint: 150 0
+PanPoint: 156 0
+PanPoint: 162 0
+PanPoint: 168 0
+PanPoint: 174 0
+PanPoint: 180 0
+PanPoint: 186 0
+VolumeAutomation: 36
+VolumePoint: 0 0
+VolumePoint: 0 0.3
+VolumePoint: 5 0.3
+VolumePoint: 6 0.3
+VolumePoint: 12 0.31875
+VolumePoint: 18 0.31875
+VolumePoint: 24 0.31875
+VolumePoint: 30 0.31875
+VolumePoint: 36 0.3375
+VolumePoint: 42 0.3375
+VolumePoint: 48 0.3375
+VolumePoint: 54 0.3375
+VolumePoint: 60 0.31875
+VolumePoint: 66 0.31875
+VolumePoint: 72 0.31875
+VolumePoint: 78 0.31875
+VolumePoint: 84 0.3375
+VolumePoint: 90 0.3375
+VolumePoint: 96 0.3375
+VolumePoint: 102 0.3375
+VolumePoint: 108 0.3375
+VolumePoint: 114 0.3375
+VolumePoint: 120 0.3375
+VolumePoint: 126 0.3375
+VolumePoint: 132 0.3375
+VolumePoint: 138 0.3375
+VolumePoint: 144 0.3375
+VolumePoint: 150 0.3375
+VolumePoint: 156 0.375
+VolumePoint: 162 0.375
+VolumePoint: 168 0.375
+VolumePoint: 174 0.375
+VolumePoint: 180 0.375
+VolumePoint: 185.47 0.375
+VolumePoint: 186 0.375
+VolumePoint: 190.47 0
+ReverbMixAutomation: 32
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 6 0.5
+ReverbMixPoint: 12 0.5
+ReverbMixPoint: 18 0.5
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.5
+ReverbMixPoint: 36 0.5
+ReverbMixPoint: 42 0.5
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.5
+ReverbMixPoint: 60 0.5
+ReverbMixPoint: 66 0.5
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.5
+ReverbMixPoint: 96 0.5
+ReverbMixPoint: 102 0.5
+ReverbMixPoint: 108 0.5
+ReverbMixPoint: 114 0.5
+ReverbMixPoint: 120 0.5
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.5
+ReverbMixPoint: 138 0.5
+ReverbMixPoint: 144 0.5
+ReverbMixPoint: 150 0.5
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 162 0.5
+ReverbMixPoint: 168 0.5
+ReverbMixPoint: 174 0.5
+ReverbMixPoint: 180 0.5
+ReverbMixPoint: 186 0.5
+Part: Harmony
+Instrument: organ
+Pan: 0
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.1
+ReverbDecay: 0.9
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 2
+DistortionThreshold: 0.3
+Notes: 12
+Note: 587.33 6 36 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.62
+Note: 440 6 36 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.622
+Note: 587.33 6 36 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.71
+Note: 493.88 5.688 42 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.68
+Note: 659.25 6 42 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.658
+Note: 1046.5 6 42 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.764
+Note: 440 5.796 48 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.714
+Note: 880 6 48 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.73
+Note: 1046.5 5.652 48 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.63
+Note: 698.46 6 54 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.694
+Note: 523.25 6.36 54 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.708
+Note: 698.46 6 54 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.784
+PanAutomation: 32
+PanPoint: 0 0
+PanPoint: 6 0
+PanPoint: 12 0
+PanPoint: 18 0
+PanPoint: 24 0
+PanPoint: 30 0
+PanPoint: 36 0
+PanPoint: 42 0
+PanPoint: 48 0
+PanPoint: 54 0
+PanPoint: 60 0
+PanPoint: 66 0
+PanPoint: 72 0
+PanPoint: 78 0
+PanPoint: 84 0
+PanPoint: 90 0
+PanPoint: 96 0
+PanPoint: 102 0
+PanPoint: 108 0
+PanPoint: 114 0
+PanPoint: 120 0
+PanPoint: 126 0
+PanPoint: 132 0
+PanPoint: 138 0
+PanPoint: 144 0
+PanPoint: 150 0
+PanPoint: 156 0
+PanPoint: 162 0
+PanPoint: 168 0
+PanPoint: 174 0
+PanPoint: 180 0
+PanPoint: 186 0
+VolumeAutomation: 36
+VolumePoint: 0 0
+VolumePoint: 0 0.3
+VolumePoint: 5 0.3
+VolumePoint: 6 0.3
+VolumePoint: 12 0.31875
+VolumePoint: 18 0.31875
+VolumePoint: 24 0.31875
+VolumePoint: 30 0.31875
+VolumePoint: 36 0.3375
+VolumePoint: 42 0.3375
+VolumePoint: 48 0.3375
+VolumePoint: 54 0.3375
+VolumePoint: 60 0.31875
+VolumePoint: 66 0.31875
+VolumePoint: 72 0.31875
+VolumePoint: 78 0.31875
+VolumePoint: 84 0.3375
+VolumePoint: 90 0.3375
+VolumePoint: 96 0.3375
+VolumePoint: 102 0.3375
+VolumePoint: 108 0.3375
+VolumePoint: 114 0.3375
+VolumePoint: 120 0.3375
+VolumePoint: 126 0.3375
+VolumePoint: 132 0.3375
+VolumePoint: 138 0.3375
+VolumePoint: 144 0.3375
+VolumePoint: 150 0.3375
+VolumePoint: 156 0.375
+VolumePoint: 162 0.375
+VolumePoint: 168 0.375
+VolumePoint: 174 0.375
+VolumePoint: 180 0.375
+VolumePoint: 185.47 0.375
+VolumePoint: 186 0.375
+VolumePoint: 190.47 0
+ReverbMixAutomation: 32
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 6 0.5
+ReverbMixPoint: 12 0.5
+ReverbMixPoint: 18 0.5
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.5
+ReverbMixPoint: 36 0.5
+ReverbMixPoint: 42 0.5
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.5
+ReverbMixPoint: 60 0.5
+ReverbMixPoint: 66 0.5
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.5
+ReverbMixPoint: 96 0.5
+ReverbMixPoint: 102 0.5
+ReverbMixPoint: 108 0.5
+ReverbMixPoint: 114 0.5
+ReverbMixPoint: 120 0.5
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.5
+ReverbMixPoint: 138 0.5
+ReverbMixPoint: 144 0.5
+ReverbMixPoint: 150 0.5
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 162 0.5
+ReverbMixPoint: 168 0.5
+ReverbMixPoint: 174 0.5
+ReverbMixPoint: 180 0.5
+ReverbMixPoint: 186 0.5
+Part: Melody
+Instrument: violin
+Pan: 0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 26
+Note: 493.88 0.25 60 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.08
+Note: 523.25 1.002 60.1875 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.9504
+Note: 523.25 0.105852 61.0099 Phoneme: -1 Open: false Volume: 0.2835 Velocity: 0.852
+Note: 523.25 0.460224 61.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.852
+Note: 523.25 0.443182 61.5 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0032
+Note: 523.25 0.476864 61.875 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.1064
+Note: 523.25 0.272727 65.0625 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.9696
+Note: 493.88 0.75 65.25 Phoneme: -1 Open: false Volume: 0.3645 Velocity: 0.9696
+Note: 493.88 0.443182 66.1875 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0032
+Note: 493.88 0.443182 66.5625 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.1496
+Note: 880 0.221591 68.9659 Phoneme: -1 Open: false Volume: 0.2835 Velocity: 1.0152
+Note: 659.25 0.886364 69.1875 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0152
+Note: 783.99 0.136364 70.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.08
+Note: 783.99 1 70.3125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.984
+Note: 880 0.210511 71.5909 Phoneme: -1 Open: false Volume: 0.2835 Velocity: 0.8568
+Note: 523.25 0.886364 71.8125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.8568
+Note: 493.88 0.5 72.75 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0008
+Note: 698.46 0.460909 73.3125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0008
+Note: 523.25 0.423682 73.6875 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.1064
+Note: 587.33 0.460224 76.3125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.9264
+Note: 659.25 0.443182 76.875 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.9672
+Note: 493.88 0.443182 77.25 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0896
+Note: 587.33 0.546 81.9375 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.9672
+Note: 880 0.5 82.5 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.08
+Note: 783.99 0.25 83.0625 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0728
+Note: 523.25 0.460224 83.4375 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.9768
+PanAutomation: 56
+PanPoint: 0 1
+PanPoint: 3 1
+PanPoint: 6 1
+PanPoint: 9 0.33
+PanPoint: 12 1
+PanPoint: 18 0.3
+PanPoint: 24 0.33
+PanPoint: 30 0.33
+PanPoint: 36 0.32
+PanPoint: 42 1
+PanPoint: 48 0.34
+PanPoint: 54 0.31
+PanPoint: 60 1
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.34
+PanPoint: 84 1
+PanPoint: 90 0.33
+PanPoint: 96 0.33
+PanPoint: 102 0.3
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 0.31
+PanPoint: 144 0.34
+PanPoint: 150 0.3
+PanPoint: 156 0.3
+PanPoint: 164.618 1
+PanPoint: 173.235 0.33
+PanPoint: 181.853 0.3
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.2475
+VolumePoint: 3 0.2625
+VolumePoint: 5 0.2475
+VolumePoint: 6 0.225
+VolumePoint: 9 0.2775
+VolumePoint: 12 0.3375
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.3075
+VolumePoint: 24 0.36
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.36
+VolumePoint: 36 0.465
+VolumePoint: 36 0.495
+VolumePoint: 42 0.48
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.495
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.5025
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.3075
+VolumePoint: 60 0.405
+VolumePoint: 66 0.3525
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.3675
+VolumePoint: 78 0.315
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.45
+VolumePoint: 90 0.585
+VolumePoint: 90 0.495
+VolumePoint: 96 0.603
+VolumePoint: 96 0.51
+VolumePoint: 102 0.603
+VolumePoint: 102 0.5025
+VolumePoint: 108 0.594
+VolumePoint: 108 0.4875
+VolumePoint: 114 0.585
+VolumePoint: 114 0.465
+VolumePoint: 120 0.603
+VolumePoint: 120 0.495
+VolumePoint: 126 0.603
+VolumePoint: 126 0.4725
+VolumePoint: 132 0.594
+VolumePoint: 132 0.4725
+VolumePoint: 138 0.585
+VolumePoint: 138 0.495
+VolumePoint: 144 0.603
+VolumePoint: 144 0.48
+VolumePoint: 150 0.603
+VolumePoint: 150 0.4875
+VolumePoint: 156 0.225
+VolumePoint: 164.618 0.24
+VolumePoint: 173.235 0.2325
+VolumePoint: 181.853 0.255
+VolumePoint: 185.47 0.2475
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.52
+ReverbMixPoint: 3 0.53
+ReverbMixPoint: 6 0.52
+ReverbMixPoint: 9 0.54
+ReverbMixPoint: 12 0.5
+ReverbMixPoint: 18 0.53
+ReverbMixPoint: 24 0.52
+ReverbMixPoint: 30 0.51
+ReverbMixPoint: 36 0.52
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.54
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.54
+ReverbMixPoint: 66 0.51
+ReverbMixPoint: 72 0.54
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.53
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.51
+ReverbMixPoint: 108 0.53
+ReverbMixPoint: 114 0.51
+ReverbMixPoint: 120 0.53
+ReverbMixPoint: 126 0.52
+ReverbMixPoint: 132 0.5
+ReverbMixPoint: 138 0.51
+ReverbMixPoint: 144 0.51
+ReverbMixPoint: 150 0.54
+ReverbMixPoint: 156 0.54
+ReverbMixPoint: 164.618 0.54
+ReverbMixPoint: 173.235 0.53
+ReverbMixPoint: 181.853 0.51
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: false
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: true
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 26
+Note: 110 0.893455 60 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9535
+Note: 174.61 1 60.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9475
+Note: 146.83 0.803046 61.875 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.8815
+Note: 123.47 0.272727 63.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.874
+Note: 110 0.5 64.875 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9565
+Note: 174.61 1 65.4375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9265
+Note: 146.83 0.886364 67.5 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9805
+Note: 123.47 0.272727 69.375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.943
+Note: 110 0.25 69.5625 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9235
+Note: 174.61 0.272727 69.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9235
+Note: 146.83 0.136364 69.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.901
+Note: 146.83 0.460224 70.125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9475
+Note: 123.47 1 70.5 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.8785
+Note: 110 0.909409 72 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.991
+Note: 174.61 0.5 72.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.925
+Note: 146.83 0.210226 73.5 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.8545
+Note: 110 0.147726 78.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9445
+Note: 146.83 0.460224 78.9375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.871
+Note: 123.47 1 79.3125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.892
+Note: 110 0.5 80.25 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9385
+Note: 174.61 0.5 80.8125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.994
+Note: 146.83 0.886364 81.75 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9355
+Note: 123.47 0.5 82.6875 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9715
+Note: 110 0.210226 83.25 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9175
+Note: 110 0.434451 83.4375 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.991
+Note: 174.61 0.178125 83.8125 Phoneme: -1 Open: false Volume: 0.35625 Velocity: 0.9145
+PanAutomation: 56
+PanPoint: 0 -0.025
+PanPoint: 3 -0.005
+PanPoint: 6 -0.005
+PanPoint: 9 0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 -0.015
+PanPoint: 30 -0.015
+PanPoint: 36 -0.015
+PanPoint: 42 -0.025
+PanPoint: 48 0.015
+PanPoint: 54 -0.005
+PanPoint: 60 0.005
+PanPoint: 66 0.005
+PanPoint: 72 0.005
+PanPoint: 78 0.005
+PanPoint: 84 0.015
+PanPoint: 90 -0.005
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.005
+PanPoint: 120 -0.015
+PanPoint: 126 0.015
+PanPoint: 132 -0.025
+PanPoint: 138 -0.005
+PanPoint: 144 -0.025
+PanPoint: 150 -0.025
+PanPoint: 156 0.015
+PanPoint: 164.618 0.005
+PanPoint: 173.235 -0.015
+PanPoint: 181.853 0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.3675
+VolumePoint: 3 0.3825
+VolumePoint: 5 0.3675
+VolumePoint: 6 0.39
+VolumePoint: 9 0.405
+VolumePoint: 12 0.3525
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 18 0.345
+VolumePoint: 24 0.3675
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 30 0.3375
+VolumePoint: 36 0.3825
+VolumePoint: 36 0.39
+VolumePoint: 42 0.36
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.375
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.345
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.3375
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.3375
+VolumePoint: 66 0.405
+VolumePoint: 72 0.3675
+VolumePoint: 72 0.3975
+VolumePoint: 78 0.3975
+VolumePoint: 78 0.345
+VolumePoint: 84 0.39
+VolumePoint: 84 0.345
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.3375
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.405
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.405
+VolumePoint: 108 0.39
+VolumePoint: 108 0.345
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.3825
+VolumePoint: 120 0.3675
+VolumePoint: 120 0.3975
+VolumePoint: 126 0.3525
+VolumePoint: 126 0.405
+VolumePoint: 132 0.39
+VolumePoint: 132 0.405
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.345
+VolumePoint: 144 0.3675
+VolumePoint: 144 0.39
+VolumePoint: 150 0.3525
+VolumePoint: 150 0.36
+VolumePoint: 156 0.405
+VolumePoint: 164.618 0.3975
+VolumePoint: 173.235 0.3825
+VolumePoint: 181.853 0.39
+VolumePoint: 185.47 0.3675
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.19
+ReverbMixPoint: 3 0.16
+ReverbMixPoint: 6 0.19
+ReverbMixPoint: 9 0.16
+ReverbMixPoint: 12 0.16
+ReverbMixPoint: 18 0.17
+ReverbMixPoint: 24 0.17
+ReverbMixPoint: 30 0.19
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.19
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.18
+ReverbMixPoint: 66 0.17
+ReverbMixPoint: 72 0.19
+ReverbMixPoint: 78 0.18
+ReverbMixPoint: 84 0.18
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.18
+ReverbMixPoint: 102 0.19
+ReverbMixPoint: 108 0.18
+ReverbMixPoint: 114 0.19
+ReverbMixPoint: 120 0.15
+ReverbMixPoint: 126 0.17
+ReverbMixPoint: 132 0.16
+ReverbMixPoint: 138 0.19
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.19
+ReverbMixPoint: 156 0.15
+ReverbMixPoint: 164.618 0.18
+ReverbMixPoint: 173.235 0.19
+ReverbMixPoint: 181.853 0.15
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18
+Part: Melody
+Instrument: flute
+Pan: -0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: true
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 18
+Note: 587.33 0.5 84 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.08
+Note: 659.25 1 86.625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.056
+Note: 659.25 0.75 87.5625 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.056
+Note: 659.25 0.443182 88.3125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0872
+Note: 659.25 0.443182 88.6875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0632
+Note: 440 0.402409 91.5 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.116
+Note: 440 0.452932 91.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0944
+Note: 587.33 0.442296 96.5625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0152
+Note: 587.33 0.483068 96.9375 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.092
+Note: 440 0.54 99.5625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8808
+Note: 659.25 0.75 100.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.8808
+Note: 659.25 0.443182 100.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1352
+Note: 659.25 0.434318 101.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1112
+Note: 440 0.886364 103.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0296
+Note: 587.33 0.753 104.812 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0296
+Note: 587.33 0.483 105.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.84
+Note: 659.25 0.125 106 Phoneme: -1 Open: false Volume: 0.315 Velocity: 1.032
+Note: 523.25 0.5 106.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.032
+PanAutomation: 56
+PanPoint: 0 1
+PanPoint: 3 -0.26
+PanPoint: 6 -0.26
+PanPoint: 9 -0.26
+PanPoint: 12 1
+PanPoint: 18 -0.3
+PanPoint: 24 1
+PanPoint: 30 -0.27
+PanPoint: 36 -0.27
+PanPoint: 42 -0.29
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 -0.27
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 -0.28
+PanPoint: 84 1
+PanPoint: 90 -0.26
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 -0.27
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 -0.27
+PanPoint: 150 -0.3
+PanPoint: 156 1
+PanPoint: 164.618 1
+PanPoint: 173.235 1
+PanPoint: 181.853 1
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.24
+VolumePoint: 3 0.2625
+VolumePoint: 5 0.24
+VolumePoint: 6 0.2625
+VolumePoint: 9 0.255
+VolumePoint: 12 0.33
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.3
+VolumePoint: 24 0.315
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.345
+VolumePoint: 36 0.51
+VolumePoint: 36 0.495
+VolumePoint: 42 0.495
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.465
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.5025
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.315
+VolumePoint: 60 0.405
+VolumePoint: 66 0.36
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.3
+VolumePoint: 78 0.3225
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.495
+VolumePoint: 90 0.585
+VolumePoint: 90 0.465
+VolumePoint: 96 0.603
+VolumePoint: 96 0.45
+VolumePoint: 102 0.603
+VolumePoint: 102 0.4575
+VolumePoint: 108 0.594
+VolumePoint: 108 0.51
+VolumePoint: 114 0.585
+VolumePoint: 114 0.4875
+VolumePoint: 120 0.603
+VolumePoint: 120 0.5175
+VolumePoint: 126 0.603
+VolumePoint: 126 0.495
+VolumePoint: 132 0.594
+VolumePoint: 132 0.495
+VolumePoint: 138 0.585
+VolumePoint: 138 0.48
+VolumePoint: 144 0.603
+VolumePoint: 144 0.45
+VolumePoint: 150 0.603
+VolumePoint: 150 0.5175
+VolumePoint: 156 0.225
+VolumePoint: 164.618 0.24
+VolumePoint: 173.235 0.2625
+VolumePoint: 181.853 0.27
+VolumePoint: 185.47 0.24
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.54
+ReverbMixPoint: 3 0.53
+ReverbMixPoint: 6 0.53
+ReverbMixPoint: 9 0.53
+ReverbMixPoint: 12 0.52
+ReverbMixPoint: 18 0.53
+ReverbMixPoint: 24 0.53
+ReverbMixPoint: 30 0.5
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.52
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.54
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.51
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.51
+ReverbMixPoint: 102 0.54
+ReverbMixPoint: 108 0.5
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.54
+ReverbMixPoint: 132 0.5
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.54
+ReverbMixPoint: 150 0.53
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 164.618 0.52
+ReverbMixPoint: 173.235 0.5
+ReverbMixPoint: 181.853 0.53
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: true
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 28
+Note: 110 0.210226 84 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8665
+Note: 146.83 0.914 85.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9235
+Note: 164.81 0.272727 86.0625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9925
+Note: 110 0.481394 86.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8725
+Note: 174.61 0.488758 86.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.982
+Note: 146.83 0.5 87 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.991
+Note: 164.81 0.886364 89.0625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9565
+Note: 110 0.974 90 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.955
+Note: 174.61 0.125 90.9375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9355
+Note: 174.61 0.210226 91.3125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8515
+Note: 174.61 0.886364 91.5 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9685
+Note: 146.83 1 93.75 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.889
+Note: 164.81 0.5 94.6875 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 0.460224 95.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 174.61 0.886364 95.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 146.83 0.952 98.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9865
+Note: 164.81 0.5 99.5625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9595
+Note: 110 0.25 100.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.943
+Note: 174.61 0.25 102.188 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.907
+Note: 146.83 0.210226 102.375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 146.83 0.272727 102.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.865
+Note: 164.81 0.886364 103.688 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9115
+Note: 110 0.465747 104.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8995
+Note: 174.61 0.5 105 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8635
+Note: 146.83 0.460224 105.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9715
+Note: 164.81 0.460224 105.938 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 1 106.312 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 174.61 0.460224 107.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9775
+PanAutomation: 56
+PanPoint: 0 0.005
+PanPoint: 3 0.015
+PanPoint: 6 0.005
+PanPoint: 9 0.005
+PanPoint: 12 -0.005
+PanPoint: 18 0.015
+PanPoint: 24 -0.015
+PanPoint: 30 0.015
+PanPoint: 36 -0.015
+PanPoint: 42 -0.015
+PanPoint: 48 -0.015
+PanPoint: 54 -0.015
+PanPoint: 60 -0.005
+PanPoint: 66 0.015
+PanPoint: 72 0.015
+PanPoint: 78 0.005
+PanPoint: 84 -0.015
+PanPoint: 90 0.005
+PanPoint: 96 -0.005
+PanPoint: 102 0.015
+PanPoint: 108 -0.025
+PanPoint: 114 0.005
+PanPoint: 120 0.005
+PanPoint: 126 -0.015
+PanPoint: 132 -0.005
+PanPoint: 138 0.005
+PanPoint: 144 -0.005
+PanPoint: 150 -0.005
+PanPoint: 156 -0.015
+PanPoint: 164.618 0.015
+PanPoint: 173.235 0.005
+PanPoint: 181.853 -0.005
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.375
+VolumePoint: 3 0.405
+VolumePoint: 5 0.375
+VolumePoint: 6 0.36
+VolumePoint: 9 0.3825
+VolumePoint: 12 0.345
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 18 0.36
+VolumePoint: 24 0.3375
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 30 0.36
+VolumePoint: 36 0.375
+VolumePoint: 36 0.39
+VolumePoint: 42 0.3525
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.405
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.3825
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.375
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.405
+VolumePoint: 66 0.405
+VolumePoint: 72 0.3675
+VolumePoint: 72 0.36
+VolumePoint: 78 0.3375
+VolumePoint: 78 0.345
+VolumePoint: 84 0.39
+VolumePoint: 84 0.3525
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.405
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.3825
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.3975
+VolumePoint: 108 0.39
+VolumePoint: 108 0.345
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.3675
+VolumePoint: 120 0.3675
+VolumePoint: 120 0.39
+VolumePoint: 126 0.3525
+VolumePoint: 126 0.345
+VolumePoint: 132 0.39
+VolumePoint: 132 0.36
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.405
+VolumePoint: 144 0.3675
+VolumePoint: 144 0.345
+VolumePoint: 150 0.3525
+VolumePoint: 150 0.3375
+VolumePoint: 156 0.375
+VolumePoint: 164.618 0.3675
+VolumePoint: 173.235 0.3675
+VolumePoint: 181.853 0.3825
+VolumePoint: 185.47 0.375
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.17
+ReverbMixPoint: 3 0.16
+ReverbMixPoint: 6 0.17
+ReverbMixPoint: 9 0.15
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.16
+ReverbMixPoint: 24 0.17
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.17
+ReverbMixPoint: 42 0.19
+ReverbMixPoint: 48 0.18
+ReverbMixPoint: 54 0.16
+ReverbMixPoint: 60 0.17
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.18
+ReverbMixPoint: 78 0.19
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.17
+ReverbMixPoint: 96 0.18
+ReverbMixPoint: 102 0.16
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.19
+ReverbMixPoint: 120 0.16
+ReverbMixPoint: 126 0.16
+ReverbMixPoint: 132 0.16
+ReverbMixPoint: 138 0.19
+ReverbMixPoint: 144 0.18
+ReverbMixPoint: 150 0.18
+ReverbMixPoint: 156 0.18
+ReverbMixPoint: 164.618 0.16
+ReverbMixPoint: 173.235 0.15
+ReverbMixPoint: 181.853 0.19
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18
+Part: Harmony
+Instrument: pad
+Pan: 0
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.1
+ReverbDecay: 0.9
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 2
+DistortionThreshold: 0.3
+Notes: 12
+Note: 587.33 6 84 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.62
+Note: 440 6 84 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.622
+Note: 587.33 6 84 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.71
+Note: 493.88 6 90 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.68
+Note: 659.25 6 90 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.658
+Note: 1046.5 6 90 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.764
+Note: 440 6 96 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.714
+Note: 880 6.444 96 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.73
+Note: 1046.5 6.552 96 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.63
+Note: 698.46 6.12 102 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.694
+Note: 523.25 6 102 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.708
+Note: 698.46 6 102 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.784
+PanAutomation: 31
+PanPoint: 0 0
+PanPoint: 6 0
+PanPoint: 12 0
+PanPoint: 18 0
+PanPoint: 24 0
+PanPoint: 30 0
+PanPoint: 36 0
+PanPoint: 42 0
+PanPoint: 48 0
+PanPoint: 54 0
+PanPoint: 60 0
+PanPoint: 66 0
+PanPoint: 72 0
+PanPoint: 78 0
+PanPoint: 84 0
+PanPoint: 90 0
+PanPoint: 96 0
+PanPoint: 102 0
+PanPoint: 108 0
+PanPoint: 114 0
+PanPoint: 120 0
+PanPoint: 126 0
+PanPoint: 132 0
+PanPoint: 138 0
+PanPoint: 144 0
+PanPoint: 150 0
+PanPoint: 156 0
+PanPoint: 162 0
+PanPoint: 168 0
+PanPoint: 174 0
+PanPoint: 180 0
+VolumeAutomation: 35
+VolumePoint: 0 0
+VolumePoint: 0 0.3
+VolumePoint: 5 0.3
+VolumePoint: 6 0.3
+VolumePoint: 12 0.31875
+VolumePoint: 18 0.31875
+VolumePoint: 24 0.31875
+VolumePoint: 30 0.31875
+VolumePoint: 36 0.3375
+VolumePoint: 42 0.3375
+VolumePoint: 48 0.3375
+VolumePoint: 54 0.3375
+VolumePoint: 60 0.31875
+VolumePoint: 66 0.31875
+VolumePoint: 72 0.31875
+VolumePoint: 78 0.31875
+VolumePoint: 84 0.3375
+VolumePoint: 90 0.3375
+VolumePoint: 96 0.3375
+VolumePoint: 102 0.3375
+VolumePoint: 108 0.3375
+VolumePoint: 114 0.3375
+VolumePoint: 120 0.3375
+VolumePoint: 126 0.3375
+VolumePoint: 132 0.3375
+VolumePoint: 138 0.3375
+VolumePoint: 144 0.3375
+VolumePoint: 150 0.3375
+VolumePoint: 156 0.375
+VolumePoint: 162 0.375
+VolumePoint: 168 0.375
+VolumePoint: 174 0.375
+VolumePoint: 180 0.375
+VolumePoint: 185.47 0.3
+VolumePoint: 190.47 0
+ReverbMixAutomation: 31
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 6 0.5
+ReverbMixPoint: 12 0.5
+ReverbMixPoint: 18 0.5
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.5
+ReverbMixPoint: 36 0.5
+ReverbMixPoint: 42 0.5
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.5
+ReverbMixPoint: 60 0.5
+ReverbMixPoint: 66 0.5
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.5
+ReverbMixPoint: 96 0.5
+ReverbMixPoint: 102 0.5
+ReverbMixPoint: 108 0.5
+ReverbMixPoint: 114 0.5
+ReverbMixPoint: 120 0.5
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.5
+ReverbMixPoint: 138 0.5
+ReverbMixPoint: 144 0.5
+ReverbMixPoint: 150 0.5
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 162 0.5
+ReverbMixPoint: 168 0.5
+ReverbMixPoint: 174 0.5
+ReverbMixPoint: 180 0.5
+Part: Melody
+Instrument: violin
+Pan: 0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: true
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 18
+Note: 587.33 0.474 84 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.08
+Note: 659.25 1 86.625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.056
+Note: 659.25 0.798 87.5625 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.056
+Note: 659.25 0.443182 88.3125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0872
+Note: 659.25 0.405955 88.6875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0632
+Note: 440 0.479523 91.5 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.116
+Note: 440 0.443182 91.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0944
+Note: 587.33 0.443182 96.5625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0152
+Note: 587.33 0.442296 96.9375 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.092
+Note: 440 0.5 99.5625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8808
+Note: 659.25 0.75 100.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.8808
+Note: 659.25 0.443182 100.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1352
+Note: 659.25 0.443182 101.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1112
+Note: 440 0.886364 103.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0296
+Note: 587.33 0.75 104.812 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0296
+Note: 587.33 0.5 105.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.84
+Note: 659.25 0.12825 106 Phoneme: -1 Open: false Volume: 0.315 Velocity: 1.032
+Note: 523.25 0.5 106.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.032
+PanAutomation: 56
+PanPoint: 0 0.32
+PanPoint: 3 0.3
+PanPoint: 6 0.32
+PanPoint: 9 1
+PanPoint: 12 0.33
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.34
+PanPoint: 36 0.32
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.31
+PanPoint: 66 0.33
+PanPoint: 72 0.3
+PanPoint: 78 1
+PanPoint: 84 1
+PanPoint: 90 0.31
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 0.31
+PanPoint: 120 0.33
+PanPoint: 126 0.31
+PanPoint: 132 0.3
+PanPoint: 138 1
+PanPoint: 144 0.33
+PanPoint: 150 1
+PanPoint: 156 1
+PanPoint: 164.618 1
+PanPoint: 173.235 1
+PanPoint: 181.853 0.31
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.27
+VolumePoint: 3 0.24
+VolumePoint: 5 0.27
+VolumePoint: 6 0.2625
+VolumePoint: 9 0.285
+VolumePoint: 12 0.3525
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.33
+VolumePoint: 24 0.3525
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.3375
+VolumePoint: 36 0.5025
+VolumePoint: 36 0.495
+VolumePoint: 42 0.495
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.45
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.465
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.3075
+VolumePoint: 60 0.405
+VolumePoint: 66 0.36
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.3075
+VolumePoint: 78 0.33
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.48
+VolumePoint: 90 0.585
+VolumePoint: 90 0.48
+VolumePoint: 96 0.603
+VolumePoint: 96 0.5175
+VolumePoint: 102 0.603
+VolumePoint: 102 0.45
+VolumePoint: 108 0.594
+VolumePoint: 108 0.45
+VolumePoint: 114 0.585
+VolumePoint: 114 0.51
+VolumePoint: 120 0.603
+VolumePoint: 120 0.45
+VolumePoint: 126 0.603
+VolumePoint: 126 0.5175
+VolumePoint: 132 0.594
+VolumePoint: 132 0.4725
+VolumePoint: 138 0.585
+VolumePoint: 138 0.465
+VolumePoint: 144 0.603
+VolumePoint: 144 0.51
+VolumePoint: 150 0.603
+VolumePoint: 150 0.465
+VolumePoint: 156 0.285
+VolumePoint: 164.618 0.2775
+VolumePoint: 173.235 0.2325
+VolumePoint: 181.853 0.2925
+VolumePoint: 185.47 0.27
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 3 0.5
+ReverbMixPoint: 6 0.5
+ReverbMixPoint: 9 0.53
+ReverbMixPoint: 12 0.51
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.51
+ReverbMixPoint: 36 0.52
+ReverbMixPoint: 42 0.5
+ReverbMixPoint: 48 0.51
+ReverbMixPoint: 54 0.52
+ReverbMixPoint: 60 0.5
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.51
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.54
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.51
+ReverbMixPoint: 102 0.52
+ReverbMixPoint: 108 0.54
+ReverbMixPoint: 114 0.51
+ReverbMixPoint: 120 0.5
+ReverbMixPoint: 126 0.51
+ReverbMixPoint: 132 0.52
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.5
+ReverbMixPoint: 150 0.52
+ReverbMixPoint: 156 0.52
+ReverbMixPoint: 164.618 0.52
+ReverbMixPoint: 173.235 0.51
+ReverbMixPoint: 181.853 0.5
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Melody
+Instrument: cello
+Pan: 0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 18
+Note: 587.33 0.5 108 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.08
+Note: 659.25 1 110.625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.056
+Note: 659.25 0.75 111.562 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.056
+Note: 659.25 0.449387 112.312 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0872
+Note: 659.25 0.443182 112.688 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0632
+Note: 440 0.443182 115.5 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.116
+Note: 440 0.443182 115.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0944
+Note: 587.33 0.443182 120.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0152
+Note: 587.33 0.443182 120.938 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.092
+Note: 440 0.5 123.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8808
+Note: 659.25 0.7125 124.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.8808
+Note: 659.25 0.406841 124.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1352
+Note: 659.25 0.443182 125.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1112
+Note: 440 0.886364 127.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0296
+Note: 587.33 0.699 128.812 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0296
+Note: 587.33 0.5 129.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.84
+Note: 659.25 0.125 130 Phoneme: -1 Open: false Volume: 0.315 Velocity: 1.032
+Note: 523.25 0.5 130.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.032
+PanAutomation: 56
+PanPoint: 0 0.33
+PanPoint: 3 1
+PanPoint: 6 1
+PanPoint: 9 1
+PanPoint: 12 0.31
+PanPoint: 18 0.34
+PanPoint: 24 1
+PanPoint: 30 0.31
+PanPoint: 36 0.31
+PanPoint: 42 1
+PanPoint: 48 0.3
+PanPoint: 54 1
+PanPoint: 60 1
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.34
+PanPoint: 84 0.32
+PanPoint: 90 1
+PanPoint: 96 0.34
+PanPoint: 102 1
+PanPoint: 108 0.31
+PanPoint: 114 0.3
+PanPoint: 120 0.31
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 0.33
+PanPoint: 150 0.34
+PanPoint: 156 1
+PanPoint: 164.618 0.33
+PanPoint: 173.235 0.33
+PanPoint: 181.853 1
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.27
+VolumePoint: 3 0.2475
+VolumePoint: 5 0.27
+VolumePoint: 6 0.225
+VolumePoint: 9 0.255
+VolumePoint: 12 0.3375
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.33
+VolumePoint: 24 0.36
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.3375
+VolumePoint: 36 0.5025
+VolumePoint: 36 0.495
+VolumePoint: 42 0.45
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.4725
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.495
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.33
+VolumePoint: 60 0.405
+VolumePoint: 66 0.315
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.3225
+VolumePoint: 78 0.3225
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.48
+VolumePoint: 90 0.585
+VolumePoint: 90 0.4575
+VolumePoint: 96 0.603
+VolumePoint: 96 0.5175
+VolumePoint: 102 0.603
+VolumePoint: 102 0.495
+VolumePoint: 108 0.594
+VolumePoint: 108 0.4575
+VolumePoint: 114 0.585
+VolumePoint: 114 0.5175
+VolumePoint: 120 0.603
+VolumePoint: 120 0.465
+VolumePoint: 126 0.603
+VolumePoint: 126 0.495
+VolumePoint: 132 0.594
+VolumePoint: 132 0.51
+VolumePoint: 138 0.585
+VolumePoint: 138 0.4875
+VolumePoint: 144 0.603
+VolumePoint: 144 0.51
+VolumePoint: 150 0.603
+VolumePoint: 150 0.4875
+VolumePoint: 156 0.225
+VolumePoint: 164.618 0.2325
+VolumePoint: 173.235 0.2775
+VolumePoint: 181.853 0.2625
+VolumePoint: 185.47 0.27
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.51
+ReverbMixPoint: 3 0.51
+ReverbMixPoint: 6 0.54
+ReverbMixPoint: 9 0.51
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.53
+ReverbMixPoint: 24 0.53
+ReverbMixPoint: 30 0.54
+ReverbMixPoint: 36 0.5
+ReverbMixPoint: 42 0.51
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.52
+ReverbMixPoint: 60 0.52
+ReverbMixPoint: 66 0.53
+ReverbMixPoint: 72 0.51
+ReverbMixPoint: 78 0.51
+ReverbMixPoint: 84 0.54
+ReverbMixPoint: 90 0.52
+ReverbMixPoint: 96 0.53
+ReverbMixPoint: 102 0.54
+ReverbMixPoint: 108 0.52
+ReverbMixPoint: 114 0.52
+ReverbMixPoint: 120 0.51
+ReverbMixPoint: 126 0.54
+ReverbMixPoint: 132 0.52
+ReverbMixPoint: 138 0.53
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.52
+ReverbMixPoint: 156 0.52
+ReverbMixPoint: 164.618 0.5
+ReverbMixPoint: 173.235 0.52
+ReverbMixPoint: 181.853 0.5
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: false
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: true
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 28
+Note: 110 0.210226 108 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8665
+Note: 146.83 1 109.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9235
+Note: 164.81 0.293454 110.062 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9925
+Note: 110 0.460224 110.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8725
+Note: 174.61 0.460224 110.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.982
+Note: 146.83 0.479 111 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.991
+Note: 164.81 0.886364 113.062 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9565
+Note: 110 0.9 114 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.955
+Note: 174.61 0.1305 114.938 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9355
+Note: 174.61 0.210226 115.312 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8515
+Note: 174.61 0.886364 115.5 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9685
+Note: 146.83 1 117.75 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.889
+Note: 164.81 0.483 118.688 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 0.460224 119.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 174.61 0.886364 119.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 146.83 1 122.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9865
+Note: 164.81 0.514 123.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9595
+Note: 110 0.25 124.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.943
+Note: 174.61 0.26 126.188 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.907
+Note: 146.83 0.211908 126.375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 146.83 0.272727 126.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.865
+Note: 164.81 0.886364 127.688 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9115
+Note: 110 0.460224 128.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8995
+Note: 174.61 0.47 129 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8635
+Note: 146.83 0.422486 129.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9715
+Note: 164.81 0.460224 129.938 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 1.048 130.312 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 174.61 0.460224 131.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9775
+PanAutomation: 56
+PanPoint: 0 -0.025
+PanPoint: 3 -0.005
+PanPoint: 6 -0.015
+PanPoint: 9 -0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.005
+PanPoint: 24 -0.025
+PanPoint: 30 0.005
+PanPoint: 36 -0.015
+PanPoint: 42 0.015
+PanPoint: 48 0.015
+PanPoint: 54 -0.005
+PanPoint: 60 -0.015
+PanPoint: 66 -0.005
+PanPoint: 72 0.015
+PanPoint: 78 -0.015
+PanPoint: 84 -0.005
+PanPoint: 90 -0.025
+PanPoint: 96 -0.015
+PanPoint: 102 -0.025
+PanPoint: 108 0.015
+PanPoint: 114 0.005
+PanPoint: 120 -0.025
+PanPoint: 126 0.005
+PanPoint: 132 0.005
+PanPoint: 138 0.005
+PanPoint: 144 -0.025
+PanPoint: 150 -0.025
+PanPoint: 156 0.015
+PanPoint: 164.618 -0.005
+PanPoint: 173.235 0.005
+PanPoint: 181.853 0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.3375
+VolumePoint: 3 0.3675
+VolumePoint: 5 0.3375
+VolumePoint: 6 0.345
+VolumePoint: 9 0.345
+VolumePoint: 12 0.3525
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 18 0.3525
+VolumePoint: 24 0.3675
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 30 0.375
+VolumePoint: 36 0.375
+VolumePoint: 36 0.39
+VolumePoint: 42 0.3825
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.3375
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.3825
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.3375
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.405
+VolumePoint: 66 0.405
+VolumePoint: 72 0.3675
+VolumePoint: 72 0.3675
+VolumePoint: 78 0.3825
+VolumePoint: 78 0.345
+VolumePoint: 84 0.39
+VolumePoint: 84 0.3825
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.3825
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.345
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.375
+VolumePoint: 108 0.39
+VolumePoint: 108 0.39
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.3375
+VolumePoint: 120 0.3675
+VolumePoint: 120 0.36
+VolumePoint: 126 0.3525
+VolumePoint: 126 0.3675
+VolumePoint: 132 0.39
+VolumePoint: 132 0.3525
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.39
+VolumePoint: 144 0.3675
+VolumePoint: 144 0.3825
+VolumePoint: 150 0.3525
+VolumePoint: 150 0.36
+VolumePoint: 156 0.3675
+VolumePoint: 164.618 0.39
+VolumePoint: 173.235 0.3525
+VolumePoint: 181.853 0.3375
+VolumePoint: 185.47 0.3375
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.18
+ReverbMixPoint: 3 0.19
+ReverbMixPoint: 6 0.19
+ReverbMixPoint: 9 0.16
+ReverbMixPoint: 12 0.16
+ReverbMixPoint: 18 0.15
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.16
+ReverbMixPoint: 36 0.18
+ReverbMixPoint: 42 0.17
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.19
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.15
+ReverbMixPoint: 72 0.19
+ReverbMixPoint: 78 0.18
+ReverbMixPoint: 84 0.16
+ReverbMixPoint: 90 0.19
+ReverbMixPoint: 96 0.18
+ReverbMixPoint: 102 0.15
+ReverbMixPoint: 108 0.19
+ReverbMixPoint: 114 0.19
+ReverbMixPoint: 120 0.16
+ReverbMixPoint: 126 0.19
+ReverbMixPoint: 132 0.16
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.19
+ReverbMixPoint: 156 0.19
+ReverbMixPoint: 164.618 0.19
+ReverbMixPoint: 173.235 0.16
+ReverbMixPoint: 181.853 0.16
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18
+Part: Harmony
+Instrument: pad
+Pan: 0
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.1
+ReverbDecay: 0.9
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 2
+DistortionThreshold: 0.3
+Notes: 12
+Note: 587.33 6 108 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.62
+Note: 440 5.616 108 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.622
+Note: 587.33 6 108 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.71
+Note: 493.88 6 114 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.68
+Note: 659.25 6 114 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.658
+Note: 1046.5 6.084 114 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.764
+Note: 440 6 120 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.714
+Note: 880 6.024 120 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.73
+Note: 1046.5 5.82 120 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.63
+Note: 698.46 5.52 126 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.694
+Note: 523.25 6.18 126 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.708
+Note: 698.46 6 126 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.784
+PanAutomation: 32
+PanPoint: 0 0
+PanPoint: 6 0
+PanPoint: 12 0
+PanPoint: 18 0
+PanPoint: 24 0
+PanPoint: 30 0
+PanPoint: 36 0
+PanPoint: 42 0
+PanPoint: 48 0
+PanPoint: 54 0
+PanPoint: 60 0
+PanPoint: 66 0
+PanPoint: 72 0
+PanPoint: 78 0
+PanPoint: 84 0
+PanPoint: 90 0
+PanPoint: 96 0
+PanPoint: 102 0
+PanPoint: 108 0
+PanPoint: 114 0
+PanPoint: 120 0
+PanPoint: 126 0
+PanPoint: 132 0
+PanPoint: 138 0
+PanPoint: 144 0
+PanPoint: 150 0
+PanPoint: 156 0
+PanPoint: 162 0
+PanPoint: 168 0
+PanPoint: 174 0
+PanPoint: 180 0
+PanPoint: 186 0
+VolumeAutomation: 36
+VolumePoint: 0 0
+VolumePoint: 0 0.3
+VolumePoint: 5 0.3
+VolumePoint: 6 0.3
+VolumePoint: 12 0.31875
+VolumePoint: 18 0.31875
+VolumePoint: 24 0.31875
+VolumePoint: 30 0.31875
+VolumePoint: 36 0.3375
+VolumePoint: 42 0.3375
+VolumePoint: 48 0.3375
+VolumePoint: 54 0.3375
+VolumePoint: 60 0.31875
+VolumePoint: 66 0.31875
+VolumePoint: 72 0.31875
+VolumePoint: 78 0.31875
+VolumePoint: 84 0.3375
+VolumePoint: 90 0.3375
+VolumePoint: 96 0.3375
+VolumePoint: 102 0.3375
+VolumePoint: 108 0.3375
+VolumePoint: 114 0.3375
+VolumePoint: 120 0.3375
+VolumePoint: 126 0.3375
+VolumePoint: 132 0.3375
+VolumePoint: 138 0.3375
+VolumePoint: 144 0.3375
+VolumePoint: 150 0.3375
+VolumePoint: 156 0.375
+VolumePoint: 162 0.375
+VolumePoint: 168 0.375
+VolumePoint: 174 0.375
+VolumePoint: 180 0.375
+VolumePoint: 185.47 0.375
+VolumePoint: 186 0.375
+VolumePoint: 190.47 0
+ReverbMixAutomation: 32
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 6 0.5
+ReverbMixPoint: 12 0.5
+ReverbMixPoint: 18 0.5
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.5
+ReverbMixPoint: 36 0.5
+ReverbMixPoint: 42 0.5
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.5
+ReverbMixPoint: 60 0.5
+ReverbMixPoint: 66 0.5
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.5
+ReverbMixPoint: 96 0.5
+ReverbMixPoint: 102 0.5
+ReverbMixPoint: 108 0.5
+ReverbMixPoint: 114 0.5
+ReverbMixPoint: 120 0.5
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.5
+ReverbMixPoint: 138 0.5
+ReverbMixPoint: 144 0.5
+ReverbMixPoint: 150 0.5
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 162 0.5
+ReverbMixPoint: 168 0.5
+ReverbMixPoint: 174 0.5
+ReverbMixPoint: 180 0.5
+ReverbMixPoint: 186 0.5
+Part: Melody
+Instrument: flute
+Pan: 0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 18
+Note: 587.33 0.461 108 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.08
+Note: 659.25 1.012 110.625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.056
+Note: 659.25 0.75 111.562 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.056
+Note: 659.25 0.443182 112.312 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0872
+Note: 659.25 0.481296 112.688 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0632
+Note: 440 0.443182 115.5 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.116
+Note: 440 0.443182 115.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0944
+Note: 587.33 0.443182 120.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0152
+Note: 587.33 0.443182 120.938 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.092
+Note: 440 0.535 123.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8808
+Note: 659.25 0.75 124.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.8808
+Note: 659.25 0.439637 124.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1352
+Note: 659.25 0.459137 125.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1112
+Note: 440 0.886364 127.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0296
+Note: 587.33 0.75 128.812 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0296
+Note: 587.33 0.455 129.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.84
+Note: 659.25 0.125 130 Phoneme: -1 Open: false Volume: 0.315 Velocity: 1.032
+Note: 523.25 0.5 130.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.032
+PanAutomation: 56
+PanPoint: 0 1
+PanPoint: 3 0.3
+PanPoint: 6 0.32
+PanPoint: 9 1
+PanPoint: 12 0.31
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 0.32
+PanPoint: 42 0.3
+PanPoint: 48 0.32
+PanPoint: 54 1
+PanPoint: 60 0.33
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 1
+PanPoint: 84 1
+PanPoint: 90 0.3
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 0.32
+PanPoint: 114 0.33
+PanPoint: 120 0.34
+PanPoint: 126 1
+PanPoint: 132 0.34
+PanPoint: 138 0.34
+PanPoint: 144 1
+PanPoint: 150 0.34
+PanPoint: 156 1
+PanPoint: 164.618 0.34
+PanPoint: 173.235 1
+PanPoint: 181.853 1
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.24
+VolumePoint: 3 0.255
+VolumePoint: 5 0.24
+VolumePoint: 6 0.2475
+VolumePoint: 9 0.2625
+VolumePoint: 12 0.3675
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.33
+VolumePoint: 24 0.3075
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.3525
+VolumePoint: 36 0.4575
+VolumePoint: 36 0.495
+VolumePoint: 42 0.51
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.4575
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.5175
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.315
+VolumePoint: 60 0.405
+VolumePoint: 66 0.3
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.345
+VolumePoint: 78 0.345
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.51
+VolumePoint: 90 0.585
+VolumePoint: 90 0.5025
+VolumePoint: 96 0.603
+VolumePoint: 96 0.465
+VolumePoint: 102 0.603
+VolumePoint: 102 0.4875
+VolumePoint: 108 0.594
+VolumePoint: 108 0.495
+VolumePoint: 114 0.585
+VolumePoint: 114 0.5025
+VolumePoint: 120 0.603
+VolumePoint: 120 0.5175
+VolumePoint: 126 0.603
+VolumePoint: 126 0.4875
+VolumePoint: 132 0.594
+VolumePoint: 132 0.48
+VolumePoint: 138 0.585
+VolumePoint: 138 0.48
+VolumePoint: 144 0.603
+VolumePoint: 144 0.465
+VolumePoint: 150 0.603
+VolumePoint: 150 0.48
+VolumePoint: 156 0.27
+VolumePoint: 164.618 0.27
+VolumePoint: 173.235 0.2775
+VolumePoint: 181.853 0.255
+VolumePoint: 185.47 0.24
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 3 0.52
+ReverbMixPoint: 6 0.5
+ReverbMixPoint: 9 0.52
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.5
+ReverbMixPoint: 24 0.54
+ReverbMixPoint: 30 0.54
+ReverbMixPoint: 36 0.53
+ReverbMixPoint: 42 0.52
+ReverbMixPoint: 48 0.53
+ReverbMixPoint: 54 0.51
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.51
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.53
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.51
+ReverbMixPoint: 102 0.5
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.52
+ReverbMixPoint: 120 0.54
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.52
+ReverbMixPoint: 138 0.53
+ReverbMixPoint: 144 0.54
+ReverbMixPoint: 150 0.54
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 164.618 0.51
+ReverbMixPoint: 173.235 0.53
+ReverbMixPoint: 181.853 0.52
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Melody
+Instrument: trumpet
+Pan: -0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 18
+Note: 587.33 0.463 132 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.08
+Note: 659.25 1 134.625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.056
+Note: 659.25 0.75 135.562 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.056
+Note: 659.25 0.474205 136.312 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0872
+Note: 659.25 0.443182 136.688 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0632
+Note: 440 0.443182 139.5 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.116
+Note: 440 0.443182 139.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0944
+Note: 587.33 0.443182 144.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0152
+Note: 587.33 0.443182 144.938 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.092
+Note: 440 0.5 147.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8808
+Note: 659.25 0.75 148.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.8808
+Note: 659.25 0.431659 148.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1352
+Note: 659.25 0.443182 149.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1112
+Note: 440 0.893455 151.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0296
+Note: 587.33 0.75 152.812 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0296
+Note: 587.33 0.476 153.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.84
+Note: 659.25 0.125 154 Phoneme: -1 Open: false Volume: 0.315 Velocity: 1.032
+Note: 523.25 0.5 154.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.032
+PanAutomation: 56
+PanPoint: 0 -0.3
+PanPoint: 3 -0.3
+PanPoint: 6 -0.29
+PanPoint: 9 -0.27
+PanPoint: 12 -0.29
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 -0.26
+PanPoint: 36 -0.26
+PanPoint: 42 1
+PanPoint: 48 -0.27
+PanPoint: 54 1
+PanPoint: 60 -0.3
+PanPoint: 66 -0.3
+PanPoint: 72 1
+PanPoint: 78 -0.27
+PanPoint: 84 -0.26
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 -0.3
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 -0.29
+PanPoint: 138 -0.27
+PanPoint: 144 1
+PanPoint: 150 -0.28
+PanPoint: 156 -0.28
+PanPoint: 164.618 1
+PanPoint: 173.235 -0.3
+PanPoint: 181.853 1
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.24
+VolumePoint: 3 0.2775
+VolumePoint: 5 0.24
+VolumePoint: 6 0.2625
+VolumePoint: 9 0.285
+VolumePoint: 12 0.3075
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.345
+VolumePoint: 24 0.3075
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.3
+VolumePoint: 36 0.4575
+VolumePoint: 36 0.495
+VolumePoint: 42 0.5025
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.48
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.4575
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.36
+VolumePoint: 60 0.405
+VolumePoint: 66 0.3
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.3225
+VolumePoint: 78 0.33
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.5175
+VolumePoint: 90 0.585
+VolumePoint: 90 0.48
+VolumePoint: 96 0.603
+VolumePoint: 96 0.4725
+VolumePoint: 102 0.603
+VolumePoint: 102 0.45
+VolumePoint: 108 0.594
+VolumePoint: 108 0.5025
+VolumePoint: 114 0.585
+VolumePoint: 114 0.495
+VolumePoint: 120 0.603
+VolumePoint: 120 0.51
+VolumePoint: 126 0.603
+VolumePoint: 126 0.45
+VolumePoint: 132 0.594
+VolumePoint: 132 0.5025
+VolumePoint: 138 0.585
+VolumePoint: 138 0.4875
+VolumePoint: 144 0.603
+VolumePoint: 144 0.4575
+VolumePoint: 150 0.603
+VolumePoint: 150 0.51
+VolumePoint: 156 0.2475
+VolumePoint: 164.618 0.2325
+VolumePoint: 173.235 0.2325
+VolumePoint: 181.853 0.2625
+VolumePoint: 185.47 0.24
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.51
+ReverbMixPoint: 3 0.54
+ReverbMixPoint: 6 0.53
+ReverbMixPoint: 9 0.54
+ReverbMixPoint: 12 0.54
+ReverbMixPoint: 18 0.53
+ReverbMixPoint: 24 0.52
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.54
+ReverbMixPoint: 42 0.53
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.52
+ReverbMixPoint: 60 0.52
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.53
+ReverbMixPoint: 78 0.51
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.5
+ReverbMixPoint: 102 0.52
+ReverbMixPoint: 108 0.54
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.51
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.5
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.52
+ReverbMixPoint: 156 0.51
+ReverbMixPoint: 164.618 0.5
+ReverbMixPoint: 173.235 0.52
+ReverbMixPoint: 181.853 0.53
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: false
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: true
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 28
+Note: 110 0.210226 132 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8665
+Note: 146.83 1.038 133.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9235
+Note: 164.81 0.266182 134.062 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9925
+Note: 110 0.460224 134.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8725
+Note: 174.61 0.460224 134.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.982
+Note: 146.83 0.5 135 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.991
+Note: 164.81 0.886364 137.062 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9565
+Note: 110 1 138 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.955
+Note: 174.61 0.137 138.938 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9355
+Note: 174.61 0.210226 139.312 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8515
+Note: 174.61 0.886364 139.5 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9685
+Note: 146.83 1 141.75 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.889
+Note: 164.81 0.5 142.688 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 0.460224 143.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 174.61 0.886364 143.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.862
+Note: 146.83 1 146.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9865
+Note: 164.81 0.47 147.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9595
+Note: 110 0.271 148.125 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.943
+Note: 174.61 0.25 150.188 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.907
+Note: 146.83 0.210226 150.375 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 146.83 0.292363 150.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.865
+Note: 164.81 0.865091 151.688 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9115
+Note: 110 0.460224 152.625 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8995
+Note: 174.61 0.5 153 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.8635
+Note: 146.83 0.418804 153.562 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9715
+Note: 164.81 0.460224 153.938 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.988
+Note: 110 1 154.312 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.88
+Note: 174.61 0.479553 155.25 Phoneme: -1 Open: false Volume: 0.375 Velocity: 0.9775
+PanAutomation: 56
+PanPoint: 0 -0.015
+PanPoint: 3 -0.025
+PanPoint: 6 0.005
+PanPoint: 9 0.015
+PanPoint: 12 0.015
+PanPoint: 18 0.005
+PanPoint: 24 0.015
+PanPoint: 30 0.015
+PanPoint: 36 0.005
+PanPoint: 42 -0.025
+PanPoint: 48 0.005
+PanPoint: 54 -0.025
+PanPoint: 60 0.005
+PanPoint: 66 -0.005
+PanPoint: 72 -0.025
+PanPoint: 78 -0.025
+PanPoint: 84 -0.015
+PanPoint: 90 0.015
+PanPoint: 96 -0.025
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 -0.005
+PanPoint: 120 -0.015
+PanPoint: 126 0.015
+PanPoint: 132 0.005
+PanPoint: 138 0.015
+PanPoint: 144 -0.025
+PanPoint: 150 -0.025
+PanPoint: 156 -0.015
+PanPoint: 164.618 0.015
+PanPoint: 173.235 -0.015
+PanPoint: 181.853 -0.015
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.375
+VolumePoint: 3 0.36
+VolumePoint: 5 0.375
+VolumePoint: 6 0.3825
+VolumePoint: 9 0.3375
+VolumePoint: 12 0.3375
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 18 0.375
+VolumePoint: 24 0.405
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 30 0.3525
+VolumePoint: 36 0.3675
+VolumePoint: 36 0.39
+VolumePoint: 42 0.3825
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.3825
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.3375
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.405
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.3375
+VolumePoint: 66 0.405
+VolumePoint: 72 0.3675
+VolumePoint: 72 0.345
+VolumePoint: 78 0.3675
+VolumePoint: 78 0.345
+VolumePoint: 84 0.39
+VolumePoint: 84 0.3825
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.39
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.345
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.36
+VolumePoint: 108 0.39
+VolumePoint: 108 0.3975
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.3825
+VolumePoint: 120 0.3675
+VolumePoint: 120 0.36
+VolumePoint: 126 0.3525
+VolumePoint: 126 0.39
+VolumePoint: 132 0.39
+VolumePoint: 132 0.3525
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.405
+VolumePoint: 144 0.3675
+VolumePoint: 144 0.39
+VolumePoint: 150 0.3525
+VolumePoint: 150 0.3975
+VolumePoint: 156 0.345
+VolumePoint: 164.618 0.345
+VolumePoint: 173.235 0.3975
+VolumePoint: 181.853 0.375
+VolumePoint: 185.47 0.375
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.18
+ReverbMixPoint: 3 0.17
+ReverbMixPoint: 6 0.18
+ReverbMixPoint: 9 0.15
+ReverbMixPoint: 12 0.18
+ReverbMixPoint: 18 0.16
+ReverbMixPoint: 24 0.15
+ReverbMixPoint: 30 0.18
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.17
+ReverbMixPoint: 54 0.16
+ReverbMixPoint: 60 0.16
+ReverbMixPoint: 66 0.18
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.15
+ReverbMixPoint: 84 0.16
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.16
+ReverbMixPoint: 102 0.17
+ReverbMixPoint: 108 0.16
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.17
+ReverbMixPoint: 126 0.19
+ReverbMixPoint: 132 0.19
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.18
+ReverbMixPoint: 150 0.19
+ReverbMixPoint: 156 0.19
+ReverbMixPoint: 164.618 0.19
+ReverbMixPoint: 173.235 0.19
+ReverbMixPoint: 181.853 0.15
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18
+Part: Harmony
+Instrument: pad
+Pan: 0
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.1
+ReverbDecay: 0.9
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 2
+DistortionThreshold: 0.3
+Notes: 12
+Note: 587.33 6 132 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.62
+Note: 440 6 132 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.622
+Note: 587.33 6 132 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.71
+Note: 493.88 6 138 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.68
+Note: 659.25 6 138 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.658
+Note: 1046.5 6 138 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.764
+Note: 440 6 144 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.714
+Note: 880 6 144 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.73
+Note: 1046.5 6 144 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.63
+Note: 698.46 6 150 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.694
+Note: 523.25 6.336 150 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.708
+Note: 698.46 6 150 Phoneme: -1 Open: false Volume: 0.3375 Velocity: 0.784
+PanAutomation: 31
+PanPoint: 0 0
+PanPoint: 6 0
+PanPoint: 12 0
+PanPoint: 18 0
+PanPoint: 24 0
+PanPoint: 30 0
+PanPoint: 36 0
+PanPoint: 42 0
+PanPoint: 48 0
+PanPoint: 54 0
+PanPoint: 60 0
+PanPoint: 66 0
+PanPoint: 72 0
+PanPoint: 78 0
+PanPoint: 84 0
+PanPoint: 90 0
+PanPoint: 96 0
+PanPoint: 102 0
+PanPoint: 108 0
+PanPoint: 114 0
+PanPoint: 120 0
+PanPoint: 126 0
+PanPoint: 132 0
+PanPoint: 138 0
+PanPoint: 144 0
+PanPoint: 150 0
+PanPoint: 156 0
+PanPoint: 162 0
+PanPoint: 168 0
+PanPoint: 174 0
+PanPoint: 180 0
+VolumeAutomation: 35
+VolumePoint: 0 0
+VolumePoint: 0 0.3
+VolumePoint: 5 0.3
+VolumePoint: 6 0.3
+VolumePoint: 12 0.31875
+VolumePoint: 18 0.31875
+VolumePoint: 24 0.31875
+VolumePoint: 30 0.31875
+VolumePoint: 36 0.3375
+VolumePoint: 42 0.3375
+VolumePoint: 48 0.3375
+VolumePoint: 54 0.3375
+VolumePoint: 60 0.31875
+VolumePoint: 66 0.31875
+VolumePoint: 72 0.31875
+VolumePoint: 78 0.31875
+VolumePoint: 84 0.3375
+VolumePoint: 90 0.3375
+VolumePoint: 96 0.3375
+VolumePoint: 102 0.3375
+VolumePoint: 108 0.3375
+VolumePoint: 114 0.3375
+VolumePoint: 120 0.3375
+VolumePoint: 126 0.3375
+VolumePoint: 132 0.3375
+VolumePoint: 138 0.3375
+VolumePoint: 144 0.3375
+VolumePoint: 150 0.3375
+VolumePoint: 156 0.375
+VolumePoint: 162 0.375
+VolumePoint: 168 0.375
+VolumePoint: 174 0.375
+VolumePoint: 180 0.375
+VolumePoint: 185.47 0.3
+VolumePoint: 190.47 0
+ReverbMixAutomation: 31
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 6 0.5
+ReverbMixPoint: 12 0.5
+ReverbMixPoint: 18 0.5
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.5
+ReverbMixPoint: 36 0.5
+ReverbMixPoint: 42 0.5
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.5
+ReverbMixPoint: 60 0.5
+ReverbMixPoint: 66 0.5
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.5
+ReverbMixPoint: 90 0.5
+ReverbMixPoint: 96 0.5
+ReverbMixPoint: 102 0.5
+ReverbMixPoint: 108 0.5
+ReverbMixPoint: 114 0.5
+ReverbMixPoint: 120 0.5
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.5
+ReverbMixPoint: 138 0.5
+ReverbMixPoint: 144 0.5
+ReverbMixPoint: 150 0.5
+ReverbMixPoint: 156 0.5
+ReverbMixPoint: 162 0.5
+ReverbMixPoint: 168 0.5
+ReverbMixPoint: 174 0.5
+ReverbMixPoint: 180 0.5
+Part: Melody
+Instrument: cello
+Pan: 0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: true
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 18
+Note: 587.33 0.5 132 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.08
+Note: 659.25 1 134.625 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.056
+Note: 659.25 0.75 135.562 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.056
+Note: 659.25 0.443182 136.312 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0872
+Note: 659.25 0.443182 136.688 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0632
+Note: 440 0.443182 139.5 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.116
+Note: 440 0.443182 139.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0944
+Note: 587.33 0.452932 144.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0152
+Note: 587.33 0.467114 144.938 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.092
+Note: 440 0.5 147.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8808
+Note: 659.25 0.75 148.125 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.8808
+Note: 659.25 0.443182 148.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1352
+Note: 659.25 0.465341 149.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.1112
+Note: 440 0.884591 151.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.0296
+Note: 587.33 0.75 152.812 Phoneme: -1 Open: false Volume: 0.405 Velocity: 1.0296
+Note: 587.33 0.488 153.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.84
+Note: 659.25 0.125 154 Phoneme: -1 Open: false Volume: 0.315 Velocity: 1.032
+Note: 523.25 0.5 154.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 1.032
+PanAutomation: 56
+PanPoint: 0 1
+PanPoint: 3 0.33
+PanPoint: 6 0.3
+PanPoint: 9 0.34
+PanPoint: 12 0.31
+PanPoint: 18 0.3
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 0.34
+PanPoint: 42 0.3
+PanPoint: 48 0.31
+PanPoint: 54 0.33
+PanPoint: 60 0.34
+PanPoint: 66 0.34
+PanPoint: 72 0.32
+PanPoint: 78 0.32
+PanPoint: 84 0.32
+PanPoint: 90 0.33
+PanPoint: 96 1
+PanPoint: 102 0.32
+PanPoint: 108 1
+PanPoint: 114 0.32
+PanPoint: 120 0.33
+PanPoint: 126 1
+PanPoint: 132 0.33
+PanPoint: 138 1
+PanPoint: 144 0.31
+PanPoint: 150 0.31
+PanPoint: 156 1
+PanPoint: 164.618 1
+PanPoint: 173.235 1
+PanPoint: 181.853 0.32
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.2475
+VolumePoint: 3 0.225
+VolumePoint: 5 0.2475
+VolumePoint: 6 0.285
+VolumePoint: 9 0.2475
+VolumePoint: 12 0.3675
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.3075
+VolumePoint: 24 0.33
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.3225
+VolumePoint: 36 0.495
+VolumePoint: 36 0.495
+VolumePoint: 42 0.45
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.465
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.4575
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.345
+VolumePoint: 60 0.405
+VolumePoint: 66 0.3
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.345
+VolumePoint: 78 0.3675
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.5175
+VolumePoint: 90 0.585
+VolumePoint: 90 0.465
+VolumePoint: 96 0.603
+VolumePoint: 96 0.5175
+VolumePoint: 102 0.603
+VolumePoint: 102 0.48
+VolumePoint: 108 0.594
+VolumePoint: 108 0.5025
+VolumePoint: 114 0.585
+VolumePoint: 114 0.495
+VolumePoint: 120 0.603
+VolumePoint: 120 0.51
+VolumePoint: 126 0.603
+VolumePoint: 126 0.4725
+VolumePoint: 132 0.594
+VolumePoint: 132 0.4725
+VolumePoint: 138 0.585
+VolumePoint: 138 0.465
+VolumePoint: 144 0.603
+VolumePoint: 144 0.48
+VolumePoint: 150 0.603
+VolumePoint: 150 0.45
+VolumePoint: 156 0.2775
+VolumePoint: 164.618 0.2925
+VolumePoint: 173.235 0.255
+VolumePoint: 181.853 0.24
+VolumePoint: 185.47 0.2475
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 3 0.52
+ReverbMixPoint: 6 0.54
+ReverbMixPoint: 9 0.51
+ReverbMixPoint: 12 0.52
+ReverbMixPoint: 18 0.5
+ReverbMixPoint: 24 0.54
+ReverbMixPoint: 30 0.52
+ReverbMixPoint: 36 0.52
+ReverbMixPoint: 42 0.53
+ReverbMixPoint: 48 0.53
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.51
+ReverbMixPoint: 66 0.51
+ReverbMixPoint: 72 0.52
+ReverbMixPoint: 78 0.5
+ReverbMixPoint: 84 0.53
+ReverbMixPoint: 90 0.51
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.52
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.5
+ReverbMixPoint: 120 0.51
+ReverbMixPoint: 126 0.5
+ReverbMixPoint: 132 0.54
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.54
+ReverbMixPoint: 150 0.53
+ReverbMixPoint: 156 0.51
+ReverbMixPoint: 164.618 0.51
+ReverbMixPoint: 173.235 0.53
+ReverbMixPoint: 181.853 0.52
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Melody
+Instrument: flute
+Pan: -0.3
+ReverbMix: 0.5
+UseReverb: true
+ReverbDelay: 0.05
+ReverbDecay: 0.6
+ReverbMixFactor: 0.5
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.7
+Notes: 37
+Note: 220 0.25 156 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.9
+Note: 659.25 0.125 156.188 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.98
+Note: 659.25 0.443182 156.375 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.914
+Note: 440 0.5 156.75 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.99
+Note: 493.88 0.460224 159.75 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8
+Note: 698.46 0.125 160.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8
+Note: 698.46 0.443182 160.312 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.956
+Note: 523.25 0.5 160.688 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.842
+Note: 493.88 0.221591 162.903 Phoneme: -1 Open: false Volume: 0.315 Velocity: 0.712
+Note: 659.25 0.886364 163.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.712
+Note: 440 0.75 164.062 Phoneme: -1 Open: false Volume: 0.405 Velocity: 0.712
+Note: 493.88 0.0625 164.75 Phoneme: -1 Open: false Volume: 0.315 Velocity: 0.844
+Note: 587.33 0.25 164.812 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.844
+Note: 783.99 0.460224 165 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.764
+Note: 493.88 0.115056 165.26 Phoneme: -1 Open: false Volume: 0.315 Velocity: 0.714
+Note: 880 0.460224 165.375 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.714
+Note: 440 0.125 166.688 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.914
+Note: 440 0.443182 166.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.9
+Note: 440 0.5 167.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.94
+Note: 783.99 0.125 169.688 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.994
+Note: 523.25 0.443182 169.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.994
+Note: 523.25 0.5 170.25 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.906
+Note: 698.46 0.125 174.938 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.812
+Note: 698.46 0.443182 175.125 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.972
+Note: 698.46 0.5 175.5 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.876
+Note: 698.46 0.125 178.875 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.966
+Note: 493.88 0.443182 179.062 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.976
+Note: 493.88 0.5 179.438 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.874
+Note: 440 0.125 183 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.964
+Note: 659.25 0.443182 183.188 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.902
+Note: 440 0.5 183.562 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.844
+Note: 523.25 0.125 186.188 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.956
+Note: 523.25 0.443182 186.375 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.892
+Note: 783.99 0.5 186.75 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.83
+Note: 783.99 0.886364 189.188 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.8
+Note: 783.99 0.0394058 190.273 Phoneme: -1 Open: false Volume: 0.315 Velocity: 0.704
+Note: 493.88 0.157623 190.312 Phoneme: -1 Open: false Volume: 0.45 Velocity: 0.704
+PanAutomation: 56
+PanPoint: 0 -0.3
+PanPoint: 3 1
+PanPoint: 6 1
+PanPoint: 9 1
+PanPoint: 12 -0.26
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 1
+PanPoint: 36 1
+PanPoint: 42 -0.28
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 -0.27
+PanPoint: 66 1
+PanPoint: 72 -0.29
+PanPoint: 78 1
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 -0.26
+PanPoint: 120 -0.3
+PanPoint: 126 -0.26
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 -0.29
+PanPoint: 156 1
+PanPoint: 164.618 -0.29
+PanPoint: 173.235 -0.26
+PanPoint: 181.853 -0.26
+PanPoint: 12 0.34
+PanPoint: 18 1
+PanPoint: 24 1
+PanPoint: 30 0.33
+PanPoint: 36 1
+PanPoint: 42 1
+PanPoint: 48 1
+PanPoint: 54 1
+PanPoint: 60 0.34
+PanPoint: 66 1
+PanPoint: 72 1
+PanPoint: 78 0.33
+PanPoint: 84 1
+PanPoint: 90 1
+PanPoint: 96 1
+PanPoint: 102 1
+PanPoint: 108 1
+PanPoint: 114 1
+PanPoint: 120 1
+PanPoint: 126 1
+PanPoint: 132 1
+PanPoint: 138 1
+PanPoint: 144 1
+PanPoint: 150 1
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.2325
+VolumePoint: 3 0.2925
+VolumePoint: 5 0.2325
+VolumePoint: 6 0.2625
+VolumePoint: 9 0.2475
+VolumePoint: 12 0.36
+VolumePoint: 12 0.3375
+VolumePoint: 18 0.33
+VolumePoint: 18 0.315
+VolumePoint: 24 0.33
+VolumePoint: 24 0.3225
+VolumePoint: 30 0.36
+VolumePoint: 30 0.33
+VolumePoint: 36 0.51
+VolumePoint: 36 0.495
+VolumePoint: 42 0.5025
+VolumePoint: 42 0.4875
+VolumePoint: 48 0.465
+VolumePoint: 48 0.5025
+VolumePoint: 54 0.4725
+VolumePoint: 54 0.5025
+VolumePoint: 60 0.315
+VolumePoint: 60 0.405
+VolumePoint: 66 0.36
+VolumePoint: 66 0.396
+VolumePoint: 72 0.387
+VolumePoint: 72 0.3525
+VolumePoint: 78 0.33
+VolumePoint: 78 0.432
+VolumePoint: 84 0.594
+VolumePoint: 84 0.4725
+VolumePoint: 90 0.585
+VolumePoint: 90 0.51
+VolumePoint: 96 0.603
+VolumePoint: 96 0.4725
+VolumePoint: 102 0.603
+VolumePoint: 102 0.51
+VolumePoint: 108 0.594
+VolumePoint: 108 0.51
+VolumePoint: 114 0.585
+VolumePoint: 114 0.48
+VolumePoint: 120 0.603
+VolumePoint: 120 0.51
+VolumePoint: 126 0.603
+VolumePoint: 126 0.48
+VolumePoint: 132 0.594
+VolumePoint: 132 0.5025
+VolumePoint: 138 0.585
+VolumePoint: 138 0.495
+VolumePoint: 144 0.603
+VolumePoint: 144 0.51
+VolumePoint: 150 0.603
+VolumePoint: 150 0.5175
+VolumePoint: 156 0.255
+VolumePoint: 164.618 0.2775
+VolumePoint: 173.235 0.24
+VolumePoint: 181.853 0.2775
+VolumePoint: 185.47 0.2325
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.5
+ReverbMixPoint: 3 0.53
+ReverbMixPoint: 6 0.53
+ReverbMixPoint: 9 0.53
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.53
+ReverbMixPoint: 24 0.51
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.54
+ReverbMixPoint: 42 0.53
+ReverbMixPoint: 48 0.5
+ReverbMixPoint: 54 0.52
+ReverbMixPoint: 60 0.5
+ReverbMixPoint: 66 0.53
+ReverbMixPoint: 72 0.52
+ReverbMixPoint: 78 0.52
+ReverbMixPoint: 84 0.54
+ReverbMixPoint: 90 0.51
+ReverbMixPoint: 96 0.5
+ReverbMixPoint: 102 0.54
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.51
+ReverbMixPoint: 132 0.53
+ReverbMixPoint: 138 0.51
+ReverbMixPoint: 144 0.53
+ReverbMixPoint: 150 0.52
+ReverbMixPoint: 156 0.53
+ReverbMixPoint: 164.618 0.5
+ReverbMixPoint: 173.235 0.53
+ReverbMixPoint: 181.853 0.54
+ReverbMixPoint: 12 0.53
+ReverbMixPoint: 18 0.54
+ReverbMixPoint: 24 0.5
+ReverbMixPoint: 30 0.53
+ReverbMixPoint: 36 0.51
+ReverbMixPoint: 42 0.54
+ReverbMixPoint: 48 0.52
+ReverbMixPoint: 54 0.53
+ReverbMixPoint: 60 0.53
+ReverbMixPoint: 66 0.54
+ReverbMixPoint: 72 0.5
+ReverbMixPoint: 78 0.53
+ReverbMixPoint: 84 0.51
+ReverbMixPoint: 90 0.54
+ReverbMixPoint: 96 0.52
+ReverbMixPoint: 102 0.53
+ReverbMixPoint: 108 0.51
+ReverbMixPoint: 114 0.54
+ReverbMixPoint: 120 0.52
+ReverbMixPoint: 126 0.53
+ReverbMixPoint: 132 0.51
+ReverbMixPoint: 138 0.54
+ReverbMixPoint: 144 0.52
+ReverbMixPoint: 150 0.53
+Part: Bass
+Instrument: bass
+Pan: 0
+ReverbMix: 0.15
+UseReverb: true
+ReverbDelay: 0.15
+ReverbDecay: 0.5
+ReverbMixFactor: 0.15
+UseDistortion: false
+DistortionDrive: 1.5
+DistortionThreshold: 0.8
+Notes: 54
+Note: 146.83 1 156 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.889
+Note: 110 0.5 157.125 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.934
+Note: 164.81 0.25 157.688 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9385
+Note: 174.61 0.460224 158.438 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.922
+Note: 110 0.5 158.812 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.916
+Note: 110 0.460224 159.375 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.913
+Note: 164.81 0.5 159.75 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9565
+Note: 174.61 0.886364 160.312 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9265
+Note: 146.83 0.210226 162.375 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9715
+Note: 146.83 0.460224 162.562 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.994
+Note: 110 0.272727 162.938 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9595
+Note: 164.81 0.460224 164.625 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9535
+Note: 174.61 0.886364 165 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.886
+Note: 146.83 0.5 165.938 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9565
+Note: 110 0.460224 167.625 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9655
+Note: 164.81 0.460224 168.375 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9445
+Note: 174.61 0.5 168.75 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8785
+Note: 146.83 0.5 169.312 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8695
+Note: 110 0.886364 170.062 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.91
+Note: 164.81 0.272727 171.375 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.955
+Note: 174.61 0.5 171.562 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.865
+Note: 146.83 0.460224 172.125 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.889
+Note: 110 0.886364 172.5 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.859
+Note: 164.81 0.460224 173.438 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9565
+Note: 174.61 0.272727 173.812 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.913
+Note: 146.83 0.886364 174 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9475
+Note: 110 0.5 174.938 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.862
+Note: 164.81 0.25 175.5 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9595
+Note: 174.61 0.5 175.688 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.955
+Note: 146.83 0.5 176.25 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9895
+Note: 110 0.272727 177 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8575
+Note: 123.47 0.886364 177.188 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8785
+Note: 174.61 0.5 178.125 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.856
+Note: 146.83 0.210226 178.688 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9145
+Note: 146.83 0.5 178.875 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9835
+Note: 110 0.5 179.438 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9145
+Note: 164.81 0.460224 180 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9325
+Note: 130.81 0.460224 180.375 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.973
+Note: 146.83 0.25 180.75 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9325
+Note: 110 0.5 180.938 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.937
+Note: 164.81 1 181.5 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9145
+Note: 174.61 0.886364 183.375 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.946
+Note: 146.83 0.210226 184.312 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.967
+Note: 110 1 184.5 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8695
+Note: 164.81 0.147726 185.438 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9355
+Note: 110 0.210226 186.562 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9805
+Note: 110 0.460224 186.75 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8875
+Note: 164.81 0.25 187.125 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8665
+Note: 130.81 0.272727 187.312 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8605
+Note: 146.83 0.210226 187.688 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8965
+Note: 146.83 1 187.875 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.9565
+Note: 110 0.272727 188.812 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.97
+Note: 164.81 0.5 189 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.8785
+Note: 174.61 0.210226 189.938 Phoneme: -1 Open: false Volume: 0.4125 Velocity: 0.952
+PanAutomation: 56
+PanPoint: 0 -0.005
+PanPoint: 3 0.015
+PanPoint: 6 0.015
+PanPoint: 9 0.005
+PanPoint: 12 0.015
+PanPoint: 18 -0.015
+PanPoint: 24 -0.025
+PanPoint: 30 0.015
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 -0.025
+PanPoint: 54 -0.005
+PanPoint: 60 -0.015
+PanPoint: 66 0.015
+PanPoint: 72 -0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.005
+PanPoint: 90 0.015
+PanPoint: 96 0.015
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 -0.015
+PanPoint: 120 -0.015
+PanPoint: 126 0.005
+PanPoint: 132 -0.015
+PanPoint: 138 -0.005
+PanPoint: 144 0.015
+PanPoint: 150 -0.005
+PanPoint: 156 -0.015
+PanPoint: 164.618 -0.015
+PanPoint: 173.235 -0.025
+PanPoint: 181.853 0.005
+PanPoint: 12 -0.025
+PanPoint: 18 -0.025
+PanPoint: 24 0.015
+PanPoint: 30 -0.005
+PanPoint: 36 -0.025
+PanPoint: 42 0.015
+PanPoint: 48 0.005
+PanPoint: 54 0.005
+PanPoint: 60 -0.025
+PanPoint: 66 -0.025
+PanPoint: 72 0.015
+PanPoint: 78 -0.005
+PanPoint: 84 -0.025
+PanPoint: 90 0.015
+PanPoint: 96 0.005
+PanPoint: 102 0.005
+PanPoint: 108 -0.025
+PanPoint: 114 0.015
+PanPoint: 120 0.005
+PanPoint: 126 0.005
+PanPoint: 132 -0.025
+PanPoint: 138 0.015
+PanPoint: 144 0.005
+PanPoint: 150 0.005
+VolumeAutomation: 60
+VolumePoint: 0 0
+VolumePoint: 0 0.3375
+VolumePoint: 3 0.375
+VolumePoint: 5 0.3375
+VolumePoint: 6 0.3675
+VolumePoint: 9 0.345
+VolumePoint: 12 0.3375
+VolumePoint: 12 0.3525
+VolumePoint: 18 0.405
+VolumePoint: 18 0.3975
+VolumePoint: 24 0.3975
+VolumePoint: 24 0.3675
+VolumePoint: 30 0.345
+VolumePoint: 30 0.3675
+VolumePoint: 36 0.405
+VolumePoint: 36 0.39
+VolumePoint: 42 0.36
+VolumePoint: 42 0.3525
+VolumePoint: 48 0.3975
+VolumePoint: 48 0.3675
+VolumePoint: 54 0.3375
+VolumePoint: 54 0.3525
+VolumePoint: 60 0.3675
+VolumePoint: 60 0.3525
+VolumePoint: 66 0.39
+VolumePoint: 66 0.405
+VolumePoint: 72 0.3675
+VolumePoint: 72 0.345
+VolumePoint: 78 0.405
+VolumePoint: 78 0.345
+VolumePoint: 84 0.39
+VolumePoint: 84 0.3375
+VolumePoint: 90 0.3525
+VolumePoint: 90 0.3675
+VolumePoint: 96 0.3675
+VolumePoint: 96 0.405
+VolumePoint: 102 0.3525
+VolumePoint: 102 0.36
+VolumePoint: 108 0.39
+VolumePoint: 108 0.3975
+VolumePoint: 114 0.3525
+VolumePoint: 114 0.36
+VolumePoint: 120 0.3675
+VolumePoint: 120 0.375
+VolumePoint: 126 0.3525
+VolumePoint: 126 0.39
+VolumePoint: 132 0.39
+VolumePoint: 132 0.3825
+VolumePoint: 138 0.3525
+VolumePoint: 138 0.36
+VolumePoint: 144 0.3675
+VolumePoint: 144 0.375
+VolumePoint: 150 0.3525
+VolumePoint: 150 0.3525
+VolumePoint: 156 0.3825
+VolumePoint: 164.618 0.3675
+VolumePoint: 173.235 0.36
+VolumePoint: 181.853 0.3825
+VolumePoint: 185.47 0.3375
+VolumePoint: 190.47 0
+ReverbMixAutomation: 56
+ReverbMixPoint: 0 0.17
+ReverbMixPoint: 3 0.15
+ReverbMixPoint: 6 0.15
+ReverbMixPoint: 9 0.17
+ReverbMixPoint: 12 0.15
+ReverbMixPoint: 18 0.17
+ReverbMixPoint: 24 0.18
+ReverbMixPoint: 30 0.16
+ReverbMixPoint: 36 0.16
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.17
+ReverbMixPoint: 54 0.17
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.16
+ReverbMixPoint: 72 0.18
+ReverbMixPoint: 78 0.18
+ReverbMixPoint: 84 0.18
+ReverbMixPoint: 90 0.19
+ReverbMixPoint: 96 0.15
+ReverbMixPoint: 102 0.17
+ReverbMixPoint: 108 0.19
+ReverbMixPoint: 114 0.18
+ReverbMixPoint: 120 0.16
+ReverbMixPoint: 126 0.19
+ReverbMixPoint: 132 0.16
+ReverbMixPoint: 138 0.15
+ReverbMixPoint: 144 0.17
+ReverbMixPoint: 150 0.17
+ReverbMixPoint: 156 0.16
+ReverbMixPoint: 164.618 0.16
+ReverbMixPoint: 173.235 0.17
+ReverbMixPoint: 181.853 0.16
+ReverbMixPoint: 12 0.19
+ReverbMixPoint: 18 0.19
+ReverbMixPoint: 24 0.16
+ReverbMixPoint: 30 0.17
+ReverbMixPoint: 36 0.15
+ReverbMixPoint: 42 0.16
+ReverbMixPoint: 48 0.19
+ReverbMixPoint: 54 0.18
+ReverbMixPoint: 60 0.19
+ReverbMixPoint: 66 0.19
+ReverbMixPoint: 72 0.16
+ReverbMixPoint: 78 0.17
+ReverbMixPoint: 84 0.15
+ReverbMixPoint: 90 0.16
+ReverbMixPoint: 96 0.19
+ReverbMixPoint: 102 0.18
+ReverbMixPoint: 108 0.15
+ReverbMixPoint: 114 0.16
+ReverbMixPoint: 120 0.19
+ReverbMixPoint: 126 0.18
+ReverbMixPoint: 132 0.15
+ReverbMixPoint: 138 0.16
+ReverbMixPoint: 144 0.19
+ReverbMixPoint: 150 0.18

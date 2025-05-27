@@ -27889,7 +27889,7 @@ ReverbMixPoint: 217.846 0.16
 ReverbMixPoint: 221.538 0.16
 ReverbMixPoint: 225.231 0.18
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: piano
 Pan: 0.4
 ReverbMix: 0.3
 UseReverb: true

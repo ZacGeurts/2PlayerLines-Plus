@@ -13756,7 +13756,7 @@ ReverbMixPoint: 247.385 0.32
 ReverbMixPoint: 251.077 0.3
 ReverbMixPoint: 254.769 0.32
 Part: Arpeggio
-Instrument: syntharp
+Instrument: flute
 Pan: -0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -16120,7 +16120,7 @@ ReverbMixPoint: 247.385 0.3
 ReverbMixPoint: 251.077 0.31
 ReverbMixPoint: 254.769 0.34
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: guitar
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -21524,7 +21524,7 @@ ReverbMixPoint: 247.385 0.28
 ReverbMixPoint: 251.077 0.26
 ReverbMixPoint: 254.769 0.25
 Part: Arpeggio
-Instrument: leadsynth
+Instrument: guitar
 Pan: -0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -30273,7 +30273,7 @@ ReverbMixPoint: 247.385 0.3
 ReverbMixPoint: 251.077 0.31
 ReverbMixPoint: 254.769 0.34
 Part: Arpeggio
-Instrument: syntharp
+Instrument: trumpet
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -36164,7 +36164,7 @@ ReverbMixPoint: 247.385 0.28
 ReverbMixPoint: 251.077 0.26
 ReverbMixPoint: 254.769 0.25
 Part: Arpeggio
-Instrument: syntharp
+Instrument: flute
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -37606,7 +37606,7 @@ ReverbMixPoint: 247.385 0.32
 ReverbMixPoint: 251.077 0.3
 ReverbMixPoint: 254.769 0.32
 Part: Arpeggio
-Instrument: syntharp
+Instrument: trumpet
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true
@@ -42515,7 +42515,7 @@ ReverbMixPoint: 247.385 0.3
 ReverbMixPoint: 251.077 0.31
 ReverbMixPoint: 254.769 0.34
 Part: Arpeggio
-Instrument: syntharp
+Instrument: flute
 Pan: 0.4
 ReverbMix: 0.5
 UseReverb: true

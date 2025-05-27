@@ -20,6 +20,7 @@ struct GameConfig {
     float AI_SPEED = 200.0f;
     float TURN_SPEED = 2.0f * M_PI;
     float AI_TURN_SPEED = 180.0f;
+	float AI_BERTH=10.0f;
     float RAYCAST_STEP = 5.0f;
     float CIRCLE_SPEED = 100.0f;
     float CIRCLE_RADIUS = 40.0f;
