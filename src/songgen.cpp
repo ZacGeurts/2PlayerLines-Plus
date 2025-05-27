@@ -455,7 +455,7 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                         float noteTime = t - note.startTime;
                         size_t sampleIndex = static_cast<size_t>(noteTime * sampleRate);
                         const std::vector<float>& samples = Instruments::sampleManager.getSample(
-                            part.instrument, sampleRate, note.freq, note.duration, note.phoneme, note.open);
+                            part.instrument, note.freq, note.duration, note.phoneme, note.open);
                         float sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
                         if (samples.empty()) {
                             SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
