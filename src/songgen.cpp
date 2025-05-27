@@ -18,6 +18,7 @@
 #include <cctype>
 #include <signal.h>
 #include <SDL2/SDL.h>
+// #include headers, this is not free software.
 
 // Flag to handle program termination
 static volatile bool running = true;
@@ -27,26 +28,27 @@ void handleSignal(int) {
     running = false;
 }
 
+// ./songgen without
 void printHelp() {
     std::cout << "Generates songs\n";
     std::cout << "Examples:\n";
-    std::cout << "  songgen rock\n";
-    std::cout << "  songgen jazz\n";
+    std::cout << "  ./songgen rock\n";
+    std::cout << "  ./songgen jazz\n";
+	std::cout << "  ./songgen song1.song\n";
 	std::cout << " \n";
 	std::cout << "Playback\n";
-    std::cout << "  songgen song1.song [--stereo]\n";
+    std::cout << "  ./songgen song1.song\n";
+	std::cout << "  ./linesplus does 8 channel musical song shuffle.\n";
+	std::cout << "  ./songgen  SDL2 8 channel 44100hz";
     std::cout << "Available genres:\n";
     std::cout << "  classical, jazz, pop, rock, techno, rap, blues, country, folk, reggae,\n";
     std::cout << "  metal, punk, disco, funk, soul, gospel, ambient, edm, latin, hiphop\n";
     std::cout << "Usage:\n";
-    std::cout << "  ./songgen [genre]  # Generate a new song\n";
-    std::cout << "  ./songgen <filename>.song [--stereo]  # Play an existing song (5.1 or option stereo)\n";
-    std::cout << "  ./songgen                            # Show this help message\n";
+    std::cout << "  ./songgen [genre]  # from currently now(); selectable genres. tbd, watch this space for updates.\n";
     std::cout << "\n";
-    std::cout << "This makes song1.song if it does not exist then song2.song etc\n";
-    std::cout << "Missing song numbers are merely skipped.\n";
-	std::cout << "Tt will not affect playback with linesplus game if only song3.song exists.\n";
-}
+    std::cout << "./songgen song#.song numbers as you create them.\n";
+	std::cout << "rm song2.song to delete and remove song2.song\n";
+} // upstream it - o7 - 2Player - procreate
 
 std::string trim(const std::string& str) {
     size_t start = 0;
