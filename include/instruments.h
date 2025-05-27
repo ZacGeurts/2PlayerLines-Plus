@@ -23,7 +23,7 @@
 
 namespace AudioUtils {
 const float SAMPLE_RATE = 44100.0f;
-const int CHANNELS = 8;
+const int CHANNELS = 8; // SDL2 can handle up to 8.
 const int BUFFER_SIZE = 128; // 2.9ms latency
 const int RING_BUFFER_COUNT = 4;
 
@@ -135,6 +135,7 @@ public:
         return input * (1.0f - mix) + output * mix;
     }
 };
+
 } // namespace AudioUtils
 
 namespace Instruments {
@@ -145,6 +146,48 @@ struct KarplusStrongState {
     size_t writePos;
     std::vector<float> delayLine;
     KarplusStrongState() : lastFreq(0.0f), delayLineSize(0), writePos(0), delayLine() {}
+};
+
+// Add a utility class for protective processing
+// should prevent blowout and static (just leave alone)
+// different instruments get different adjustments.
+struct AudioProtector {
+    AudioUtils::HighPassFilter dcBlocker;
+    float fadeOutTime;
+    float maxGain;
+
+    AudioProtector(float sampleRate = 44100.0f, float fadeTime = 0.005f, float gain = 0.9f)
+        : dcBlocker(20.0f, 0.707f, sampleRate), // Block DC below 20Hz
+          fadeOutTime(fadeTime),
+          maxGain(gain) {}
+
+    float process(float input, float t, float dur) {
+        // Apply DC blocker
+        float output = dcBlocker.process(input);
+
+        // Apply fade-out near note end to prevent clicks
+        if (t > dur - fadeOutTime) {
+            float fade = 1.0f - (t - (dur - fadeOutTime)) / fadeOutTime;
+            output *= std::max(0.0f, std::min(1.0f, fade));
+        }
+
+        // Soft clipping with tanh
+        output = std::tanh(output * 1.2f) / 1.2f;
+
+        // Simple peak limiter
+        float absOutput = std::abs(output);
+        if (absOutput > maxGain) {
+            output *= maxGain / absOutput;
+        }
+
+        // Check for NaN/Inf
+        if (!std::isfinite(output)) {
+            output = 0.0f;
+            if (DEBUG_LOG) SDL_Log("NaN/Inf detected in audio output, reset to 0");
+        }
+
+        return output;
+    }
 };
 
 struct FormantFilter {
@@ -232,12 +275,15 @@ static float getTailDuration(const std::string& instrument) {
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 static float generateKickWave(float t, float freq, float dur) {
+	// Kick: Lower maxGain (0.85) due to low-frequency energy; 5ms fade to match deep decay.
+	static AudioProtector protector(44100.0f, 0.005f, 0.85f); // Slightly lower gain for kick
     static AudioUtils::RandomGenerator rng;
+    
     // Envelope parameters for punchy, dynamic kick
-    float attack = 0.005f; // Sharper attack for immediate impact
-    float decay = 0.15f;   // Shorter decay for tight body
-    float sustain = 0.4f;  // Lower sustain to avoid muddiness
-    float release = 0.1f;  // Quick release for clean tail
+    float attack = 0.005f;
+    float decay = 0.15f;
+    float sustain = 0.4f;
+    float release = 0.1f;
     float env;
     if (t < attack) {
         env = t / attack;
@@ -249,44 +295,48 @@ static float generateKickWave(float t, float freq, float dur) {
         env = sustain * std::exp(-(t - dur) / release);
     }
 
-    // Pitch-modulated body (sine + subharmonic)
-    float baseFreq = freq * 0.8f; // Lower base frequency for deeper kick
-    float pitchDecay = std::exp(-15.0f * t / dur); // Faster pitch drop
-    float pitchMod = baseFreq * (2.0f * pitchDecay + 0.5f); // Dynamic pitch sweep
-    float sine = std::sin(2.0f * M_PI * pitchMod * t); // Main body
-    float subSine = 0.3f * std::sin(2.0f * M_PI * (baseFreq * 0.5f) * t); // Subharmonic for depth
+    // Pitch-modulated body
+    float baseFreq = freq * 0.8f;
+    float pitchDecay = std::exp(-15.0f * t / dur);
+    float pitchMod = baseFreq * (2.0f * pitchDecay + 0.5f);
+    float sine = std::sin(2.0f * M_PI * pitchMod * t);
+    float subSine = 0.3f * std::sin(2.0f * M_PI * (baseFreq * 0.5f) * t);
 
-    // Noise component for click/snap
-    float clickEnv = std::exp(-80.0f * t); // Sharp transient
+    // Noise component for click
+    float clickEnv = std::exp(-80.0f * t);
     float whiteNoise = rng.generateWhiteNoise();
     float pinkNoise = rng.generatePinkNoise();
-    AudioUtils::BandPassFilter clickFilter(2500.0f, 1.0f, 44100.0f); // Center at 2.5kHz for crispness
+    AudioUtils::BandPassFilter clickFilter(2500.0f, 1.0f, 44100.0f);
     float click = clickFilter.process(0.6f * whiteNoise + 0.4f * pinkNoise) * clickEnv * 0.25f;
 
     // Combine components
     float output = env * (0.6f * sine + 0.2f * subSine + 0.2f * click);
 
-    // Dynamic low-pass filter to shape tone
-    float filterCutoff = 150.0f + 1000.0f * pitchDecay; // Sweep from 1150Hz to 150Hz
+    // Dynamic low-pass filter
+    float filterCutoff = 150.0f + 1000.0f * pitchDecay;
     AudioUtils::LowPassFilter filter(filterCutoff, 44100.0f);
     output = filter.process(output);
 
-    // Saturation and distortion for warmth and grit
-    AudioUtils::Distortion dist(1.8f, 0.8f); // Moderate distortion
+    // Saturation and distortion
+    AudioUtils::Distortion dist(1.8f, 0.8f);
     output = dist.process(output);
-    output = std::tanh(output * 1.2f); // Soft clipping for warmth
 
-    // Final amplitude adjustment
-    output = std::max(-1.0f, std::min(1.0f, output * 0.9f)); // Prevent clipping
+    // Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 1.0f; // I add these for volume adjustments
     return output;
 }
 
 static float generateHiHatWave(float t, float freq, bool open, float dur) {
+	// Hi-Hat: Shorter 3ms fade for crisp transients; higher cutoff in DC blocker (already high-passed).
+    static AudioProtector protector(44100.0f, 0.003f, 0.9f); // Shorter fade for hi-hat
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::HighPassFilter openFilter(6000.0f, 0.707f, 44100.0f);
     static AudioUtils::HighPassFilter closedFilter(10000.0f, 0.707f, 44100.0f);
     static AudioUtils::Reverb reverb(0.02f, 0.2f, 0.15f, 44100.0f);
     static AudioUtils::Distortion dist(1.2f, 0.8f);
+
     float release = open ? 1.5f : 0.2f;
     if (t > dur + release) return 0.0f;
     float decayTime = open ? 1.2f : 0.1f;
@@ -309,13 +359,20 @@ static float generateHiHatWave(float t, float freq, bool open, float dur) {
     float output = transient + 0.5f * body + 0.5f * tonal;
     output = reverb.process(output);
     output = dist.process(output);
-    output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.3f; // I add these for final volume adjustments
+	
+    // Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 0.3f; // I add these for volume adjustments
     return output;
 }
 
 static float generateSnareWave(float t, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
+    static AudioUtils::BandPassFilter crackFilter(2000.0f, 1.5f, 44100.0f);
+    static AudioUtils::BandPassFilter rattleFilter(4000.0f, 1.0f, 44100.0f);
+
     float velocity = 0.7f + rng.generateUniform(-0.3f, 0.3f);
     velocity = std::max(0.4f, std::min(1.0f, velocity));
     if (dur < 0.05f) velocity *= 0.7f;
@@ -329,13 +386,11 @@ static float generateSnareWave(float t, float dur) {
     else if (t < dur) env = sustain * std::exp(-10.0f * (t - attack - decay));
     else env = sustain * std::exp(-(t - dur) / release);
     float noise = rng.generatePinkNoise() * 0.4f;
-    static AudioUtils::BandPassFilter crackFilter(2000.0f, 1.5f, 44100.0f);
     float crack = rng.generateWhiteNoise() * std::exp(-50.0f * t) * 0.3f * velocity;
     crack = crackFilter.process(crack);
     float toneFreq = 220.0f + rng.generateUniform(-20.0f, 20.0f);
     float phase = 2.0f * M_PI * toneFreq * t;
     float tone = (1.0f - 2.0f * std::fmod(phase / M_PI, 1.0f)) * std::exp(-20.0f * t) * 0.2f * velocity;
-    static AudioUtils::BandPassFilter rattleFilter(4000.0f, 1.0f, 44100.0f);
     float rattleDecay = 0.1f + rng.generateUniform(-0.02f, 0.02f);
     float rattle = rng.generateWhiteNoise() * std::exp(-t / rattleDecay) * 0.35f * velocity;
     rattle = rattleFilter.process(rattle);
@@ -344,14 +399,21 @@ static float generateSnareWave(float t, float dur) {
     AudioUtils::Reverb reverb(0.1f, 0.5f, 0.25f);
     output = dist.process(output);
     output = reverb.process(output);
-    output *= 0.6f * velocity;
-    output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 1.0f; // I add these for final volume adjustments
+	
+    // Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 0.6f; // I add these for volume adjustments
     return output;
 }
 
 static float generateClapWave(float t, float dur) {
+	// lap: 3ms fade for sharp bursts; standard gain. ignore this code or have AI read it.
+	static AudioProtector protector(44100.0f, 0.003f, 0.9f); // Shorter fade for clap
     static AudioUtils::RandomGenerator rng;
+    static AudioUtils::Distortion dist(1.4f, 0.6f);
+    static AudioUtils::Reverb reverb(0.03f, 0.3f, 0.2f);    
+
     dur = std::clamp(dur, 0.08f, 0.15f);
     float attack = 0.002f, decay = 0.03f, sustain = 0.2f, release = 0.05f, env;
     if (t < attack) env = t / attack;
@@ -364,15 +426,18 @@ static float generateClapWave(float t, float dur) {
     float noise = rng.generatePinkNoise() * 0.4f;
     float tonal = rng.generateWhiteNoise() * std::sin(2.0f * M_PI * 800.0f * t) * 0.3f;
     float output = env * (burst1 + burst2 + burst3 + noise + tonal);
-    static AudioUtils::Distortion dist(1.4f, 0.6f);
-    static AudioUtils::Reverb reverb(0.03f, 0.3f, 0.2f);
     output = dist.process(output);
     output = reverb.process(output);
-    output *= 1.0f;
+
+    // Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 1.0f; // I add these for volume adjustments
     return output;
 }
 
 static float generateTomWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     float attack = 0.01f, decay = 0.15f, sustain = 0.6f, release = 0.2f, env;
     if (t < attack) env = t / attack;
@@ -388,11 +453,16 @@ static float generateTomWave(float t, float freq, float dur) {
     AudioUtils::LowPassFilter filter(300.0f, 44100.0f);
     output = reverb.process(output);
     output = filter.process(output);
-    output *= 1.0f;
+    
+	// Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 1.0f; // I add these for volume adjustments
     return output;
 }
 
 static float generateSubBassWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     freq = std::clamp(freq, 20.0f, 80.0f);
     float attack = 0.005f, decay = 0.1f, sustain = 0.6f, release = 0.25f, env;
     if (t < attack) env = t / attack;
@@ -405,11 +475,16 @@ static float generateSubBassWave(float t, float freq, float dur) {
     static AudioUtils::LowPassFilter filter(80.0f, 44100.0f);
     output = filter.process(output);
     output = std::tanh(output * 1.2f);
-    output *= 1.0f;
+	
+    // Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 1.0f; // I add these for volume adjustments
     return output;
 }
 
 static float generateSynthArpWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     // Corrected to produce arpeggio synth sound
     static AudioUtils::RandomGenerator rng;
     float attack = 0.01f, decay = 0.1f, sustain = 0.7f, release = 0.2f, env;
@@ -425,11 +500,16 @@ static float generateSynthArpWave(float t, float freq, float dur) {
     output = filter.process(output);
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.8f;
+	
+    // Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 0.8f; // I add these for volume adjustments
     return output;
 }
 
 static float generateLeadSynthWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     float attack = 0.02f, decay = 0.1f, sustain = 0.7f, release = 0.2f, env;
     if (t < attack) env = t / attack;
     else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
@@ -447,11 +527,16 @@ static float generateLeadSynthWave(float t, float freq, float dur) {
     output = dist.process(output);
     output = reverb.process(output);
     output = filter.process(output);
-    output *= 1.0f;
+    
+	// Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 1.0f; // I add these for volume adjustments
     return output;
 }
 
 static float generatePadWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter filter(800.0f, 44100.0f);
     static AudioUtils::Reverb reverb(0.8f, 0.8f, 0.6f, 44100.0f);
@@ -481,11 +566,16 @@ static float generatePadWave(float t, float freq, float dur) {
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
+    
+	// Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 0.25f; // I add these for volume adjustments
     return output;
 }
 
 static float generateCymbalWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     dur = std::clamp(dur, 0.1f, 1.5f);
     freq = (freq > 0.0f) ? std::clamp(freq, 2000.0f, 10000.0f) : 6000.0f;
@@ -502,11 +592,17 @@ static float generateCymbalWave(float t, float freq, float dur) {
     static AudioUtils::Reverb reverb(0.15f, 0.6f, 0.4f, 44100.0f);
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.3f;
+    
+	// Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 0.3f; // I add these for volume adjustments
     return output;
 }
 
-// forgot why I asked for this
+// forgot why I asked for this.
+// oh yeah, 2 singers vocal_0 and vocal_1
+// generateSingerWave generateVocalWave
 struct VocalState {
     float current_freq = 0.0f;
     float current_dur = 0.0f;
@@ -516,8 +612,9 @@ struct VocalState {
     float prev_time = -1.0f;
 };
 
-// pick new voices, I think they should seperate further
+// pick new voices but this is a tone generator
 static float generateVocalWave(float t, float freq, int phoneme, float dur, int depth) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static VocalState male_state;
     static VocalState female_state;
@@ -586,8 +683,8 @@ static float generateVocalWave(float t, float freq, int phoneme, float dur, int 
     
     // Phoneme selection based on freq (deterministic)
     int selected_phoneme;
-    if (depth == 1) { // Male: 80-150 Hz, 14 phonemes
-        float freq_normalized = (base_freq - 80.0f) / (150.0f - 80.0f);
+    if (depth == 1) { // Male: 20-90 Hz, 14 phonemes
+        float freq_normalized = (base_freq - 20.0f) / (90.0f - 20.0f);
         freq_normalized = std::max(0.0f, std::min(1.0f, freq_normalized));
         selected_phoneme = static_cast<int>(freq_normalized * 14);
     } else { // Female: 160-300 Hz, 13 phonemes
@@ -809,7 +906,10 @@ static float generateVocalWave(float t, float freq, int phoneme, float dur, int 
     // Store current output for next iteration
     state.prev_output = output_current;
     
-	output *= 0.3f; // I add these for final volume adjustments
+	// Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 0.2f; // I add these for volume adjustments
     return output;
 }
 
@@ -840,6 +940,7 @@ static float generateVocalWave(float t, float freq, int phoneme, float dur, int 
 // save. make clean make
 // copy below here.
 static float generateFluteWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter breathFilter(1600.0f, 300.0f, 44100.0f); // Lower, narrower for natural breath
 
@@ -888,7 +989,7 @@ static float generateFluteWave(float t, float freq, float dur) {
         breathNoise = 0.0f;
     }
 
-    // Minimal articulation noise for natural note starts
+    // Minimal articulation noise for natural note starts - some can probably be expanded
     float articulation = (t < 0.004f) ? breathFilter.process(rng.generateWhiteNoise()) * 0.02f * env : 0.0f;
     articulation = std::max(-0.15f, std::min(0.15f, articulation));
     if (!std::isfinite(articulation)) {
@@ -919,7 +1020,11 @@ static float generateFluteWave(float t, float freq, float dur) {
         output = 0.0f;
     }
     output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
-	output *= 1.0f; // These are added to adjust this instrument volume
+	
+	// Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 2.0f; // I add these for volume adjustments
     return output;
 }
 // This is enough for AI to design your instruments.
@@ -927,6 +1032,7 @@ static float generateFluteWave(float t, float freq, float dur) {
 
 // crank this one up
 static float generateTrumpetWave(float t, float freq, float dur) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter breathFilter(2500.0f, 600.0f, 44100.0f); // Breath noise filter
 
@@ -1005,12 +1111,17 @@ static float generateTrumpetWave(float t, float freq, float dur) {
         output = 0.0f;
     }
     output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
-	output *= 1.7f; // adjusts instrument volume
+	
+	// Apply protective processing
+    output = protector.process(output, t, dur);
+	
+	output *= 2.0f; // I add these for volume adjustments
     return output;
 }
 
 // guitar
 static float generateBassWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     if (!std::isfinite(sampleRate) || sampleRate <= 0.0f || !std::isfinite(freq) || freq <= 0.0f) {
         SDL_Log("Invalid sampleRate %.2f or freq %.2f, returning 0.0", sampleRate, freq);
@@ -1130,12 +1241,16 @@ static float generateBassWave(float sampleRate, float freq, float time, float du
         SDL_Log("Non-zero output at note end: %.6f", output);
     }
 
-	output *= 5.0f; // adjusts instrument volume
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 3.0f; // I add these for volume adjustments
     return output;
 }
 
 // room for improvement
 static float generateGuitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     if (!std::isfinite(sampleRate) || sampleRate <= 0.0f || !std::isfinite(freq) || freq <= 0.0f) {
         SDL_Log("Invalid sampleRate %.2f or freq %.2f, returning 0.0", sampleRate, freq);
@@ -1237,12 +1352,17 @@ static float generateGuitarWave(float sampleRate, float freq, float time, float 
     output = reverb.process(output);
 
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.2f; // These are added to adjust this instrument volume
+    
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.2f; // I add these for volume adjustments
     return output;
 }
 
 // room for improvement
 static float generateSaxophoneWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter breathFilter(2500.0f, 600.0f, sampleRate); // Breath noise filter
 
@@ -1319,12 +1439,17 @@ static float generateSaxophoneWave(float sampleRate, float freq, float time, flo
         output = 0.0f;
     }
     output = std::max(-1.0f, std::min(1.0f, output)); // Final clip
-	output *= 1.0f; // These are added to adjust this instrument volume
+	
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.1f; // I add these for volume adjustments
     return output;
 }
 
-// gl
+// good luck
 static float generatePianoWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter stringFilter(1600.0f, 44100.0f); // Lowered cutoff for warmth
     static AudioUtils::Reverb reverb(0.15f, 0.65f, 0.45f, 44100.0f); // Warmer, longer reverb
@@ -1430,13 +1555,18 @@ static float generatePianoWave(float sampleRate, float freq, float time, float d
     output = reverb.process(output) * reverbMix + output * (1.0f - reverbMix);
 
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.3f * velocity;
-	output *= 1.0f; // These are added to adjust this instrument volume
+    output *= velocity;
+	
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.1f; // I add these for volume adjustments
     return output;
 }
 
-// room for improvement. Worked from alto Sax.
+// room for improvement. Worked toward alto Sax.
 static float generateViolinWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter bowFilter(2500.0f, 0.5f, 44100.0f);
     static AudioUtils::LowPassFilter stringFilter(3000.0f, 44100.0f);
@@ -1492,12 +1622,17 @@ static float generateViolinWave(float sampleRate, float freq, float time, float 
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f; // These are added to adjust this instrument volume
+    
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.3f; // I add these for volume adjustments
     return output;
 }
 
-// might have blow out somewhere but has strong notes.
+// strong notes.
 static float generateOrganWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter windFilter(1200.0f, 0.6f, 44100.0f);
     static AudioUtils::LowPassFilter pipeFilter(2500.0f, 44100.0f);
@@ -1554,13 +1689,17 @@ static float generateOrganWave(float sampleRate, float freq, float time, float d
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f;
-	output *= 0.3f; // These are added to adjust this instrument volume	
+    	
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.2f; // I add these for volume adjustments
     return output;
 }
 
 // room for improvement
 static float generateCelloWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::BandPassFilter bowFilter(1800.0f, 0.6f, 44100.0f);
     static AudioUtils::LowPassFilter stringFilter(2200.0f, 44100.0f);
@@ -1616,12 +1755,17 @@ static float generateCelloWave(float sampleRate, float freq, float time, float d
     output *= env;
     output = reverb.process(output);
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f; // These are added to adjust this instrument volume	
+    
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.25f; // I add these for volume adjustments
     return output;
 }
 
 // more this
 static float generateMarimbaWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // Adjust fade/gain
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter barFilter(1500.0f, 44100.0f);
     static AudioUtils::Reverb reverb(0.08f, 0.5f, 0.3f, 44100.0f);
@@ -1676,12 +1820,17 @@ static float generateMarimbaWave(float sampleRate, float freq, float time, float
     output *= env;
     output = reverb.process(output); // Subtle reverb for resonance
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.7f; // These are added to adjust this instrument volume	
+    
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.7f; // I add these for volume adjustments
     return output;
 }
 
 // I hit the volume hard
 static float generateSteelGuitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // not adjusted
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter stringFilter(2000.0f, 44100.0f);
     static AudioUtils::Reverb reverb(0.12f, 0.55f, 0.35f, 44100.0f);
@@ -1738,12 +1887,17 @@ static float generateSteelGuitarWave(float sampleRate, float freq, float time, f
     output = (output + slideNoise) * env;
     output = reverb.process(output); // Moderate reverb for ambiance
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.1f; // These are added to adjust this instrument volume	
+	
+    // Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.1f; // I add these for volume adjustments
     return output;
 }
 
 // seems accurate for a tone generator - challenge you to do better
 static float generateSitarWave(float sampleRate, float freq, float time, float dur, KarplusStrongState& state1, KarplusStrongState& state2) {
+	static AudioProtector protector(44100.0f, 0.005f, 0.9f); // not adjusted
     static AudioUtils::RandomGenerator rng;
     static AudioUtils::LowPassFilter stringFilter(2500.0f, 44100.0f);
     static AudioUtils::Reverb reverb(0.15f, 0.6f, 0.4f, 44100.0f);
@@ -1812,7 +1966,11 @@ static float generateSitarWave(float sampleRate, float freq, float time, float d
     output = (output + buzz) * env;
     output = reverb.process(output); // Reverb for depth
     output = std::max(-1.0f, std::min(1.0f, output));
-    output *= 0.25f; // These are added to adjust this instrument volume	
+    
+	// Apply protective processing
+    output = protector.process(output, time, dur);
+	
+	output *= 0.1f; // I add these for volume adjustments
     return output;
 }
 
