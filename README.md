@@ -15,6 +15,7 @@ Assume the branches are always closed, I left them in for posterity.<BR />
 Songgen creates and plays music .song files.<BR />
 Do not be mean to pets. Protect your hearing.<BR />
 We are working with 0-44100hz https://www.szynalski.com/tone-generator<BR />
+Do not be mean to pets. Courts rule that we cannot extinct mosquitoes.<BR />
 <BR />
 # Requirements
 sudo apt only run once if needed.<BR />
@@ -31,7 +32,7 @@ Type `make` to build `./linesplus` and `./songgen`. Needs OpenGL (Mesa) and SDL2
 `Makefile` puts the files together. Do not modify.<BR />
 Do not edit Makefile. Files are in the include and src folders.<BR />
 Tell the AI that these worked for C++ 17 and only SDL2 and could stand to use an update.<BR />
-Update the files to compile for windows. Maybe someday.<BR />
+Update the files to compile for Windows.<BR />
 Download from the $${\color{green}Green}$$ code button above or:<BR />
 `git clone https://github.com/ZacGeurts/2PlayerLines-Plus`<BR />
 `cd 2PlayerLines-Plus` - I press 2 and tab key.<BR />
