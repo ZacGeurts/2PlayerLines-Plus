@@ -14,7 +14,7 @@ If a branch is better, I will put it back into main. Always get main.<BR />
 Assume the branches are always closed, I left them in for posterity.<BR />
 Songgen creates and plays music .song files.<BR />
 Do not be mean to pets. Protect your hearing.<BR />
-This is what we have to work with https://www.szynalski.com/tone-generator<BR />
+We are working with 0-44100hz https://www.szynalski.com/tone-generator<BR />
 <BR />
 # Requirements
 sudo apt only run once if needed.<BR />
