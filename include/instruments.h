@@ -3,6 +3,33 @@
 // Royalties are required for songgen.cpp, songgen.h, instruments.h
 // The other linesplus code is free and cannot be resold.
 // Interested parties can find my contact information at https://github.com/ZacGeurts
+//
+// To add a new instrument (e.g., tuba.h):
+// 1. Place the new header file (e.g., tuba.h) in the ../instruments/ folder.
+// 2. The instrument class (e.g., Tuba) must be in the Instruments namespace and inherit from Instruments::Instrument,
+//    implementing float generateWave(float t, float freq, float dur).
+//    Example for tuba.h:
+//      #ifndef TUBA_H
+//      #define TUBA_H
+//      #include "instruments.h"
+//      namespace Instruments {
+//      class Tuba : public Instrument {
+//      public:
+//          Tuba(float amplitude) {}
+//          float generateWave(float t, float freq, float dur) override {
+//              return std::sin(2.0f * M_PI * freq * t) * 0.5f; // Example
+//          }
+//      };
+//      }
+//      #endif
+// 3. Add the include directive below where other instruments are included:
+//      #include "../instruments/tuba.h"
+// 4. Add the registrar below where other instruments are registered:
+//      Instruments::InstrumentRegistrar<Instruments::Tuba> regTuba("tuba");
+// 5. Rebuild the project with 'make clean && make'.
+// Note: Non-vocal instruments use generateWave(t, freq, dur). The Vocal instrument uses a special overload,
+//       generateWave(t, freq, phoneme, dur, variant), where variant 0 is male (vocal_0) and variant 1 is female (vocal_1).
+//       Both vocal_0 and vocal_1 are registered separately but use the same Vocal class with different variant parameters.
 
 #ifndef INSTRUMENTS_H
 #define INSTRUMENTS_H
@@ -37,19 +64,6 @@ struct AutomationPoint {
     AutomationPoint(float t, float v) : time(t), value(v) {}
 };
 
-class SampleManager {
-public:
-    std::vector<float> getSample(const std::string& sampleName, float pitch, float volume, float duration) {
-        std::vector<float> samples(static_cast<size_t>(AudioUtils::DEFAULT_SAMPLE_RATE * duration));
-        for (size_t i = 0; i < samples.size(); ++i) {
-            float t = i / AudioUtils::DEFAULT_SAMPLE_RATE;
-            samples[i] = generateInstrumentWave(sampleName, t, pitch, duration) * volume;
-        }
-        return samples;
-    }
-};
-
-// some reason
 namespace AudioUtils {
     constexpr float DEFAULT_SAMPLE_RATE = 44100.0f; // max SDL2 supports
     constexpr int BUFFER_SIZE = 128;
@@ -108,7 +122,7 @@ namespace AudioUtils {
             return static_cast<float>(x) / max_val;
         }
 
-    public: // AI says latest best rng
+    public:
         RandomGenerator() : rd(), gen(rd()), dist(-1.0f, 1.0f) {
             fill_buffer();
         }
@@ -146,7 +160,6 @@ namespace AudioUtils {
     public:
         LowPassFilter(float cutoff = 1000.0f) : cutoffFreq(cutoff), x1(0.0f), y1(0.0f) {}
         float process(float input) {
-            // Assume DEFAULT_SAMPLE_RATE at playback
             float alpha = 1.0f / (1.0f + 2.0f * M_PI * cutoffFreq / DEFAULT_SAMPLE_RATE);
             float output = alpha * input + (1.0f - alpha) * y1;
             x1 = input; y1 = output;
@@ -162,7 +175,7 @@ namespace AudioUtils {
             : centerFreq(center), bandwidth(bw), x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {}
         float process(float input) {
             float w0 = 2.0f * M_PI * centerFreq / DEFAULT_SAMPLE_RATE;
-            float alpha = std::sin(w0) * std::sinh(std::log(2.0f) / 2. * bandwidth * w0 / std::sin(w0));
+            float alpha = std::sin(w0) * std::sinh(std::log(2.0f) / 2.0f * bandwidth * w0 / std::sin(w0));
             float b0 = alpha, b1 = 0.0f, b2 = -alpha;
             float a0 = 1.0f + alpha, a1 = -2.0f * std::cos(w0), a2 = 1.0f - alpha;
             float output = (b0 / a0) * input + (b1 / a0) * x1 + (b2 / a0) * x2 - (a1 / a0) * y1 - (a2 / a0) * y2;
@@ -228,7 +241,7 @@ namespace AudioUtils {
                 float fade = 1.0f - (t - (dur - fadeOutTime)) / fadeOutTime;
                 output *= std::max(0.0f, std::min(1.0f, fade));
             }
-            output = std::tanh(output * 1.2f) / 1.2f;
+            output = std::tanh(output * 1.5f) / 1.5f;
             float absOutput = std::abs(output);
             if (absOutput > maxGain) {
                 output *= maxGain / absOutput;
@@ -237,32 +250,6 @@ namespace AudioUtils {
         }
     };
 }
-
-// Include instrument headers
-#include "../instruments/kick.h"
-#include "../instruments/hihat.h"
-#include "../instruments/snare.h"
-#include "../instruments/clap.h"
-#include "../instruments/tom.h"
-#include "../instruments/subbass.h"
-#include "../instruments/syntharp.h"
-#include "../instruments/leadsynth.h"
-#include "../instruments/pad.h"
-#include "../instruments/cymbal.h"
-#include "../instruments/vocal.h"
-#include "../instruments/flute.h"
-#include "../instruments/trumpet.h"
-#include "../instruments/bass.h"
-#include "../instruments/guitar.h"
-#include "../instruments/saxophone.h"
-#include "../instruments/piano.h"
-#include "../instruments/violin.h"
-#include "../instruments/organ.h"
-#include "../instruments/cello.h"
-#include "../instruments/steelguitar.h"
-#include "../instruments/sitar.h"
-
-#define DEBUG_LOG 0
 
 namespace Instruments {
     struct FormantFilter {
@@ -273,9 +260,9 @@ namespace Instruments {
             : centerFreq(freq), bandwidth(bw), x1(0.0f), x2(0.0f), y1(0.0f), y2(0.0f) {
             updateCoefficients();
         }
-        void updateCoefficients() {
-            float r = std::exp(-M_PI * bandwidth / AudioUtils::DEFAULT_SAMPLE_RATE);
-            float theta = 2.0f * M_PI * centerFreq / AudioUtils::DEFAULT_SAMPLE_RATE;
+        void update(float freq, float bw) {
+            float r = std::exp(-M_PI * bw / AudioUtils::DEFAULT_SAMPLE_RATE);
+            float theta = 2.0f * M_PI * freq / AudioUtils::DEFAULT_SAMPLE_RATE;
             b0 = 1.0f - r; b1 = 0.0f; b2 = 0.0f;
             a1 = -2.0f * r * std::cos(theta); a2 = r * r;
         }
@@ -285,14 +272,21 @@ namespace Instruments {
             return output;
         }
         void setParameters(float freq, float bw) { centerFreq = freq; bandwidth = bw; updateCoefficients(); }
+        void updateCoefficients() {
+            float r = std::exp(-M_PI * bandwidth / AudioUtils::DEFAULT_SAMPLE_RATE);
+            float theta = 2.0f * M_PI * centerFreq / AudioUtils::DEFAULT_SAMPLE_RATE;
+            b0 = 1.0f - r; b1 = 0.0f; b2 = 0.0f;
+            a1 = -2.0f * r * std::cos(theta); a2 = r * r;
+        }
     };
 
     struct WaveguideState {
         std::vector<float> forwardWave, backwardWave;
-        size_t delayLineSize = 0;
+        size_t delayLineSize;
         size_t writePos = 0;
         float lastFreq = 0.0f;
         float pressure = 0.0f;
+        WaveguideState() : delayLineSize(0), writePos(0), lastFreq(0.0f), pressure(0.0f) {}
     };
 
     struct Note {
@@ -304,14 +298,19 @@ namespace Instruments {
     struct Section {
         std::string name;
         float startTime, endTime;
+        float progress;
+        std::string templateName;
     };
 
     struct Part {
         std::string instrument;
+        std::string sectionName;
         std::vector<Note> notes;
-        std::vector<AutomationPoint> panAutomation, volumeAutomation, reverbMixAutomation;
+        std::vector<std::pair<float, float>> panAutomation, volumeAutomation, reverbMixAirAutomation;
         float pan, reverbMix;
         bool useDistortion, useReverb;
+        float reverbDelay, reverbDecay, reverbMixFactor;
+        float distortionDrive, distortionThreshold;
     };
 
     struct Song {
@@ -338,96 +337,179 @@ namespace Instruments {
         PlaybackState() : currentTime(0.0f), currentSectionIdx(0), playing(false) {}
     };
 
-    // Starts an instrument from their folder /instruments/ function for dynamic instantiation
-    float generateInstrumentWave(const std::string& instrument, float t, float freq, float dur, float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE) {
-        if (instrument == "cello") {
-            Cello inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "tom") {
-            Tom inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "kick") {
-            Kick inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "hihat") {
-            HiHat inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "snare") {
-            Snare inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "clap") {
-            Clap inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "subbass") {
-            SubBass inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "syntharp") {
-            SynthArp inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "leadsynth") {
-            LeadSynth inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "pad") {
-            Pad inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "cymbal") {
-            Cymbal inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "vocal_0") {
-            Vocal inst(1.0f);
-            return inst.generateWave(t, freq, 0, dur, 0); // Default phoneme=0, depth=1 (male voice)
-		} else if (instrument == "vocal_1") {
-            Vocal inst(1.0f);
-            return inst.generateWave(t, freq, 0, dur, 1); // Default phoneme=0, depth=1 (female voice)
-        } else if (instrument == "flute") {
-            Flute inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "trumpet") {
-            Trumpet inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "bass") {
-            Bass inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "guitar") {
-            Guitar inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "saxophone") {
-            Saxophone inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "piano") {
-            Piano inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "violin") {
-            Violin inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "organ") {
-            Organ inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "steelguitar") {
-            SteelGuitar inst(1.0f);
-            return inst.generateWave(t, freq, dur);
-        } else if (instrument == "sitar") {
-            Sitar inst(1.0f);
-            return inst.generateWave(t, freq, dur);
+    // Instrument interface
+    class Instrument {
+    public:
+        virtual ~Instrument() = default;
+        virtual float generateWave(float t, float freq, float dur) = 0;
+        virtual float generateWave(float t, float freq, int phoneme, float dur, int variant) {
+            return 0.0f; // Default for non-vocal instruments
         }
-        return 0.0f;
+    };
+
+	// Registry for instrument factories
+	using InstrumentFactory = std::function<std::unique_ptr<Instrument>()>;
+	static std::map<std::string, InstrumentFactory>& getInstrumentRegistry() {
+    	static std::map<std::string, InstrumentFactory> registry;
+    	return registry;
+	}
+
+	// Register an instrument
+	template<typename T>
+	struct InstrumentRegistrar {
+    	InstrumentRegistrar(const std::string& name) {
+        	getInstrumentRegistry()[name] = []() -> std::unique_ptr<Instrument> {
+            	return std::unique_ptr<Instrument>(std::make_unique<T>(1.0f).release());
+        	};
+    	}
+	};
+
+    // Generate wave for any instrument
+    float generateInstrumentWave(const std::string& instrument, float t, float freq, float dur, int phoneme = 1, float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE) {
+        auto& registry = getInstrumentRegistry();
+        std::string instName = instrument;
+
+        // Normalize instrument name (remove file extension if present)
+        if (instName.find(".h") != std::string::npos) {
+            instName = instName.substr(0, instName.find(".h"));
+        }
+
+        // Check if instrument exists in registry
+        auto it = registry.find(instName);
+        if (it == registry.end()) {
+            std::cerr << "Unknown instrument: " << instName << std::endl;
+            return 0.0f;
+        }
+
+        // Create a new instance of the instrument
+        auto instrumentPtr = it->second();
+        if (!instrumentPtr) {
+            std::cerr << "Failed to create instrument: " << instName << std::endl;
+            return 0.0f;
+        }
+
+        // Handle vocal variants
+        if (instName == "vocal_0" || instName == "vocal_1") {
+            int variant = (instName == "vocal_0") ? 0 : 1;
+            return instrumentPtr->generateWave(t, freq, phoneme, dur, variant);
+        }
+
+        // Generate wave for non-vocal instruments
+        return instrumentPtr->generateWave(t, freq, dur);
     }
 
-    float interpolateAutomation(float t, const std::vector<AutomationPoint>& points, float defaultValue) {
+    float interpolateAutomation(float t, const std::vector<std::pair<float, float>>& points, float defaultValue) {
         if (points.empty()) return defaultValue;
-        if (t <= points.front().time) return points.front().value;
-        if (t >= points.back().time) return points.back().value;
+        if (t <= points.front().first) return points.front().second;
+        if (t >= points.back().first) return points.back().second;
         for (size_t i = 1; i < points.size(); ++i) {
-            if (t >= points[i-1].time && t < points[i].time) {
-                float t0 = points[i-1].time, t1 = points[i].time;
-                float v0 = points[i-1].value, v1 = points[i].value;
+            if (t >= points[i-1].first && t <= points[i].first) {
+                float t0 = points[i-1].first, t1 = points[i].first;
+                float v0 = points[i-1].second, v1 = points[i].second;
                 return v0 + (v1 - v0) * (t - t0) / (t1 - t0);
             }
         }
-    	return defaultValue;
+        return defaultValue;
     }
-    size_t countNotesInSection(const Song& song, const Section& section);
-    std::string getInstrumentsInSection(const Song& song, const Section& section);
+
+    size_t countNotesInSection(const Song& song, const Section& section) {
+        size_t count = 0;
+        for (const auto& part : song.parts) {
+            for (const auto& note : part.notes) {
+                if (note.startTime >= section.startTime && note.startTime < section.endTime) {
+                    ++count;
+                }
+            }
+        }
+        return count;
+    }
+
+    std::string getInstrumentsInSection(const Song& song, const Section& section) {
+        std::set<std::string> instruments;
+        for (const auto& part : song.parts) {
+            for (const auto& note : part.notes) {
+                if (note.startTime >= section.startTime && note.startTime < section.endTime) {
+                    instruments.insert(part.instrument);
+                    break;
+                }
+            }
+        }
+        std::string result;
+        for (const auto& inst : instruments) {
+            result += inst + ", ";
+        }
+        if (!result.empty()) result.resize(result.size() - 2);
+        return result.empty() ? "none" : result;
+    }
 }
+
+class SampleManager {
+public:
+    std::vector<float> getSample(const std::string& sampleName, float pitch, float volume, float duration, int phoneme = 1) {
+        std::vector<float> samples(static_cast<size_t>(AudioUtils::DEFAULT_SAMPLE_RATE * duration));
+        for (size_t i = 0; i < samples.size(); ++i) {
+            float t = i / AudioUtils::DEFAULT_SAMPLE_RATE;
+            samples[i] = Instruments::generateInstrumentWave(sampleName, t, pitch, duration, phoneme) * volume;
+        }
+        return samples;
+    }
+};
+
+// Include all instrument headers
+// Note: This list must be updated when new instruments are added
+#include "../instruments/kick.h"
+#include "../instruments/hihat.h"
+#include "../instruments/snare.h"
+#include "../instruments/clap.h"
+#include "../instruments/tom.h"
+#include "../instruments/subbass.h"
+#include "../instruments/syntharp.h"
+#include "../instruments/leadsynth.h"
+#include "../instruments/pad.h"
+#include "../instruments/cymbal.h"
+#include "../instruments/vocal.h"
+#include "../instruments/flute.h"
+#include "../instruments/trumpet.h"
+#include "../instruments/bass.h"
+#include "../instruments/guitar.h"
+#include "../instruments/saxophone.h"
+#include "../instruments/piano.h"
+#include "../instruments/violin.h"
+#include "../instruments/organ.h"
+#include "../instruments/cello.h"
+#include "../instruments/steelguitar.h"
+#include "../instruments/sitar.h"
+// Add new instruments here, e.g., #include "../instruments/tuba.h"
+
+// Register known instruments
+namespace Instruments {
+    Instruments::InstrumentRegistrar<Instruments::Kick> regKick("kick");
+    Instruments::InstrumentRegistrar<Instruments::HiHat> regHiHatOpen("hihat_open");
+	Instruments::InstrumentRegistrar<Instruments::HiHat> regHiHatClosed("hihat_closed");
+    Instruments::InstrumentRegistrar<Instruments::Snare> regSnare("snare");
+    Instruments::InstrumentRegistrar<Instruments::Clap> regClap("clap");
+    Instruments::InstrumentRegistrar<Instruments::Tom> regTom("tom");
+    Instruments::InstrumentRegistrar<Instruments::Subbass> regSubbass("subbass");
+    Instruments::InstrumentRegistrar<Instruments::SynthArp> regSynthArp("syntharp");
+    Instruments::InstrumentRegistrar<Instruments::LeadSynth> regLeadSynth("leadsynth");
+    Instruments::InstrumentRegistrar<Instruments::Pad> regPad("pad");
+    Instruments::InstrumentRegistrar<Instruments::Cymbal> regCymbal("cymbal");
+    Instruments::InstrumentRegistrar<Instruments::Vocal> regVocal0("vocal_0");
+    Instruments::InstrumentRegistrar<Instruments::Vocal> regVocal1("vocal_1");
+    Instruments::InstrumentRegistrar<Instruments::Flute> regFlute("flute");
+    Instruments::InstrumentRegistrar<Instruments::Trumpet> regTrumpet("trumpet");
+    Instruments::InstrumentRegistrar<Instruments::Bass> regBass("bass");
+    Instruments::InstrumentRegistrar<Instruments::Guitar> regGuitar("guitar");
+    Instruments::InstrumentRegistrar<Instruments::Saxophone> regSaxophone("saxophone");
+    Instruments::InstrumentRegistrar<Instruments::Piano> regPiano("piano");
+    Instruments::InstrumentRegistrar<Instruments::Violin> regViolin("violin");
+    Instruments::InstrumentRegistrar<Instruments::Organ> regOrgan("organ");
+    Instruments::InstrumentRegistrar<Instruments::Cello> regCello("cello");
+    Instruments::InstrumentRegistrar<Instruments::SteelGuitar> regSteelGuitar("steelguitar");
+    Instruments::InstrumentRegistrar<Instruments::Sitar> regSitar("sitar");
+    // Add new instrument here, e.g., Instruments::InstrumentRegistrar<Instruments::Tuba> regTuba("tuba");
+}
+
+#define DEBUG_LOG 1
 
 #endif // INSTRUMENTS_H

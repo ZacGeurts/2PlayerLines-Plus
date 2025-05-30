@@ -7,31 +7,31 @@
 #ifndef LEADSYNTH_H
 #define LEADSYNTH_H
 
-// Sound tuned for bold, expressive, realistic lead synth with cutting attack and rich harmonics
+// Sound tuned for expressive lead synth with clear attack, rich harmonics, and balanced presence
 // Sample rate removed; assumed DEFAULT_SAMPLE_RATE at playback
 
 #include "instruments.h"
 
 namespace Instruments {
 
-class LeadSynth {
+class LeadSynth : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::Reverb reverb;
     AudioUtils::LowPassFilter filter; // Low-pass with resonance for tonal shaping
     AudioUtils::RandomGenerator rng;
-    float gain; // 1.0f is 100% volume
+    float gain; // 0.6f for balanced volume
 
 public:
-    LeadSynth(float gain = 1.0f)
+    LeadSynth(float gain = 0.6f)
         : protector(0.005f, 0.9f), // Smooth fade, high gain limit
-          reverb(0.12f, 0.6f, 0.35f), // Spacious ambiance for lead presence
-          filter(2500.0f), // Bright, resonant tone
+          reverb(0.12f, 0.6f, 0.25f), // Moderate ambiance
+          filter(2000.0f), // Warm, clear tone
           rng(),
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         // Envelope: sharp for lead clarity, sustained for melodies
-        float attack = 0.003f, decay = 0.2f, sustain = 0.75f, release = 0.2f, env;
+        float attack = 0.003f, decay = 0.2f, sustain = 0.6f, release = 0.2f, env;
         if (t < attack) env = t / attack;
         else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
         else if (t < dur) env = sustain;

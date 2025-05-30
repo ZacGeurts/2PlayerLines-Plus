@@ -2,6 +2,8 @@
 // This is not free software and requires royalties for commercial use.
 // Royalties are required for songgen.cpp, songgen.h, instruments.h
 // The other linesplus code is free and cannot be resold.
+// Copyright (c) 2023 Zac Brown
+// Licensed under the MIT License
 // Interested parties can find my contact information at https://github.com/ZacGeurts
 
 #include "songgen.h"
@@ -21,33 +23,29 @@
 #include <SDL2/SDL.h>
 
 // Flag to handle program termination
-static volatile bool running = true;
+static volatile sig_atomic_t running = true;
 
 // Signal handler for Ctrl+C
-void handleSignal(int) {
+void handleSignal(int sig) {
     running = false;
+    SDL_Log("Received signal %d, shutting down...", sig);
 }
 
-// ./songgen without
+// ./songgen
 void printHelp() {
     std::cout << "Generates songs\n";
-    std::cout << "Examples:\n";
-    std::cout << "  ./songgen rock\n";
+    std::cout << "Usage:\n";
     std::cout << "  ./songgen jazz\n";
     std::cout << "  ./songgen song1.song\n";
     std::cout << " \n";
     std::cout << "Playback\n";
     std::cout << "  ./songgen song1.song\n";
-    std::cout << "  ./linesplus does musical song shuffle.\n";
-    std::cout << "  ./songgen  SDL2 8 channel 44100hz";
+	std::cout << "\n";
     std::cout << "Available genres:\n";
     std::cout << "  classical, jazz, pop, rock, techno, rap, blues, country, folk, reggae,\n";
     std::cout << "  metal, punk, disco, funk, soul, gospel, ambient, edm, latin, hiphop\n";
-    std::cout << "Usage:\n";
-    std::cout << "  ./songgen [genre]  # from currently now(); selectable genres. tbd, watch this space for updates.\n";
     std::cout << "\n";
-    std::cout << "./songgen song#.song numbers as you create them.\n";
-    std::cout << "rm song2.song to delete and remove song2.song\n";
+    std::cout << "Songgen numbers song#.song as you create them.\n";
 }
 
 std::string trim(const std::string& str) {
@@ -67,7 +65,7 @@ struct SongData {
     std::string scaleName, title, genres;
     std::vector<SongGen::Section> sections;
     std::vector<SongGen::Part> parts;
-    int channels; // Added to store channel count (2 for stereo, 6 for 5.1)
+    int channels;
 };
 
 SongData parseSongFile(const std::string& filename) {
@@ -81,14 +79,14 @@ SongData parseSongFile(const std::string& filename) {
         throw std::runtime_error("Song file is empty: " + filename);
     }
 
-    SongData song;
+    SongData song; // temporary settings - updates when song is loaded
     song.bpm = 120.0f;
     song.rootFreq = 440.0f;
     song.scaleName = "major";
     song.duration = 180.0f;
     song.channels = 8;
-    song.parts.reserve(7);
-    song.sections.reserve(9);
+    song.parts.reserve(20);
+    song.sections.reserve(20);
 
     std::string line;
     SongGen::Part currentPart;
@@ -245,7 +243,7 @@ SongData parseSongFile(const std::string& filename) {
 
     if (song.sections.empty()) {
         SDL_Log("No sections parsed, adding default section");
-        song.sections.emplace_back("Default", 0.0f, song.duration, 0.0f);
+        song.sections.emplace_back("Default", 0.0f, song.duration, 0.0f, "");
     }
     if (song.parts.empty()) {
         SDL_Log("No parts parsed, song will have no audio");
@@ -352,34 +350,25 @@ std::string getInstrumentsInSection(const SongData& song, const SongGen::Section
     return instrumentList.empty() ? "None" : instrumentList;
 }
 
-float getTailDuration(const std::string& instrument) {
-    if (instrument == "cymbal") return 1.5f;
-    if (instrument == "guitar") return 1.5f;
-    if (instrument == "syntharp") return 1.5f;
-    if (instrument == "subbass") return 1.5f;
-    if (instrument == "kick") return 1.5f;
-    if (instrument == "snare") return 1.5f;
-    if (instrument == "piano") return 1.5f;
-    if (instrument == "violin") return 1.5f;
-    if (instrument == "cello") return 1.5f;
-    if (instrument == "marimba") return 1.5f;
-    if (instrument == "steelguitar") return 1.5f;
-    if (instrument == "sitar") return 1.5f;
-    return 1.5f;
-}
-
 void audioCallback(void* userdata, Uint8* stream, int len) {
     PlaybackState* state = static_cast<PlaybackState*>(userdata);
     float* output = reinterpret_cast<float*>(stream);
     bool isStereo = state->song.channels == 2;
-    int numChannels = isStereo ? 2 : 6;
+    int numChannels = isStereo ? 2 : 8;
     int numSamples = len / sizeof(float) / numChannels;
-    float sampleRate = 44100.0f;
+    float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE;
 
     float fullDuration = state->song.sections.empty() ? state->song.duration : state->song.sections.back().endTime;
-    fullDuration += 5.0f;
+    fullDuration += 5.0f; // Add 5 seconds to the end of the song for notes to finish and for reverb/decay
 
-    std::fill(output, output + static_cast<size_t>(numSamples) * numChannels, 0.0f);
+    if (!state->playing || state->currentTime > fullDuration || !running) {
+        state->playing = false;
+        std::fill(output, output + numSamples * numChannels, 0.0f);
+        SDL_Log("Audio callback stopped: time=%.2f, duration=%.2f, running=%d", state->currentTime, fullDuration, running);
+        return;
+    }
+
+    std::fill(output, output + numSamples * numChannels, 0.0f);
 
     unsigned int numThreads = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(state->song.parts.size()));
     if (numThreads == 0) numThreads = 1;
@@ -388,6 +377,8 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
 
     auto processParts = [&](size_t startIdx, size_t endIdx, size_t threadIdx, float startTime) {
         std::vector<float> localOutput(static_cast<size_t>(numSamples) * numChannels, 0.0f);
+        size_t activeNoteCount = 0;
+
         for (size_t i = 0; i < static_cast<size_t>(numSamples); ++i) {
             float t = startTime + i / sampleRate;
             float L = 0.0f, R = 0.0f, C = 0.0f, LFE = 0.0f, Ls = 0.0f, Rs = 0.0f;
@@ -417,8 +408,7 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
 
                 while (nextIdx < part.notes.size() && part.notes[nextIdx].startTime <= t && active.size() < 16) {
                     const auto& note = part.notes[nextIdx];
-                    float tailDuration = getTailDuration(part.instrument);
-                    active.push_back({nextIdx, note.startTime, note.startTime + note.duration + tailDuration});
+                    active.push_back({nextIdx, note.startTime, note.startTime + note.duration});
                     ++nextIdx;
                 }
 
@@ -427,7 +417,7 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                     if (t <= it->endTime) {
                         float noteTime = t - note.startTime;
                         float sample;
-                        if (part.instrument == "vocal") {
+                        if (part.instrument == "vocal_0" || part.instrument == "vocal_1") {
                             sample = Instruments::generateInstrumentWave(
                                 part.instrument, noteTime, note.freq, note.duration, sampleRate);
                             sample *= (note.open ? 1.0f : 0.8f);
@@ -456,6 +446,7 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                         Ls += sample * surroundGain * sideWeight;
                         Rs += sample * surroundGain * sideWeight;
 
+                        ++activeNoteCount;
                         ++it;
                     } else {
                         it = active.erase(it);
@@ -476,6 +467,10 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 localOutput[i * 6 + 4] = std::max(-1.0f, std::min(1.0f, Ls));
                 localOutput[i * 6 + 5] = std::max(-1.0f, std::min(1.0f, Rs));
             }
+        }
+
+        if (activeNoteCount == 0 && threadIdx == 0) {
+            SDL_Log("No active notes at time %.2f", startTime);
         }
 
         std::lock_guard<std::mutex> lock(outputMutex);
@@ -513,7 +508,7 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     }
 
     for (auto& t : threads) {
-        t.join();
+        if (t.joinable()) t.join();
     }
 
     for (const auto& tOutput : threadOutputs) {
@@ -523,10 +518,25 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     }
 
     state->currentTime += numSamples / sampleRate;
+
+    // Debug output to check if samples are being generated
+    float maxSample = 0.0f;
+    for (int i = 0; i < numSamples * numChannels; ++i) {
+        maxSample = std::max(maxSample, std::abs(output[i]));
+    }
+    if (maxSample > 0.0f) {
+        SDL_Log("Generated %d samples at time %.2f, max amplitude: %.4f", numSamples, state->currentTime, maxSample);
+    }
 }
 
 void playSong(const std::string& filename, bool forceStereo) {
-    SongData song = parseSongFile(filename);
+    SongData song;
+    try {
+        song = parseSongFile(filename);
+    } catch (const std::exception& e) {
+        SDL_Log("Failed to parse song file: %s", e.what());
+        return;
+    }
 
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0) {
         SDL_Log("SDL initialization failed: %s", SDL_GetError());
@@ -534,25 +544,26 @@ void playSong(const std::string& filename, bool forceStereo) {
     }
 
     signal(SIGINT, handleSignal);
+    signal(SIGTERM, handleSignal);
 
-    SDL_AudioSpec spec;
-    SDL_zero(spec);
-    spec.freq = 44100;
-    spec.format = AUDIO_F32;
-    spec.channels = forceStereo ? 2 : 8;
-    spec.samples = 1024;
-    spec.callback = audioCallback;
+    SDL_AudioSpec want, have;
+    SDL_zero(want);
+    want.freq = 44100;
+    want.format = AUDIO_F32;
+    want.channels = forceStereo ? 2 : 6; // Try 5.1, fallback to stereo
+    want.samples = 1024;
+    want.callback = audioCallback;
 
-    song.channels = spec.channels;
+    song.channels = want.channels;
     PlaybackState state(song);
-    spec.userdata = &state;
+    want.userdata = &state;
 
-    SDL_AudioDeviceID device = SDL_OpenAudioDevice(nullptr, 0, &spec, nullptr, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
+    SDL_AudioDeviceID device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
     if (device == 0 && !forceStereo) {
         SDL_Log("Failed to open 5.1 audio device: %s, attempting stereo", SDL_GetError());
-        spec.channels = 2;
+        want.channels = 2;
         song.channels = 2;
-        device = SDL_OpenAudioDevice(nullptr, 0, &spec, nullptr, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
+        device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
     }
     if (device == 0) {
         SDL_Log("Failed to open audio device: %s", SDL_GetError());
@@ -560,19 +571,24 @@ void playSong(const std::string& filename, bool forceStereo) {
         return;
     }
 
-    SDL_Log("Playing song %s with %d channels", filename.c_str(), spec.channels);
+    SDL_Log("Playing song %s with %d channels", filename.c_str(), have.channels);
     SDL_PauseAudioDevice(device, 0);
 
+    const Uint32 timeout = SDL_GetTicks() + static_cast<Uint32>(song.duration * 1000.0f + 10000); // 10s buffer
     SDL_Event event;
-    while (state.playing && running) {
+    while (state.playing && running && SDL_GetTicks() < timeout) {
+        SDL_PumpEvents(); // Ensure signals are processed
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
                 running = false;
+                SDL_Log("User requested exit");
             }
         }
-        SDL_Delay(10);
+        SDL_Delay(10); // Prevent CPU hogging
     }
 
+    state.playing = false; // Ensure playback stops
+    SDL_PauseAudioDevice(device, 1);
     SDL_CloseAudioDevice(device);
     SDL_Quit();
     SDL_Log("Playback stopped: %s at timestamp %.2f", running ? "Song completed" : "User interrupted", state.currentTime);
@@ -648,7 +664,7 @@ int main(int argc, char* argv[]) {
         std::string genreStr(argv[1]);
         std::string genreStrUpper = genreStr;
         std::transform(genreStrUpper.begin(), genreStrUpper.end(), genreStrUpper.begin(), ::toupper);
-        generator.saveToFile(title, genreStrUpper, bpm, scale, rootFrequency, duration, parts, filename);
+        generator.saveToFile(title, genreStrUpper, bpm, scale, rootFrequency, duration, parts, sections, filename);
 
         std::ifstream checkFile(filename);
         if (!checkFile || checkFile.peek() == std::ifstream::traits_type::eof()) {

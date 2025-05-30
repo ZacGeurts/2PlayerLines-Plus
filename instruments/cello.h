@@ -14,7 +14,7 @@
 
 namespace Instruments {
 
-class Cello {
+class Cello : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::Reverb reverb;
     AudioUtils::LowPassFilter filter;
@@ -29,7 +29,7 @@ public:
           rng(),
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         // ADSR envelope for smooth bowing dynamics
         float attack = 0.05f, decay = 0.1f, sustain = 0.8f, release = 0.2f, env;
         if (t < attack) env = t / attack;

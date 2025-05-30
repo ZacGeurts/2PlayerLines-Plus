@@ -14,7 +14,7 @@
 
 namespace Instruments {
 
-class Snare {
+class Snare : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::Reverb reverb;
     AudioUtils::BandPassFilter filter; // Band-pass for snare rattle
@@ -29,7 +29,7 @@ public:
           rng(),
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         // Envelope: tight for standard hit, slightly longer for looser sound
         float decay = dur < 0.15f ? 0.1f : 0.2f; // Tight: 100ms, Loose: 200ms
         float attack = 0.001f, sustain = 0.0f, release = 0.02f, env;

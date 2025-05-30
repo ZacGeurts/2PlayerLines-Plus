@@ -14,7 +14,7 @@
 
 namespace Instruments {
 
-class Kick {
+class Kick : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::Reverb reverb;
     AudioUtils::LowPassFilter filter;
@@ -29,7 +29,7 @@ public:
           rng(),
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         // ADSR envelope for punchy dynamics
         float attack = 0.005f, decay = 0.15f, sustain = 0.0f, release = 0.05f, env;
         if (t < attack) env = t / attack;

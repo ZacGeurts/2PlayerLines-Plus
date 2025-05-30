@@ -14,7 +14,7 @@
 
 namespace Instruments {
 
-class HiHat {
+class HiHat : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::Reverb reverb;
     AudioUtils::HighPassFilter filter; // High-pass for metallic clarity
@@ -29,7 +29,7 @@ public:
           rng(),
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         // Envelope: short for closed, longer for open hi-hat
         float decay = dur < 0.1f ? 0.05f : 0.3f; // Closed: 50ms, Open: 300ms
         float attack = 0.002f, sustain = 0.0f, release = 0.01f, env;

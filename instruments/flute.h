@@ -7,61 +7,64 @@
 #ifndef FLUTE_H
 #define FLUTE_H
 
-// ai can modify this file as long as float generateWave(float t, float freq, float dur) { } remains true
-// tell it how it should sound better by comparing it to videos you listen to.
+// Sound tuned for lyrical, breathy concert flute with pure tone and subtle vibrato
+// Sample rate assumed DEFAULT_SAMPLE_RATE at playback
 
 #include "instruments.h"
 
 namespace Instruments {
 
-class Flute {
+class Flute : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::RandomGenerator rng;
     AudioUtils::BandPassFilter breathFilter;
     AudioUtils::Reverb reverb;
     AudioUtils::HighPassFilter filter;
-    float gain; // 2.0f is 200% volume
-    float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE; // 44100 default is max supported SDL2.
+    float gain; // 1.5f for balanced volume
 
 public:
-    Flute(float gain = 2.0f, float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE)
-        : protector(0.005f, 0.9f),
-          breathFilter(1600.0f, 300.0f),
-          reverb(0.02f, 0.15f, 0.1f),
-          filter(200.0f, 0.707f),
+    Flute(float gain = 1.5f)
+        : protector(0.004f, 0.95f), // Smooth fade
+          rng(),
+          breathFilter(1800.0f, 400.0f), // Breathy tone
+          reverb(0.03f, 0.2f, 0.15f), // Light ambiance
+          filter(250.0f, 0.707f), // Remove low-end rumble
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
+        // Constrain frequency to flute range (C4 to C7)
         freq = std::max(261.63f, std::min(2093.0f, freq));
-        float attack = 0.015f, decay = 0.05f, sustain = 0.9f, release = 0.12f, env;
-        if (t < attack) {
-            env = t / attack;
-        } else if (t < attack + decay) {
-            env = 1.0f - (t - attack) / decay * (1.0f - sustain);
-        } else if (t < dur) {
-            env = sustain;
-        } else if (t < dur + release) {
-            env = sustain * std::exp(-(t - dur) / release);
-        } else {
-            env = 0.0f;
-        }
-        float modulatedFreq = freq;
+
+        // ADSR envelope for lyrical tone
+        float attack = 0.02f, decay = 0.06f, sustain = 0.85f, release = 0.1f, env;
+        if (t < attack) env = t / attack;
+        else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
+        else if (t < dur) env = sustain;
+        else env = sustain * std::exp(-(t - dur) / release);
+
+        // Vibrato: 5 Hz, ±0.3% after 0.05s
+        float vibrato = t > 0.05f ? 0.003f * std::sin(2.0f * M_PI * 5.0f * t) : 0.0f;
+        float modulatedFreq = freq * (1.0f + vibrato);
+
+        // Waveforms: pure sine with soft harmonics
         float harmonic1 = 1.0f * std::sin(2.0f * M_PI * modulatedFreq * t);
-        float harmonic2 = 0.25f * std::sin(2.0f * M_PI * 2.0f * modulatedFreq * t);
-        float harmonic3 = 0.08f * std::sin(2.0f * M_PI * 3.0f * modulatedFreq * t);
-        float output = (harmonic1 + harmonic2 + harmonic3) * 0.3f * env;
-        output = std::max(-0.8f, std::min(0.8f, output));
-        float breathNoise = breathFilter.process(rng.generateWhiteNoise()) * 0.008f * (t < 0.04f ? 0.9f : 0.15f);
-        breathNoise = std::max(-0.15f, std::min(0.15f, breathNoise));
-        float articulation = (t < 0.004f) ? breathFilter.process(rng.generateWhiteNoise()) * 0.02f * env : 0.0f;
-        articulation = std::max(-0.15f, std::min(0.15f, articulation));
-        output = output + breathNoise * env + articulation;
+        float harmonic2 = 0.15f * std::sin(2.0f * M_PI * 2.0f * modulatedFreq * t);
+        float harmonic3 = 0.05f * std::sin(2.0f * M_PI * 3.0f * modulatedFreq * t);
+
+        // Breath noise: more prominent for realism
+        float breathNoise = breathFilter.process(rng.generateWhiteNoise()) * 0.02f * (t < 0.05f ? 1.0f : 0.2f);
+
+        // Articulation: soft attack transient
+        float articulation = t < 0.005f ? breathFilter.process(rng.generateWhiteNoise()) * 0.03f * env : 0.0f;
+
+        // Combine
+        float output = env * (0.8f * (harmonic1 + harmonic2 + harmonic3) + breathNoise + articulation);
+
+        // Apply effects
         output = reverb.process(output);
         output = filter.process(output);
-        output = std::tanh(output * 0.7f);
-        output *= 0.45f;
-        output = std::max(-1.0f, std::min(1.0f, output));
         output = protector.process(output, t, dur);
+
         output *= gain;
         return output;
     }

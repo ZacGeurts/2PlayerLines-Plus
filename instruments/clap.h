@@ -14,7 +14,7 @@
 
 namespace Instruments {
 
-class Clap {
+class Clap : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::Reverb reverb;
     AudioUtils::BandPassFilter filter; // Band-pass for mid-frequency clap sound
@@ -29,7 +29,7 @@ public:
           rng(),
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         // Envelope: tight for single clap, longer for crowd-like sound
         float decay = dur < 0.1f ? 0.05f : 0.15f; // Tight: 50ms, Crowd: 150ms
         float attack = 0.001f, sustain = 0.0f, release = 0.02f, env;
@@ -48,7 +48,7 @@ public:
         if (t >= 0.004f && t < 0.009f) noise += 0.2f * rng.generateWhiteNoise() * (1.0f - (t - 0.004f) / 0.005f);
 
         // Tonal hint: subtle sine wave at 300 Hz for warmth
-        float sine = 0.1f * std::sin(2.0f * M_PI * 300.0f * t);
+        float sine = 0.1f * std::sin(2.0f * M_PI * M_PI * 300.0f * t);
 
         // Combine and apply envelope
         float output = env * (noise + sine);

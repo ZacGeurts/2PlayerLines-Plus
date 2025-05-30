@@ -7,55 +7,61 @@
 #ifndef PAD_H
 #define PAD_H
 
-// ai can modify this file as long as float generateWave(float t, float freq, float dur) { } remains true
-// tell it how it should sound better by comparing it to videos you listen to.
+// Sound tuned for lush, ambient synth pad with warm, evolving texture
+// Sample rate assumed DEFAULT_SAMPLE_RATE at playback
 
 #include "instruments.h"
 
 namespace Instruments {
 
-class Pad {
+class Pad : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::RandomGenerator rng;
     AudioUtils::LowPassFilter filter;
     AudioUtils::Reverb reverb;
-    float gain; // 0.25f is 25% volume
-    float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE; // 44100 default is max supported SDL2.
+    float gain; // 0.4f for balanced volume
+    float sampleRate; // DEFAULT_SAMPLE_RATE
 
 public:
-    Pad(float gain = 0.25f)
+    Pad(float gain = 0.4f)
         : protector(0.1f, 0.9f),
+          rng(),
           filter(800.0f),
           reverb(0.8f, 0.8f, 0.6f),
-          gain(gain) {}
+          gain(gain),
+          sampleRate(AudioUtils::DEFAULT_SAMPLE_RATE) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         freq = std::max(32.7f, std::min(2093.0f, freq));
-        float phase = 2.0f * M_PI * freq * t;
-        float detune1 = 1.005f;
-        float detune2 = 0.995f;
-        float osc1 = std::sin(phase);
-        float osc2 = std::sin(phase * detune1);
-        float osc3 = std::sin(phase * detune2);
-        float output = (osc1 + osc2 * 0.7f + osc3 * 0.7f) / 2.4f;
-        float harmonic2 = 0.5f * std::sin(2.0f * phase);
-        float harmonic3 = 0.3f * std::sin(3.0f * phase);
-        float harmonic4 = 0.2f * std::sin(4.0f * phase);
-        output += (harmonic2 + harmonic3 + harmonic4) * 0.4f;
-        float noise = rng.generatePinkNoise() * 0.05f;
-        output += noise;
-        output = filter.process(output);
-        float attack = 0.5f, decay = 0.2f, sustain = 0.8f, release = 1.0f, env;
+
+        // Envelope: slow attack for ambient swells
+        float attack = 0.8f, decay = 0.3f, sustain = 0.7f, release = 1.2f, env;
         if (t < attack) env = t / attack;
         else if (t < attack + decay) env = 1.0f - (t - attack) / decay * (1.0f - sustain);
         else if (t < dur) env = sustain;
-        else if (t < dur + release) env = sustain * std::exp(-(t - dur) / release);
-        else env = 0.0f;
-        output *= env;
+        else env = sustain * std::exp(-(t - dur) / release);
+
+        // Waveforms: detuned sawtooths for warmth
+        float detune1 = 1.005f, detune2 = 0.995f;
+        float saw1 = (std::fmod(freq * t, 1.0f) - 0.5f);
+        float saw2 = (std::fmod(freq * detune1 * t, 1.0f) - 0.5f) * 0.7f;
+        float saw3 = (std::fmod(freq * detune2 * t, 1.0f) - 0.5f) * 0.7f;
+
+        // Filter modulation: slow LFO
+        float filterMod = 800.0f + 200.0f * std::sin(2.0f * M_PI * 0.2f * t);
+        filter.setCutoff(filterMod);
+
+        // Combine with subtle noise
+        float output = (saw1 + saw2 + saw3) * 0.4f;
+        float noise = rng.generatePinkNoise() * 0.03f;
+        output += noise;
+
+        // Apply effects
+        output = filter.process(output);
         output = reverb.process(output);
-        output = std::max(-1.0f, std::min(1.0f, output));
         output = protector.process(output, t, dur);
-        output *= gain;
+
+        output *= env * gain;
         return output;
     }
 };

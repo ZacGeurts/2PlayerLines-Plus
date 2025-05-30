@@ -14,7 +14,7 @@
 
 namespace Instruments {
 
-class Tom {
+class Tom : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::Reverb reverb;
     AudioUtils::LowPassFilter filter; // Low-pass for warm, resonant tone
@@ -29,7 +29,7 @@ public:
           rng(),
           gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
+    float generateWave(float t, float freq, float dur) override {
         // Envelope: tight for short hits, longer for resonant toms
         float decay = dur < 0.3f ? 0.2f : 0.4f; // Tight: 200ms, Resonant: 400ms
         float attack = 0.002f, sustain = 0.0f, release = 0.03f, env;

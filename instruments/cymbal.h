@@ -7,47 +7,56 @@
 #ifndef CYMBAL_H
 #define CYMBAL_H
 
-// ai can modify this file as long as float generateWave(float t, float freq, float dur) { } remains true
-// tell it how it should sound better by comparing it to videos you listen to.
+// Sound tuned for shimmering, resonant crash cymbal with rich harmonics and natural decay
+// Sample rate assumed DEFAULT_SAMPLE_RATE at playback
 
 #include "instruments.h"
 
 namespace Instruments {
 
-class Cymbal {
+class Cymbal : public Instrument {
     AudioUtils::AudioProtector protector;
     AudioUtils::RandomGenerator rng;
     AudioUtils::HighPassFilter hpFilter;
     AudioUtils::Reverb reverb;
-    float gain; // 0.4f is 40% volume
-    float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE; // 44100 default is max supported SDL2.
+    float gain; // 0.6f for balanced volume
 
 public:
-    Cymbal(float gain = 0.4f, float sampleRate = AudioUtils::DEFAULT_SAMPLE_RATE)
-        : protector(0.008f, 0.85f),
-          hpFilter(500.0f, 0.707f),
-          reverb(0.1f, 0.5f, 0.35f),
-          gain(gain),
-          sampleRate(sampleRate) {}
+    Cymbal(float gain = 0.6f)
+        : protector(0.006f, 0.9f), // Smooth fade, high gain limit
+          rng(),
+          hpFilter(600.0f, 0.707f), // Clear high-end
+          reverb(0.15f, 0.6f, 0.4f), // Spacious ambiance
+          gain(gain) {}
 
-    float generateWave(float t, float freq, float dur) {
-        dur = std::clamp(dur, 0.1f, 1.5f);
-        freq = (freq > 0.0f) ? std::clamp(freq, 2000.0f, 10000.0f) : 6000.0f;
-        float env = std::exp(-5.0f * t / dur) * (1.0f + 0.3f * std::sin(6.0f * M_PI * t / dur));
+    float generateWave(float t, float freq, float dur) override {
+        // Constrain duration and frequency
+        dur = std::clamp(dur, 0.2f, 2.0f);
+        freq = (freq > 0.0f) ? std::clamp(freq, 3000.0f, 12000.0f) : 8000.0f;
+
+        // Envelope: smooth decay with slight swell
+        float env = std::exp(-4.0f * t / dur) * (1.0f + 0.4f * std::sin(8.0f * M_PI * t / dur));
         env = std::max(0.0f, env);
-        float whiteNoise = rng.generateWhiteNoise() * 0.6f;
-        float pinkNoise = rng.generatePinkNoise() * 0.4f;
-        float pitchBend = 1.0f + 0.005f * std::sin(2.0f * M_PI * 0.5f * t);
-        float metallic1 = std::sin(2.0f * M_PI * freq * pitchBend * t) * 0.25f * std::exp(-3.5f * t / dur);
-        float metallic2 = std::sin(2.0f * M_PI * (freq * 1.5f) * pitchBend * t) * 0.2f * std::exp(-4.5f * t / dur);
-        float metallic3 = std::sin(2.0f * M_PI * (freq * 2.0f) * pitchBend * t) * 0.15f * std::exp(-5.5f * t / dur);
-        float filterMod = 0.6f + 0.4f * std::exp(-4.0f * t / dur);
-        float noise = (whiteNoise + pinkNoise) * filterMod;
-        float output = env * (0.7f * noise + 0.3f * (metallic1 + metallic2 + metallic3));
+
+        // Noise: balanced white and pink for shimmer and body
+        float whiteNoise = rng.generateWhiteNoise() * 0.5f;
+        float pinkNoise = rng.generatePinkNoise() * 0.5f;
+        float noise = (whiteNoise + pinkNoise) * (0.7f + 0.3f * std::exp(-3.0f * t / dur));
+
+        // Metallic harmonics: inharmonic ratios for cymbal character
+        float pitchBend = 1.0f + 0.003f * std::sin(2.0f * M_PI * 0.3f * t);
+        float metallic1 = std::sin(2.0f * M_PI * freq * pitchBend * t) * 0.2f * std::exp(-2.5f * t / dur);
+        float metallic2 = std::sin(2.0f * M_PI * (freq * 1.618f) * pitchBend * t) * 0.15f * std::exp(-3.0f * t / dur);
+        float metallic3 = std::sin(2.0f * M_PI * (freq * 2.414f) * pitchBend * t) * 0.1f * std::exp(-3.5f * t / dur);
+
+        // Combine
+        float output = env * (0.6f * noise + 0.4f * (metallic1 + metallic2 + metallic3));
+
+        // Apply effects
         output = hpFilter.process(output);
         output = reverb.process(output);
-        if (std::abs(output) > 0.8f) output *= 0.8f / std::abs(output);
         output = protector.process(output, t, dur);
+
         output *= gain;
         return output;
     }
