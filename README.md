@@ -35,9 +35,9 @@ Tell the AI that these worked for C++ 17 and only SDL2 and could stand to use an
 Update the files to compile for Windows.<BR />
 Download from the $${\color{green}Green}$$ code button above or:<BR />
 `git clone https://github.com/ZacGeurts/2PlayerLines-Plus`<BR />
-`cd 2PlayerLines-Plus` - I press 2 and tab key.<BR />
+`cd 2PlayerLines-Plus`
 <BR />
-`make` to build all files.<BR />
+`make` from the 2PlayerLines-Plus folder to build all files.<BR />
 <BR />
 Type `make linesplus` requires a ./songgen build, or it errors.<BR />
 Type `make songgen` if you just want to use ./songgen build. Only uses SDL2<BR />
