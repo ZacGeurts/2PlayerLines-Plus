@@ -2,7 +2,6 @@
 #define CIRCLE_H
 
 #include "types.h"
-#include "audio.h"
 #include <vector>
 #include <random>
 #include <chrono>
