@@ -1,5 +1,4 @@
 #include "ai.h"
-#include "game.h" // Add to resolve incomplete Game type
 #include <cmath>
 #include <algorithm>
 #include <vector>
@@ -8,9 +7,10 @@
 #include <queue>
 #include <unordered_set>
 
-AI::AI(const GameConfig& config, Game& game)
+namespace Game { // Added namespace
+
+AI::AI(const GameConfig& config)
     : config(config),
-      game(&game),
       framebuffer(),
       drawableWidth(0),
       drawableHeight(0),
@@ -31,7 +31,7 @@ AI::~AI() {
 }
 
 void AI::startUpdate(Player& aiPlayer, const Player& opponent, const Collectible& collectible,
-                     const std::vector<Circle>& circles, float dt, std::mt19937& rng, Game& game,
+                     const std::vector<Circle>& circles, float dt, std::mt19937& rng,
                      const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, SDL_Color) {
     if (!modeEnabled || !aiPlayer.alive || aiPlayer.willDie) return;
 
@@ -42,7 +42,7 @@ void AI::startUpdate(Player& aiPlayer, const Player& opponent, const Collectible
     this->drawableWidth = drawableWidth;
     this->drawableHeight = drawableHeight;
     updateThread = std::thread(&AI::simulateControllerInput, this, std::ref(aiPlayer), std::ref(collectible),
-                              std::ref(circles), std::ref(opponent), dt, std::ref(rng), std::ref(game),
+                              std::ref(circles), std::ref(opponent), dt, std::ref(rng),
                               std::ref(framebuffer), drawableWidth, drawableHeight,
                               std::ref(leftTrigger), std::ref(rightTrigger), std::ref(aButton));
 }
@@ -71,11 +71,10 @@ void AI::applyUpdate(Player& aiPlayer) {
 
     float speed = config.PLAYER_SPEED; // Assumed 200.0
     Vec2 nextPos = aiPlayer.pos + newDir * speed * 0.008333f;
-    nextPos.x = std::max(config.AI_BERTH, std::min(nextPos.x, game->orthoWidth - config.AI_BERTH));
-    nextPos.y = std::max(config.AI_BERTH, std::min(nextPos.y, game->orthoHeight - config.AI_BERTH));
+    nextPos.x = std::max(config.AI_BERTH, std::min(nextPos.x, config.WIDTH - config.AI_BERTH));
+    nextPos.y = std::max(config.AI_BERTH, std::min(nextPos.y, config.HEIGHT - config.AI_BERTH));
 
     if (aButton && !flashUsed && aiPlayer.canUseNoCollision && !aiPlayer.isInvincible) {
-        game->activateNoCollision(&aiPlayer, currentTimeSec);
         flashUsed = true;
     }
 
@@ -83,9 +82,8 @@ void AI::applyUpdate(Player& aiPlayer) {
     bool hitOpponentHead = false;
     if (aiPlayer.hasMoved && !aiPlayer.isInvincible && !aiPlayer.spawnInvincibilityTimer) {
         aiPlayer.pos = nextPos;
-        game->checkCollision(&aiPlayer, nextPos, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
-        willDie = aiPlayer.willDie;
-        hitOpponentHead = aiPlayer.hitOpponentHead;
+        willDie = false; // Placeholder: Replace with actual collision check
+        hitOpponentHead = false; // Placeholder
     } else {
         aiPlayer.pos = nextPos;
         aiPlayer.hasMoved = true;
@@ -110,7 +108,7 @@ void AI::applyUpdate(Player& aiPlayer) {
 
 void AI::simulateControllerInput(const Player& aiPlayer, const Collectible& collectible,
                                 const std::vector<Circle>& circles, const Player& opponent,
-                                float dt, std::mt19937& rng, Game& game,
+                                float dt, std::mt19937& rng,
                                 const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight,
                                 float& leftTrigger, float& rightTrigger, bool& aButton) {
     leftTrigger = 0.0f;
@@ -129,8 +127,8 @@ void AI::simulateControllerInput(const Player& aiPlayer, const Collectible& coll
         return;
     }
 
-    Vec2 targetDir = calculateTargetDirection(aiPlayer, collectible, circles, opponent, rng, game, currentTimeSec,
-                                              framebuffer, drawableWidth, drawableHeight);
+    Vec2 targetDir = calculateTargetDirection(aiPlayer, collectible, circles, opponent, rng,
+                                             currentTimeSec, framebuffer, drawableWidth, drawableHeight);
 
     float angleDiff = std::acos(std::clamp(aiPlayer.direction.dot(targetDir), -1.0f, 1.0f));
     float cross = aiPlayer.direction.x * targetDir.y - aiPlayer.direction.y * targetDir.x;
@@ -157,9 +155,9 @@ float AI::heuristic(const Vec2& a, const Vec2& b) const {
     return (a - b).magnitude();
 }
 
-bool AI::isPositionSafe(const Vec2& pos, const std::vector<Circle>& circles, const Player& opponent, Game& game) {
-    if (pos.x < config.AI_BERTH || pos.x > game.orthoWidth - config.AI_BERTH ||
-        pos.y < config.AI_BERTH || pos.y > game.orthoHeight - config.AI_BERTH) {
+bool AI::isPositionSafe(const Vec2& pos, const std::vector<Circle>& circles, const Player& opponent) {
+    if (pos.x < config.AI_BERTH || pos.x > config.WIDTH - config.AI_BERTH ||
+        pos.y < config.AI_BERTH || pos.y > config.HEIGHT - config.AI_BERTH) {
         return false;
     }
 
@@ -176,9 +174,9 @@ bool AI::isPositionSafe(const Vec2& pos, const std::vector<Circle>& circles, con
     return true;
 }
 
-std::vector<Vec2> AI::findPathAStar(const Vec2& start, const Vec2& goal, const std::vector<Circle>& circles,
-                                    const Player& opponent, Game& game, const std::vector<unsigned char>& framebuffer,
-                                    int drawableWidth, int drawableHeight) {
+std::vector<Vec2> AI::findPathAStar(const Vec2& start, const Vec2& goal,
+                                    const std::vector<Circle>& circles, const Player& opponent,
+                                    const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
     const float GRID_SIZE = 6.0f; // Finer grid
     std::priority_queue<PathNode, std::vector<PathNode>, std::greater<PathNode>> openList;
     std::unordered_set<uint64_t> closedList;
@@ -218,9 +216,9 @@ std::vector<Vec2> AI::findPathAStar(const Vec2& start, const Vec2& goal, const s
 
         for (const auto& dir : directions) {
             Vec2 newPos = current.pos + dir;
-            if (!isPositionSafe(newPos, circles, opponent, game)) continue;
+            if (!isPositionSafe(newPos, circles, opponent)) continue;
 
-            std::string color = getPixelColor(newPos, game, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+            std::string color = getPixelColor(newPos, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
             if (color == "red" || color == "yellow" || color == "blue") continue;
 
             float gCost = current.gCost + dir.magnitude();
@@ -236,8 +234,9 @@ std::vector<Vec2> AI::findPathAStar(const Vec2& start, const Vec2& goal, const s
 
 Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& collectible,
                                  const std::vector<Circle>& circles, const Player& opponent,
-                                 std::mt19937& rng, Game& game, float currentTimeSec,
-                                 const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
+                                 std::mt19937& rng,
+                                 float currentTimeSec, const std::vector<unsigned char>& framebuffer,
+                                 int drawableWidth, int drawableHeight) {
     const float AI_BERTH = config.AI_BERTH;
     const float COLLECTIBLE_HALF_SIZE = config.COLLECTIBLE_SIZE / 2.0f;
     const float VISUAL_HALF_SIZE = collectible.size / 2.0f;
@@ -260,23 +259,23 @@ Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& col
         wallAvoidanceDir += Vec2(1.0f, 0.0f);
         wallDistance = std::min(wallDistance, aiPlayer.pos.x - AI_BERTH);
         nearWall = true;
-    } else if (aiPlayer.pos.x > game.orthoWidth - WALL_THRESHOLD) {
+    } else if (aiPlayer.pos.x > config.WIDTH - WALL_THRESHOLD) {
         wallAvoidanceDir += Vec2(-1.0f, 0.0f);
-        wallDistance = std::min(wallDistance, game.orthoWidth - aiPlayer.pos.x - AI_BERTH);
+        wallDistance = std::min(wallDistance, config.WIDTH - aiPlayer.pos.x - AI_BERTH);
         nearWall = true;
     }
     if (aiPlayer.pos.y < WALL_THRESHOLD) {
         wallAvoidanceDir += Vec2(0.0f, 1.0f);
         wallDistance = std::min(wallDistance, aiPlayer.pos.y - AI_BERTH);
         nearWall = true;
-    } else if (aiPlayer.pos.y > game.orthoHeight - WALL_THRESHOLD) {
+    } else if (aiPlayer.pos.y > config.HEIGHT - WALL_THRESHOLD) {
         wallAvoidanceDir += Vec2(0.0f, -1.0f);
-        wallDistance = std::min(wallDistance, game.orthoHeight - aiPlayer.pos.y - AI_BERTH);
+        wallDistance = std::min(wallDistance, config.HEIGHT - aiPlayer.pos.y - AI_BERTH);
         nearWall = true;
     }
 
     // A* pathfinding
-    std::vector<Vec2> path = findPathAStar(aiPlayer.pos, collectible.pos, circles, opponent, game, framebuffer, drawableWidth, drawableHeight);
+    std::vector<Vec2> path = findPathAStar(aiPlayer.pos, collectible.pos, circles, opponent, framebuffer, drawableWidth, drawableHeight);
     Vec2 toCollectible = (collectible.pos - aiPlayer.pos).normalized();
     Vec2 targetDir = toCollectible;
 
@@ -314,7 +313,7 @@ Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& col
     }
 
     // Forward raycast
-    RaycastResult forwardRay = raycastForward(aiPlayer, game, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+    RaycastResult forwardRay = raycastForward(aiPlayer, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
 
     // Pursue collectible if safe
     if (nearCollectible || (!forwardRay.centerLine.hasDanger || forwardRay.centerLine.greenVisible)) {
@@ -345,7 +344,7 @@ Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& col
         ).normalized();
 
         LineCheckResult line = checkLine(aiPlayer.pos + aiPlayer.direction * 10.0f, testDir, RAYCAST_RANGE,
-                                        aiPlayer.direction, game, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+                                        aiPlayer.direction, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
 
         if (!line.hasDanger || line.greenVisible) {
             float score = testDir.dot(toCollectible) * (line.greenVisible ? 30.0f : 1.0f) * (1.0f - line.distance / RAYCAST_RANGE);
@@ -357,8 +356,8 @@ Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& col
                        std::abs(testPos.y - collectible.pos.y) <= COLLECTIBLE_HALF_SIZE) {
                 score *= 15.0f;
             }
-            if (testPos.x < AI_BERTH * 2.0f || testPos.x > game.orthoWidth - AI_BERTH * 2.0f ||
-                testPos.y < AI_BERTH * 2.0f || testPos.y > game.orthoHeight - AI_BERTH * 2.0f) {
+            if (testPos.x < AI_BERTH * 2.0f || testPos.x > config.WIDTH - AI_BERTH * 2.0f ||
+                testPos.y < AI_BERTH * 2.0f || testPos.y > config.HEIGHT - AI_BERTH * 2.0f) {
                 score *= 0.1f;
             }
             if ((testPos - opponent.pos).magnitude() < OPPONENT_AVOIDANCE) {
@@ -394,8 +393,8 @@ Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& col
     ).normalized();
 }
 
-AI::RaycastResult AI::raycastForward(const Player& aiPlayer, Game& game, float currentTimeSec,
-                                     const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
+AI::RaycastResult AI::raycastForward(const Player& aiPlayer, float currentTimeSec,
+                                    const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) {
     RaycastResult result;
     const float ANGLE_OFFSET = M_PI / 18; // 10 degrees
     const float RAYCAST_RANGE = 700.0f;
@@ -403,8 +402,8 @@ AI::RaycastResult AI::raycastForward(const Player& aiPlayer, Game& game, float c
 
     Vec2 start = aiPlayer.pos + aiPlayer.direction * HEAD_OFFSET;
 
-    result.centerLine = checkLine(start, aiPlayer.direction, RAYCAST_RANGE, aiPlayer.direction, game, currentTimeSec,
-                                  framebuffer, drawableWidth, drawableHeight);
+    result.centerLine = checkLine(start, aiPlayer.direction, RAYCAST_RANGE, aiPlayer.direction,
+                                  currentTimeSec, framebuffer, drawableWidth, drawableHeight);
 
     float cosA = std::cos(-ANGLE_OFFSET);
     float sinA = std::sin(-ANGLE_OFFSET);
@@ -412,8 +411,8 @@ AI::RaycastResult AI::raycastForward(const Player& aiPlayer, Game& game, float c
         aiPlayer.direction.x * cosA - aiPlayer.direction.y * sinA,
         aiPlayer.direction.x * sinA + aiPlayer.direction.y * cosA
     ).normalized();
-    result.leftLine = checkLine(start, leftDir, RAYCAST_RANGE, aiPlayer.direction, game, currentTimeSec,
-                                framebuffer, drawableWidth, drawableHeight);
+    result.leftLine = checkLine(start, leftDir, RAYCAST_RANGE, aiPlayer.direction,
+                                currentTimeSec, framebuffer, drawableWidth, drawableHeight);
     result.leftDir = leftDir;
 
     cosA = std::cos(ANGLE_OFFSET);
@@ -422,8 +421,8 @@ AI::RaycastResult AI::raycastForward(const Player& aiPlayer, Game& game, float c
         aiPlayer.direction.x * cosA - aiPlayer.direction.y * sinA,
         aiPlayer.direction.x * sinA + aiPlayer.direction.y * cosA
     ).normalized();
-    result.rightLine = checkLine(start, rightDir, RAYCAST_RANGE, aiPlayer.direction, game, currentTimeSec,
-                                 framebuffer, drawableWidth, drawableHeight); // Fixed: drawableWidth, drawableHeight
+    result.rightLine = checkLine(start, rightDir, RAYCAST_RANGE, aiPlayer.direction,
+                                 currentTimeSec, framebuffer, drawableWidth, drawableHeight);
     result.rightDir = rightDir;
 
     if (config.ENABLE_DEBUG && (result.centerLine.hasDanger || result.leftLine.hasDanger || result.rightLine.hasDanger)) {
@@ -436,9 +435,9 @@ AI::RaycastResult AI::raycastForward(const Player& aiPlayer, Game& game, float c
     return result;
 }
 
-AI::LineCheckResult AI::checkLine(const Vec2& start, const Vec2& dir, float maxDistance, const Vec2& playerDir,
-                                  Game& game, float currentTimeSec, const std::vector<unsigned char>& framebuffer,
-                                  int drawableWidth, int drawableHeight) const {
+AI::LineCheckResult AI::checkLine(const Vec2& start, const Vec2& dir, float maxDistance,
+                                 const Vec2& playerDir, float currentTimeSec,
+                                 const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) const {
     LineCheckResult result;
     result.distance = maxDistance;
     result.hasDanger = false;
@@ -455,8 +454,8 @@ AI::LineCheckResult AI::checkLine(const Vec2& start, const Vec2& dir, float maxD
         Vec2 pos = start + normDir * distance;
 
         // Check wall collision
-        if (pos.x < config.AI_BERTH || pos.x > game.orthoWidth - config.AI_BERTH ||
-            pos.y < config.AI_BERTH || pos.y > game.orthoHeight - config.AI_BERTH) {
+        if (pos.x < config.AI_BERTH || pos.x > config.WIDTH - config.AI_BERTH ||
+            pos.y < config.AI_BERTH || pos.y > config.HEIGHT - config.AI_BERTH) {
             result.distance = distance;
             result.hasDanger = true;
             result.hitPos = pos;
@@ -465,7 +464,7 @@ AI::LineCheckResult AI::checkLine(const Vec2& start, const Vec2& dir, float maxD
         }
 
         // Check pixel color
-        std::string color = getPixelColor(pos, game, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
+        std::string color = getPixelColor(pos, currentTimeSec, framebuffer, drawableWidth, drawableHeight);
         if (color == "green") {
             result.greenVisible = true;
             result.distance = distance;
@@ -489,10 +488,10 @@ AI::LineCheckResult AI::checkLine(const Vec2& start, const Vec2& dir, float maxD
     return result;
 }
 
-std::string AI::getPixelColor(const Vec2& pos, Game& game, float currentTimeSec,
-                              const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) const {
-    float x_read = (pos.x / game.orthoWidth) * drawableWidth;
-    float y_read = ((game.orthoHeight - pos.y) / game.orthoHeight) * drawableHeight;
+std::string AI::getPixelColor(const Vec2& pos, float currentTimeSec,
+                             const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight) const {
+    float x_read = (pos.x / config.WIDTH) * drawableWidth;
+    float y_read = ((config.HEIGHT - pos.y) / config.HEIGHT) * drawableHeight;
     x_read = std::max(0.0f, std::min(x_read, static_cast<float>(drawableWidth - 1)));
     y_read = std::max(0.0f, std::min(y_read, static_cast<float>(drawableHeight - 1)));
 
@@ -509,16 +508,21 @@ std::string AI::getPixelColor(const Vec2& pos, Game& game, float currentTimeSec,
     unsigned char g = framebuffer[index + 1];
     unsigned char b = framebuffer[index + 2];
 
+    std::string color;
+    if (r == 0 && g == 0 && b == 0) color = "black";
+    else if (r == 0 && g == 255 && b == 0) color = "green";
+    else if (r == 255 && g == 0 && b == 255) color = "magenta";
+    else if (r == 0 && g == 0 && b == 255) color = "blue";
+    else if (r == 255 && g == 0 && b == 0) color = "red";
+    else if (r == 255 && g == 255 && b == 0) color = "yellow";
+    else color = "other";
+
     if (config.ENABLE_DEBUG) {
-        SDL_Log("getPixelColor: pos=(%f, %f), x_read=%f, y_read=%f, color=(%d, %d, %d)",
-                pos.x, pos.y, x_read, y_read, r, g, b);
+        SDL_Log("getPixelColor: pos=(%f, %f), x_read=%f, y_read=%f, color=(%d, %d, %d), result=%s",
+                pos.x, pos.y, x_read, y_read, r, g, b, color.c_str());
     }
 
-    if (r == 0 && g == 0 && b == 0) return "black";
-    if (r == 0 && g == 255 && b == 0) return "green";
-    if (r == 255 && g == 0 && b == 255) return "magenta";
-    if (r == 0 && g == 0 && b == 255) return "blue";
-    if (r == 255 && g == 0 && b == 0) return "red";
-    if (r == 255 && g == 255 && b == 0) return "yellow";
-    return "other";
+    return color;
 }
+
+} // End namespace Game

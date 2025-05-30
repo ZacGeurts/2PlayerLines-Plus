@@ -4,16 +4,16 @@
 #include "types.h"
 #include <random>
 
-class Game; // Changed from struct to class
+namespace Game { class Game; } // Forward declaration within Game namespace
 
 class CollectibleManager {
 public:
-    CollectibleManager(const GameConfig& config);
-    Collectible spawnCollectible(std::mt19937& rng, const Game& game) const;
-    bool checkCollectibleCollision(const Vec2& playerPos, const Collectible& collectible, const Game& game) const;
+    CollectibleManager(const Game::GameConfig& config);
+    Game::Collectible spawnCollectible(std::mt19937& rng, const Game::Game& game) const;
+    bool checkCollectibleCollision(const Game::Vec2& playerPos, const Game::Collectible& collectible, const Game::Game& game) const;
 
 private:
-    const GameConfig& config;
+    const Game::GameConfig& config;
 };
 
-#endif // COLLECTIBLE_H
+#endif

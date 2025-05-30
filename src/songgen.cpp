@@ -1,3 +1,4 @@
+// songgen.cpp
 // This is not free software and requires royalties for commercial use.
 // Royalties are required for songgen.cpp, songgen.h, instruments.h
 // The other linesplus code is free and cannot be resold.
@@ -27,25 +28,26 @@ void handleSignal(int) {
     running = false;
 }
 
+// ./songgen without
 void printHelp() {
     std::cout << "Generates songs\n";
     std::cout << "Examples:\n";
-    std::cout << "  songgen rock\n";
-    std::cout << "  songgen jazz\n";
-	std::cout << " \n";
-	std::cout << "Playback\n";
-    std::cout << "  songgen song1.song [--stereo]\n";
+    std::cout << "  ./songgen rock\n";
+    std::cout << "  ./songgen jazz\n";
+    std::cout << "  ./songgen song1.song\n";
+    std::cout << " \n";
+    std::cout << "Playback\n";
+    std::cout << "  ./songgen song1.song\n";
+    std::cout << "  ./linesplus does musical song shuffle.\n";
+    std::cout << "  ./songgen  SDL2 8 channel 44100hz";
     std::cout << "Available genres:\n";
     std::cout << "  classical, jazz, pop, rock, techno, rap, blues, country, folk, reggae,\n";
     std::cout << "  metal, punk, disco, funk, soul, gospel, ambient, edm, latin, hiphop\n";
     std::cout << "Usage:\n";
-    std::cout << "  ./songgen [genre]  # Generate a new song\n";
-    std::cout << "  ./songgen <filename>.song [--stereo]  # Play an existing song (5.1 or option stereo)\n";
-    std::cout << "  ./songgen                            # Show this help message\n";
+    std::cout << "  ./songgen [genre]  # from currently now(); selectable genres. tbd, watch this space for updates.\n";
     std::cout << "\n";
-    std::cout << "This makes song1.song if it does not exist then song2.song etc\n";
-    std::cout << "Missing song numbers are merely skipped.\n";
-	std::cout << "Tt will not affect playback with linesplus game if only song3.song exists.\n";
+    std::cout << "./songgen song#.song numbers as you create them.\n";
+    std::cout << "rm song2.song to delete and remove song2.song\n";
 }
 
 std::string trim(const std::string& str) {
@@ -80,12 +82,11 @@ SongData parseSongFile(const std::string& filename) {
     }
 
     SongData song;
-    // Initialize with default values in case fields are missing (legacy files)
     song.bpm = 120.0f;
     song.rootFreq = 440.0f;
     song.scaleName = "major";
     song.duration = 180.0f;
-    song.channels = 6;
+    song.channels = 8;
     song.parts.reserve(7);
     song.sections.reserve(9);
 
@@ -119,8 +120,6 @@ SongData parseSongFile(const std::string& filename) {
                 }
             } else if (token == "Scale:") {
                 ss >> song.scaleName;
-                // Validate scale against known scales (optional, assuming scales map exists)
-                // Example: if (scales.find(song.scaleName) == scales.end()) { /* handle invalid scale */ }
             } else if (token == "RootFrequency:") {
                 ss >> song.rootFreq;
                 if (!std::isfinite(song.rootFreq) || song.rootFreq <= 0.0f) {
@@ -244,7 +243,6 @@ SongData parseSongFile(const std::string& filename) {
     }
     in.close();
 
-    // Validate parsed data
     if (song.sections.empty()) {
         SDL_Log("No sections parsed, adding default section");
         song.sections.emplace_back("Default", 0.0f, song.duration, 0.0f);
@@ -261,7 +259,6 @@ SongData parseSongFile(const std::string& filename) {
         song.genres = "Unknown";
     }
 
-    // Validate scaleName against known scales
     static const std::set<std::string> validScales = {
         "major", "minor", "dorian", "mixolydian", "blues", "pentatonic_minor",
         "harmonic_minor", "whole_tone", "chromatic"
@@ -355,34 +352,20 @@ std::string getInstrumentsInSection(const SongData& song, const SongGen::Section
     return instrumentList.empty() ? "None" : instrumentList;
 }
 
-float interpolateAutomation(float t, const std::vector<std::pair<float, float>>& automation, float defaultValue) {
-    if (automation.empty()) return defaultValue;
-    if (t <= automation.front().first) return automation.front().second;
-    if (t >= automation.back().first) return automation.back().second;
-    for (size_t i = 1; i < automation.size(); ++i) {
-        if (t >= automation[i-1].first && t < automation[i].first) {
-            float t0 = automation[i-1].first, t1 = automation[i].first;
-            float v0 = automation[i-1].second, v1 = automation[i].second;
-            return v0 + (v1 - v0) * (t - t0) / (t1 - t0);
-        }
-    }
-    return defaultValue;
-}
-
 float getTailDuration(const std::string& instrument) {
-    if (instrument == "cymbal") return 2.0f;
+    if (instrument == "cymbal") return 1.5f;
     if (instrument == "guitar") return 1.5f;
-    if (instrument == "syntharp") return 1.2f;
-    if (instrument == "subbass") return 0.8f;
-    if (instrument == "kick") return 0.5f;
-    if (instrument == "snare") return 0.6f;
-    if (instrument == "piano") return 2.0f;
-    if (instrument == "violin") return 2.5f;
-    if (instrument == "cello") return 3.0f;
-    if (instrument == "marimba") return 1.0f;
-    if (instrument == "steelguitar") return 1.8f;
-    if (instrument == "sitar") return 2.0f;
-    return 1.5f; // Default for other instruments
+    if (instrument == "syntharp") return 1.5f;
+    if (instrument == "subbass") return 1.5f;
+    if (instrument == "kick") return 1.5f;
+    if (instrument == "snare") return 1.5f;
+    if (instrument == "piano") return 1.5f;
+    if (instrument == "violin") return 1.5f;
+    if (instrument == "cello") return 1.5f;
+    if (instrument == "marimba") return 1.5f;
+    if (instrument == "steelguitar") return 1.5f;
+    if (instrument == "sitar") return 1.5f;
+    return 1.5f;
 }
 
 void audioCallback(void* userdata, Uint8* stream, int len) {
@@ -393,14 +376,11 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     int numSamples = len / sizeof(float) / numChannels;
     float sampleRate = 44100.0f;
 
-    // Determine full playback duration (last section's end time + 5-second fade-out)
     float fullDuration = state->song.sections.empty() ? state->song.duration : state->song.sections.back().endTime;
     fullDuration += 5.0f;
 
-    // Clear output buffer
     std::fill(output, output + static_cast<size_t>(numSamples) * numChannels, 0.0f);
 
-    // Thread-local storage for channel outputs
     unsigned int numThreads = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(state->song.parts.size()));
     if (numThreads == 0) numThreads = 1;
     std::vector<std::vector<float>> threadOutputs(numThreads, std::vector<float>(static_cast<size_t>(numSamples) * numChannels, 0.0f));
@@ -412,7 +392,6 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
             float t = startTime + i / sampleRate;
             float L = 0.0f, R = 0.0f, C = 0.0f, LFE = 0.0f, Ls = 0.0f, Rs = 0.0f;
 
-            // Apply fade-in and fade-out
             float fadeGain = 1.0f;
             if (t < 5.0f) {
                 fadeGain = t / 5.0f;
@@ -420,20 +399,19 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 fadeGain = (fullDuration - t) / 5.0f;
             }
 
-            // Process parts assigned to this thread
             for (size_t partIdx = startIdx; partIdx < endIdx && partIdx < state->song.parts.size(); ++partIdx) {
                 auto& part = state->song.parts[partIdx];
                 auto& nextIdx = state->nextNoteIndices[partIdx];
                 auto& active = state->activeNotes[partIdx];
 
-                float pan = interpolateAutomation(t, part.panAutomation, part.pan);
-                float volume = interpolateAutomation(t, part.volumeAutomation, 0.5f);
-                float reverbMix = interpolateAutomation(t, part.reverbMixAutomation, part.reverbMix);
+                float pan = Instruments::interpolateAutomation(t, part.panAutomation, part.pan);
+                float volume = Instruments::interpolateAutomation(t, part.volumeAutomation, 0.5f);
+                float reverbMix = Instruments::interpolateAutomation(t, part.reverbMixAutomation, part.reverbMix);
 
                 float leftGain = (pan <= 0.0f) ? 1.0f : 1.0f - pan;
                 float rightGain = (pan >= 0.0f) ? 1.0f : 1.0f + pan;
                 float surroundGain = 0.5f * (leftGain + rightGain);
-                float centerWeight = (part.instrument == "voice") ? 0.8f : 0.3f;
+                float centerWeight = (part.instrument == "vocal") ? 0.8f : 0.3f;
                 float lfeWeight = (part.instrument == "subbass" || part.instrument == "kick") ? 0.5f : 0.1f;
                 float sideWeight = (part.instrument == "guitar" || part.instrument == "syntharp") ? 0.6f : 0.4f;
 
@@ -448,12 +426,20 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                     const auto& note = part.notes[it->noteIndex];
                     if (t <= it->endTime) {
                         float noteTime = t - note.startTime;
-                        size_t sampleIndex = static_cast<size_t>(noteTime * sampleRate);
-                        const std::vector<float>& samples = Instruments::sampleManager.getSample(
-                            part.instrument, sampleRate, note.freq, note.duration, note.phoneme, note.open);
-                        float sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
-                        if (samples.empty()) {
-                            SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
+                        float sample;
+                        if (part.instrument == "vocal") {
+                            sample = Instruments::generateInstrumentWave(
+                                part.instrument, noteTime, note.freq, note.duration, sampleRate);
+                            sample *= (note.open ? 1.0f : 0.8f);
+                        } else {
+                            SampleManager sampleManager;
+                            const std::vector<float>& samples = sampleManager.getSample(
+                                part.instrument, note.freq, note.volume, note.duration);
+                            size_t sampleIndex = static_cast<size_t>(noteTime * sampleRate);
+                            sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
+                            if (samples.empty()) {
+                                SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
+                            }
                         }
                         sample *= note.volume * note.velocity * volume * fadeGain;
                         if (part.useDistortion) {
@@ -477,7 +463,6 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 }
             }
 
-            // Store in local output
             if (isStereo) {
                 float L_out = L + 0.707f * C + 0.707f * LFE + 0.5f * Ls;
                 float R_out = R + 0.707f * C + 0.707f * LFE + 0.5f * Rs;
@@ -493,14 +478,12 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
             }
         }
 
-        // Accumulate into thread output
         std::lock_guard<std::mutex> lock(outputMutex);
         for (size_t i = 0; i < static_cast<size_t>(numSamples) * numChannels; ++i) {
             threadOutputs[threadIdx][i] += localOutput[i];
         }
     };
 
-    // Handle section logging (single-threaded to avoid race conditions)
     for (size_t i = 0; i < static_cast<size_t>(numSamples); ++i) {
         float t = state->currentTime + i / sampleRate;
         if (t > fullDuration || !running) {
@@ -519,7 +502,6 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
         }
     }
 
-    // Launch threads
     std::vector<std::thread> threads;
     size_t partsPerThread = (state->song.parts.size() + numThreads - 1) / numThreads;
     for (size_t t = 0; t < numThreads; ++t) {
@@ -530,12 +512,10 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
         }
     }
 
-    // Join threads
     for (auto& t : threads) {
         t.join();
     }
 
-    // Sum thread outputs
     for (const auto& tOutput : threadOutputs) {
         for (size_t i = 0; i < static_cast<size_t>(numSamples) * numChannels; ++i) {
             output[i] += tOutput[i];
@@ -559,11 +539,11 @@ void playSong(const std::string& filename, bool forceStereo) {
     SDL_zero(spec);
     spec.freq = 44100;
     spec.format = AUDIO_F32;
-    spec.channels = forceStereo ? 2 : 6;
+    spec.channels = forceStereo ? 2 : 8;
     spec.samples = 1024;
     spec.callback = audioCallback;
 
-    song.channels = spec.channels; // Store channel count in song for callback
+    song.channels = spec.channels;
     PlaybackState state(song);
     spec.userdata = &state;
 
@@ -614,14 +594,12 @@ int main(int argc, char* argv[]) {
         {"latin", SongGen::LATIN}, {"hiphop", SongGen::HIPHOP}
     };
 
-    // Check if the first argument is a .song file
     if (argc >= 2 && argv[1][0] != '-' && std::string(argv[1]).find(".song") != std::string::npos) {
         bool forceStereo = (argc >= 3 && std::string(argv[2]) == "--stereo");
         playSong(argv[1], forceStereo);
         return 0;
     }
 
-    // Handle song generation
     std::vector<SongGen::Genre> genres;
     for (int i = 1; i < argc && genres.size() < 3; ++i) {
         std::string genreStr(argv[i]);
@@ -650,33 +628,28 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        // Generate the song with the first genre
         auto [title, parts, sections] = generator.generateSong(genres[0]);
 
-        // Set song parameters
-		float bpm = generator.getGenreBPM().find(genres[0]) != generator.getGenreBPM().end() ?
+        float bpm = generator.getGenreBPM().find(genres[0]) != generator.getGenreBPM().end() ?
             generator.getGenreBPM().at(genres[0]) : 120.0f;
-		std::string scale = "major";
-		if (generator.getGenreScales().find(genres[0]) != generator.getGenreScales().end() &&
-    		!generator.getGenreScales().at(genres[0]).empty()) {
-    		std::uniform_int_distribution<> dist(0, generator.getGenreScales().at(genres[0]).size() - 1);
-    		scale = generator.getGenreScales().at(genres[0])[dist(generator.getRNG())];
-		}
-        float rootFrequency = 440.0f; // Standard A4 pitch
-        float duration = 180.0f; // Default duration
-        // Optionally calculate duration from sections
+        std::string scale = "major";
+        if (generator.getGenreScales().find(genres[0]) != generator.getGenreScales().end() &&
+            !generator.getGenreScales().at(genres[0]).empty()) {
+            std::uniform_int_distribution<> dist(0, generator.getGenreScales().at(genres[0]).size() - 1);
+            scale = generator.getGenreScales().at(genres[0])[dist(generator.getRNG())];
+        }
+        float rootFrequency = 440.0f;
+        float duration = 180.0f;
         if (!sections.empty()) {
             duration = std::max_element(sections.begin(), sections.end(),
                 [](const auto& a, const auto& b) { return a.endTime < b.endTime; })->endTime;
         }
 
-        // Save the generated song to the file
         std::string genreStr(argv[1]);
         std::string genreStrUpper = genreStr;
         std::transform(genreStrUpper.begin(), genreStrUpper.end(), genreStrUpper.begin(), ::toupper);
-        generator.saveToFile(title, genreStrUpper, bpm, scale, rootFrequency, duration, parts, sections, filename);
+        generator.saveToFile(title, genreStrUpper, bpm, scale, rootFrequency, duration, parts, filename);
 
-        // Verify the generated file
         std::ifstream checkFile(filename);
         if (!checkFile || checkFile.peek() == std::ifstream::traits_type::eof()) {
             SDL_Log("Generated song file %s is empty or invalid", filename.c_str());

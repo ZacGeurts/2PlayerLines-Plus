@@ -6,8 +6,8 @@
 #include <sstream>
 #include <string>
 
-GameConfig loadConfig(const std::string& filename) {
-    GameConfig config;
+Game::GameConfig loadConfig(const std::string& filename) {
+    Game::GameConfig config;
     std::ifstream file(filename);
     std::string line;
 
@@ -33,7 +33,7 @@ GameConfig loadConfig(const std::string& filename) {
             else if (key == "AI_SPEED") config.AI_SPEED = value;
             else if (key == "TURN_SPEED") config.TURN_SPEED = value;
             else if (key == "AI_TURN_SPEED") config.AI_TURN_SPEED = value;
-			else if (key == "RAYCAST_STEP") config.RAYCAST_STEP = value;
+            else if (key == "RAYCAST_STEP") config.RAYCAST_STEP = value;
             else if (key == "CIRCLE_SPEED") config.CIRCLE_SPEED = value;
             else if (key == "CIRCLE_RADIUS") config.CIRCLE_RADIUS = value;
             else if (key == "COLLISION_CHECK_SIZE") config.COLLISION_CHECK_SIZE = value;
@@ -49,8 +49,8 @@ GameConfig loadConfig(const std::string& filename) {
             else if (key == "WINNING_SCORE") config.WINNING_SCORE = value;
             else if (key == "GREEN_SQUARE_POINTS") config.GREEN_SQUARE_POINTS = value;
             else if (key == "DEATH_POINTS") config.DEATH_POINTS = value;
-			else if (key == "INVINCIBILITY_DURATION") config.INVINCIBILITY_DURATION = value;
-			else if (key == "AI_BERTH") config.AI_BERTH = value;
+            else if (key == "INVINCIBILITY_DURATION") config.INVINCIBILITY_DURATION = value;
+            else if (key == "AI_BERTH") config.AI_BERTH = value;
             else if (key == "ENABLE_DEBUG") config.ENABLE_DEBUG = static_cast<bool>(value);
         }
     }
@@ -71,9 +71,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    GameConfig config = loadConfig("game.ini");
+    Game::GameConfig config = loadConfig("game.ini");
     try {
-        Game game(config);
+        Game::Game game(config); // Only config is passed
         game.run();
     } catch (const std::exception& e) {
         SDL_Log("Game error: %s", e.what());

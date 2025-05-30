@@ -1,10 +1,11 @@
 #include "render.h"
 #include "game.h"
+#include "font.h"
 #include <GL/gl.h>
 #include <chrono>
 #include <cmath>
 
-RenderManager::RenderManager(const GameConfig& config) : config(config) {}
+RenderManager::RenderManager(const Game::GameConfig& config) : config(config) {}
 
 void RenderManager::drawSquare(float x, float y, float size, const SDL_Color& color) const {
     glColor4ub(color.r, color.g, color.b, color.a);
@@ -28,9 +29,7 @@ void RenderManager::drawBlackCircle(float x, float y, float radius) const {
 }
 
 void RenderManager::drawCircle(float x, float y, float radius, const SDL_Color& color) const {
-    // Draw black circle to erase trails
     drawBlackCircle(x, y, radius);
-    // Draw colored circle (magenta or yellow)
     glColor4ub(color.r, color.g, color.b, color.a);
     glBegin(GL_TRIANGLE_FAN);
     glVertex2f(x, y);
@@ -41,13 +40,13 @@ void RenderManager::drawCircle(float x, float y, float radius, const SDL_Color& 
     glEnd();
 }
 
-void RenderManager::drawExplosion(const Explosion& explosion, float currentTimeSec) const {
+void RenderManager::drawExplosion(const Game::Explosion& explosion, float currentTimeSec) const {
     float elapsed = currentTimeSec - explosion.startTime;
     if (elapsed > config.EXPLOSION_DURATION) return;
     for (const auto& particle : explosion.particles) {
         float t = particle.time + elapsed / config.EXPLOSION_DURATION;
         if (t > 1.0f) continue;
-        Vec2 pos = particle.pos + particle.vel * t * config.EXPLOSION_MAX_RADIUS;
+        Game::Vec2 pos = particle.pos + particle.vel * t * config.EXPLOSION_MAX_RADIUS;
         drawSquare(pos.x - 2, pos.y - 2, 4, {255, 255, 255, 255});
     }
 }
@@ -55,8 +54,8 @@ void RenderManager::drawExplosion(const Explosion& explosion, float currentTimeS
 void RenderManager::drawText(const std::string& text, float x, float y, float squareSize, const SDL_Color& color) const {
     float currentX = x;
     for (char c : text) {
-        if (FONT.find(c) == FONT.end()) continue;
-        const auto& pattern = FONT.at(c);
+        if (Game::FONT.find(c) == Game::FONT.end()) continue;
+        const auto& pattern = Game::FONT.at(c);
         for (int row = 0; row < 5; ++row) {
             for (int col = 0; col < 5; ++col) {
                 if (pattern[row * 5 + col]) {
@@ -64,39 +63,34 @@ void RenderManager::drawText(const std::string& text, float x, float y, float sq
                 }
             }
         }
-        currentX += 6 * squareSize; // Fixed-width: 5 pixels + 1 pixel spacing
+        currentX += 6 * squareSize;
     }
 }
 
-void RenderManager::drawPlayer(const Player& player) const {
+void RenderManager::drawPlayer(const Game::Player& player) const {
     if (!player.alive) return;
     drawSquare(player.pos.x - config.PLAYER_SIZE / 2, player.pos.y - config.PLAYER_SIZE / 2, config.PLAYER_SIZE, player.color);
 }
 
-void RenderManager::drawTrail(const Player& player, int skipRecent) const {
+void RenderManager::drawTrail(const Game::Player& player, int skipRecent) const {
     if (!player.alive || player.trail.size() < 2) return;
-
     glColor4ub(player.color.r, player.color.g, player.color.b, player.color.a);
     glLineWidth(config.TRAIL_SIZE);
     glBegin(GL_LINES);
-
-    // Draw trail segments, checking for gaps (large distances)
     for (size_t i = 0; i < player.trail.size() - 1 - skipRecent; ++i) {
         const auto& current = player.trail[i];
         const auto& next = player.trail[i + 1];
-        // Skip drawing if points are too far apart (indicating a gap from clearTrails)
         float distance = (next - current).magnitude();
-        if (distance < 50.0f) { // Threshold to detect gaps
+        if (distance < 50.0f) {
             glVertex2f(current.x, current.y);
             glVertex2f(next.x, next.y);
         }
     }
-
     glEnd();
     glLineWidth(1.0f);
 }
 
-void RenderManager::drawCollectibleGreenSquare(const Collectible& collectible) const {
+void RenderManager::drawCollectibleGreenSquare(const Game::Collectible& collectible) const {
     drawSquare(collectible.pos.x - collectible.size / 2, collectible.pos.y - collectible.size / 2, collectible.size, {0, 255, 0, 255});
 }
 
@@ -113,7 +107,7 @@ void RenderManager::renderSplashScreen(GLuint texture) const {
     glDisable(GL_TEXTURE_2D);
 }
 
-void RenderManager::renderGame(const Game& game, float currentTimeSec) const {
+void RenderManager::renderGame(const Game::Game& game, float currentTimeSec) const {
     int drawableWidth, drawableHeight;
     SDL_GL_GetDrawableSize(game.window, &drawableWidth, &drawableHeight);
     glViewport(0, 0, drawableWidth, drawableHeight);
@@ -132,16 +126,15 @@ void RenderManager::renderGame(const Game& game, float currentTimeSec) const {
         for (const auto& particle : flash.particles) {
             float t = particle.time + elapsed / 0.3f;
             if (t > 1.0f) continue;
-            Vec2 pos = particle.pos + particle.vel * t * 20.0f;
-            drawSquare(pos.x - 2, pos.y - 2, 4, flash.SDLflashcolor);
+            Game::Vec2 pos = particle.pos + particle.vel * t * 20.0f;
+            drawSquare(pos.x - 2, pos.y - 2, 4, flash.color);
         }
     }
-    // Draw trails before circles to allow circles to overwrite them
     if (!game.player1.isInvincible) drawTrail(game.player1);
     if (!game.player2.isInvincible) drawTrail(game.player2);
     drawCollectibleGreenSquare(game.collectible);
     for (const auto& circle : game.circles) {
-        drawCircle(circle.pos.x, circle.pos.y, circle.radius, circle.SDLcirclecolor);
+        drawCircle(circle.pos.x, circle.pos.y, circle.radius, circle.color);
     }
     drawPlayer(game.player1);
     drawPlayer(game.player2);
@@ -159,7 +152,7 @@ void RenderManager::renderGame(const Game& game, float currentTimeSec) const {
     }
 }
 
-void RenderManager::renderGameOver(const Game& game, float orthoWidth, float orthoHeight) const {
+void RenderManager::renderGameOver(const Game::Game& game, float orthoWidth, float orthoHeight) const {
     float currentTimeSec = std::chrono::duration<float>(std::chrono::steady_clock::now().time_since_epoch()).count();
     int drawableWidth, drawableHeight;
     SDL_GL_GetDrawableSize(game.window, &drawableWidth, &drawableHeight);

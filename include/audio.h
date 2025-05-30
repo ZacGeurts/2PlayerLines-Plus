@@ -2,20 +2,21 @@
 #define AUDIO_H
 
 #include <SDL2/SDL.h>
-#include "types.h" // For GameConfig
 #include <mutex>
 #include <vector>
 #include <atomic>
 #include <thread>
-#include <csignal>
+#include <string>
 
 #ifdef _WIN32
-#include <windows.h>
+#include <processthreadsapi.h>
 #else
 #include <sys/types.h>
 #endif
+#include "types.h"
 
-// some reason
+namespace Game {
+
 class AudioManager {
 public:
     AudioManager(const GameConfig& config);
@@ -26,45 +27,49 @@ public:
     void playWinnerVoice(float currentTimeSec);
     void startBackgroundMusic();
     void stopBackgroundMusic();
+    void playInstrument(const std::string& instrument, float freq, float dur, float currentTimeSec); // Added
 
-// AudioManager handles it. Support for up to 8 speakers with SDL
 private:
     void playSongsSequentially();
+    void generateInstrumentSamples(std::vector<int16_t>& buffer, const std::string& instrument, float freq, float dur, float startTime, int channels); // Added
 
-    SDL_AudioDeviceID soundEffectDevice; // Stereo device for sound effects - boss said 8
-    SDL_AudioDeviceID musicDevice; // 8 too or maybe those too - o7 - 6-channel (5.1) or 2-channel stereo device for music
-    bool boopPlaying;
-    bool explosionPlaying;
-    bool laserZapPlaying;
-    bool winnerVoicePlaying; // should never be true
     struct AudioData {
-        SDL_AudioDeviceID deviceId;
-        const GameConfig* config; // sounds important - o7
-        AudioManager* manager;
-    } soundEffectData;
+        SDL_AudioDeviceID deviceId{0};
+        const GameConfig* config{nullptr};
+        AudioManager* manager{nullptr};
+    };
+
+    SDL_AudioDeviceID soundEffectDevice{0};
+    SDL_AudioDeviceID musicDevice{0};
+    bool boopPlaying{false};
+    bool explosionPlaying{false};
+    bool laserZapPlaying{false};
+    bool winnerVoicePlaying{false};
+    AudioData soundEffectData{0, nullptr, nullptr};
     const GameConfig& config;
     std::mutex soundEffectMutex;
-    bool hasReopenedSoundEffectDevice;
-    bool hasReopenedMusicDevice;
-    std::atomic<bool> musicPlaying;
-    std::thread musicThread; // CPU thread count;
-	int musicChannels; // boss said 8 - o7
+    bool hasReopenedSoundEffectDevice{false};
+    bool hasReopenedMusicDevice{false};
+    std::atomic<bool> musicPlaying{false};
+    std::thread musicThread;
+    int musicChannels{8};
+    int soundEffectChannels{8};
 #ifdef _WIN32
-    HANDLE songgenProcess;
+    HANDLE songgenProcess{nullptr};
 #else
-    pid_t songgenPid;
+    pid_t songgenPid{0};
 #endif
-    // Song playback members
-    std::vector<std::string> songFiles; // linesplus shuffles your songs
-    size_t currentSongIndex;
-    bool isFirstRun;
+    std::vector<std::string> songFiles;
+    size_t currentSongIndex{0};
+    bool isFirstRun{true};
 
     void generateBoopSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
-	void generateExplosionSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
+    void generateExplosionSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
     void generateLaserZapSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
-    void generateWinnerVoiceSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels); // delete this?
+    void generateWinnerVoiceSamples(std::vector<int16_t>& buffer, float startTime, int samples, int channels);
     bool reopenAudioDevice(SDL_AudioDeviceID& device, AudioData& data, const char* deviceName, int preferredChannels, int* obtainedChannels);
-
 };
+
+} // namespace Game
 
 #endif // AUDIO_H

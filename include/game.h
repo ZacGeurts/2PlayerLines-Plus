@@ -2,59 +2,45 @@
 #define GAME_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 #include <vector>
-#include <random>
+#include <memory>
 #include <chrono>
+#include <random>
 #include "types.h"
 #include "audio.h"
-#include "collectible.h"
-#include "collision.h"
-#include "render.h"
-#include "circle.h"
-#include "explosion.h"
-#include "input.h"
 #include "ai.h"
 
-// Forward declarations
-class PlayerManager;
+namespace Game {
+
 class AI;
 
 class Game {
-public:	
+public:
     Game(const GameConfig& config);
-    ~Game();	
+    ~Game();
     void run();
-    void checkCollision(Player* player, Vec2 nextPos, float currentTimeSec, const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight);
+    void update(float dt, float currentTimeSec);
+    void render(float currentTimeSec);
+    void reset();
+    void respawnCircles(float currentTimeSec);
+    void activateNoCollision(Player* player, float currentTimeSec, float dt);
+    void toggleFullscreen();
+    void resumeAfterWinner();
+    void checkCollision(Player* player, Vec2 nextPos, float currentTimeSec,
+                        const std::vector<unsigned char>& framebuffer, int drawableWidth, int drawableHeight, float dt);
     void handleGreenSquareCollection(Player* player, float currentTimeSec);
     void handlePlayerDeath(Player* player, float currentTimeSec);
-    void toggleFullscreen();
-    void reset();
-    void respawnCircles();
-    void activateNoCollision(Player* player, float currentTimeSec);
-    bool shouldRespawnPlayer(Player* player, float currentTimeSec) {
-        return !player->alive && (currentTimeSec - deathTime >= 2.0f);
-    }
-    Vec2 getSpawnPosition() {
-        return Vec2(orthoWidth / 2, orthoHeight / 2);
-    }
-    void resumeAfterWinner();
-    SDL_Color SDLaicolor = {255, 0, 0}; // red
-    SDL_Color SDLcirclecolor = {255, 0, 255}; // magenta
-    SDL_Color SDLplayercolor = {255, 0, 255}; // magenta
-    SDL_Color SDLexplosioncolor = {255, 0, 255}; // magenta
 
+    // Public members
+    const GameConfig& config;
+    AudioManager audioManager;
+    SDL_Color playerColor;
+    SDL_Color aiColor;
+    SDL_Color explosionColor;
     SDL_Window* window;
     SDL_GLContext glContext;
-	const GameConfig& config;
-    AudioManager audio;
-    CollectibleManager collectibleManager;
-    CollisionManager collisionManager;
-    RenderManager renderManager;
-    CircleManager circleManager;
-    ExplosionManager explosionManager;
-    InputManager inputManager;
-    PlayerManager* playerManager;
-    AI* ai;
+    std::unique_ptr<AI> ai;
     GLuint splashTexture;
     bool isSplashScreen;
     bool paused;
@@ -80,7 +66,7 @@ public:
     bool firstFrame;
     std::chrono::steady_clock::time_point lastCircleSpawn;
     std::chrono::steady_clock::time_point gameOverTime;
-    float lastWinnerVoiceTime;    
+    float lastWinnerVoiceTime;
     float deathTime;
     float orthoWidth;
     float orthoHeight;
@@ -88,13 +74,16 @@ public:
     float winningScore;
     float greenSquarePoints;
     float deathPoints;
-
-private:
     bool collectibleCollectedThisFrame;
     bool pendingCollectibleRespawn;
-    void update(float dt, float currentTimeSec);
-    void render();
+
+private:
+    Collectible spawnCollectible(std::mt19937& rng);
+    void spawnInitialCircle(std::mt19937& rng, float currentTimeSec);
+    void updateCircles(float dt, float currentTimeSec);
+    bool handleInput();
 };
 
-#include "player.h" // Include after Game class to avoid circular dependency
+} // namespace Game
+
 #endif // GAME_H

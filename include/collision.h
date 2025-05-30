@@ -3,17 +3,16 @@
 
 #include "types.h"
 
-// Forward declaration
-struct Game;
+namespace Game { class Game; } // Forward declaration
 
 class CollisionManager {
 public:
-    CollisionManager(const GameConfig& config);
-    bool checkPixelCollision(const Vec2& pos, const Game& game) const;
-    bool checkAreaCollision(const Vec2& center, int size, const Game& game) const;
+    CollisionManager(const Game::GameConfig& config);
+    bool checkPixelCollision(const Game::Vec2& pos, const Game::Game& game) const;
+    bool checkAreaCollision(const Game::Vec2& center, int size, const Game::Game& game) const;
 
 private:
-    const GameConfig& config;
+    const Game::GameConfig& config;
 };
 
 #endif // COLLISION_H

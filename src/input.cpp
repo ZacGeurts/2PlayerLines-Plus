@@ -1,5 +1,6 @@
 #include "input.h"
 #include "game.h"
+#include "ai.h"
 #include <chrono>
 #include <cstring>
 
@@ -8,7 +9,7 @@ InputManager::InputManager() : musicMuted(false) {
     std::memset(lastFrameKeys, 0, sizeof(lastFrameKeys));
 }
 
-bool InputManager::handleInput(SDL_GameController* controllers[], int controllerCount, bool gameOverScreen, bool& isSplashScreen, bool& paused, Game* game) {
+bool InputManager::handleInput(SDL_GameController* controllers[], int controllerCount, bool gameOverScreen, bool& isSplashScreen, bool& paused, Game::Game* game) {
     SDL_Event event;
     bool running = true;
     const Uint8* keyboardState = SDL_GetKeyboardState(nullptr);
@@ -39,10 +40,10 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                 case SDLK_m:
                     musicMuted = !musicMuted;
                     if (musicMuted) {
-                        game->audio.stopBackgroundMusic();
+                        game->audioManager.stopBackgroundMusic();
                         SDL_Log("Music muted (sent Ctrl+C to songgen)");
                     } else {
-                        game->audio.startBackgroundMusic();
+                        game->audioManager.startBackgroundMusic();
                         SDL_Log("Music unmuted (restarted songgen)");
                     }
                     break;
@@ -71,7 +72,7 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                     isSplashScreen = false;
                     game->firstFrame = true;
                     SDL_Log("Splash screen exited via controller button %d", button);
-					game->reset();
+                    game->reset();
                 }
             } else if (!gameOverScreen) {
                 if (button == SDL_CONTROLLER_BUTTON_X || button == SDL_CONTROLLER_BUTTON_Y ||
@@ -79,12 +80,12 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
                     paused = !paused;
                     SDL_Log("Game %s", paused ? "paused" : "unpaused");
                 }
-                Player* player = nullptr;
+                Game::Player* player = nullptr;
                 if (controllerIndex == 0) player = &game->player1;
                 else if (controllerIndex == 1) player = &game->player2;
                 if (player && button == SDL_CONTROLLER_BUTTON_A) {
                     float currentTimeSec = std::chrono::duration<float>(std::chrono::steady_clock::now().time_since_epoch()).count();
-                    game->activateNoCollision(player, currentTimeSec);
+                    game->activateNoCollision(player, currentTimeSec, 0.0f);
                 }
             }
         } else if (event.type == SDL_CONTROLLERBUTTONUP) {
@@ -101,7 +102,7 @@ bool InputManager::handleInput(SDL_GameController* controllers[], int controller
     return running;
 }
 
-void InputManager::handleAIModeInput(SDL_KeyboardEvent& keyEvent, Game* game) {
+void InputManager::handleAIModeInput(SDL_KeyboardEvent& keyEvent, Game::Game* game) {
     switch (keyEvent.keysym.sym) {
         case SDLK_1:            
             game->ai->setMode(true);

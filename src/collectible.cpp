@@ -3,21 +3,21 @@
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
 
-CollectibleManager::CollectibleManager(const GameConfig& config) : config(config) {}
+CollectibleManager::CollectibleManager(const Game::GameConfig& config) : config(config) {}
 
-Collectible CollectibleManager::spawnCollectible(std::mt19937& rng, const Game& game) const {
+Game::Collectible CollectibleManager::spawnCollectible(std::mt19937& rng, const Game::Game& game) const {
     std::uniform_real_distribution<float> distX(config.COLLECTIBLE_SIZE, game.orthoWidth - config.COLLECTIBLE_SIZE);
     std::uniform_real_distribution<float> distY(config.COLLECTIBLE_SIZE, game.orthoHeight - config.COLLECTIBLE_SIZE);
-    Collectible collectible{{distX(rng), distY(rng)}, config.GREEN_SQUARE_SIZE};
+    Game::Collectible collectible{{distX(rng), distY(rng)}, config.GREEN_SQUARE_SIZE};
     return collectible;
 }
 
-bool CollectibleManager::checkCollectibleCollision(const Vec2& playerPos, const Collectible& collectible, const Game& game) const {
+bool CollectibleManager::checkCollectibleCollision(const Game::Vec2& playerPos, const Game::Collectible& collectible, const Game::Game& game) const {
     float halfSize = config.COLLECTIBLE_SIZE / 2.0f;
     unsigned char pixel[3];
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
-            Vec2 checkPos(playerPos.x + dx, playerPos.y + dy);
+            Game::Vec2 checkPos(playerPos.x + dx, playerPos.y + dy);
             if (checkPos.x < collectible.pos.x - halfSize || checkPos.x > collectible.pos.x + halfSize ||
                 checkPos.y < collectible.pos.y - halfSize || checkPos.y > collectible.pos.y + halfSize) {
                 continue;
