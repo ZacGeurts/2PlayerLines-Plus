@@ -33,7 +33,7 @@ Type `make` to build `./linesplus` and `./songgen`. Needs OpenGL (Mesa) and SDL2
 Do not edit Makefile. Files are in the include and src folders.<BR />
 Tell the AI that these worked for C++ 17 and only SDL2 and could stand to use an update.<BR />
 Update the files to compile for Windows.<BR />
-Download from the $${\color{green}Green}$$ code button above or:<BR />
+Download from the ($${\color{green}Green}$$) code button above or:<BR />
 `git clone https://github.com/ZacGeurts/2PlayerLines-Plus`<BR />
 `cd 2PlayerLines-Plus`
 <BR />
