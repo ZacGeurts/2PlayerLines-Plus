@@ -47,8 +47,8 @@ Type `make clean` before rebuilding.<BR />
 Steer with controller triggers.<BR />
 M starts and stops the music. <BR />
 Survivor gets 3 points.<BR />
-$${\color{green}Green}$$ Squares are worth 1 point.<BR />
-$${\color{yellow}Circles}$$ are $${\color{yellow}Yellow}$$ and to be avoided.<BR />
+($${\color{green}Green}$$) Squares are worth 1 point.<BR />
+($${\color{yellow}Circles}$$) are ($${\color{yellow}Yellow}$$) and to be avoided.<BR />
 <BR />
 Do not collide with other lines or ($${\color{yellow}Yellow}$$) circles with your head.<BR />
 Bouncing circles erase lines and more appear rapidly with a short no collision ($${\color{magenta}Magenta}$$).<BR />
