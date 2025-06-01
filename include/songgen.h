@@ -19,7 +19,7 @@
 #include <sstream>
 #include <ctime>
 #include <SDL2/SDL.h>
-std::set<std::string> getInstruments(); // Explicit std::
+std::set<std::string> getInstruments();
 
 namespace SongGen {
     enum Genre {
@@ -77,343 +77,246 @@ namespace SongGen {
 
     // Getter for genreScales
     const std::map<Genre, std::vector<std::string>>& getGenreScales() const { return genreScales; }
-
-    // Getter for rng
-    std::mt19937& getRNG() { return rng; }
 	
-	std::tuple<std::string, std::vector<Part>, std::vector<Section>> generateSong(Genre g, float totalDur = -1.0f, float rootFreq = 440.0f, float bpm = 0.0f) {
-    ::SDL_Log("Starting song generation for genre %s, requested duration %.2f seconds", genreNames[g].c_str(), totalDur);
-    // Set random totalDur between 180 and 300 seconds if not specified
-    if (totalDur < 0.0f) {
-        std::uniform_real_distribution<float> durDist(180.0f, 300.0f);
-        totalDur = durDist(rng);
-        ::SDL_Log("No duration specified, randomly set to %.2f seconds", totalDur);
-    }
-    // Validate and clamp totalDur to 180–300 seconds
-    if (!std::isfinite(totalDur) || totalDur < 180.0f || totalDur > 300.0f) {
-        ::SDL_Log("Invalid totalDur %.2f, clamping to range 180.0–300.0 seconds", totalDur);
-        totalDur = std::clamp(totalDur, 180.0f, 300.0f);
-    }
-    if (!std::isfinite(rootFreq) || rootFreq <= 0.0f) {
-        ::SDL_Log("Invalid rootFreq %.2f, setting to 440.0 Hz", rootFreq);
-        rootFreq = 440.0f;
-    }
-    if (!std::isfinite(bpm) || bpm <= 0.0f) {
-        bpm = genreBPM[g];
-        ::SDL_Log("Invalid or unspecified BPM, using genre default %.2f", bpm);
-    }
+std::tuple<std::string, std::vector<Part>, std::vector<Section>> generateSong(Genre g, float rootFreq = 440.0f, float bpm = 0.0f) {
+    static thread_local AudioUtils::RandomGenerator rng;
 
-    sectionTemplates.clear();
-    chordProgressions.clear();
-    melodyMotif.clear();
+    // Set random song duration (3-5 minutes)
+    float totalDur = rng.generateUniform(180.0f, 300.0f);
+    ::SDL_Log("Song duration: %.2f seconds", totalDur);
 
-    std::string title = generateTitle();
-    std::vector<Part> parts;
-    std::vector<Section> sections;
-    float t = 0.0f;
-    float sectionDur = 32.0f * (60.0f / bpm);
-    if (sectionDur > totalDur / 6.0f) {
-        sectionDur = totalDur / 6.0f;
-        ::SDL_Log("Section duration adjusted to %.2f seconds to fit total duration", sectionDur);
-    }
+    // Select scale with weighted random selection
     const std::vector<std::string> scaleNames = genreScales[g];
-    std::string scaleName = scaleNames[rng() % scaleNames.size()];
-    ::SDL_Log("Selected scale: %s", scaleName.c_str());
+    std::string scaleName = "Major";
+    if (!scaleNames.empty()) {
+        std::vector<double> weights;
+        switch (g) {
+            case Genre::POP: weights = {0.50, 0.30, 0.10, 0.07, 0.03}; break; // Major, Minor, Major Pentatonic, Mixolydian, Dorian
+            case Genre::ROCK: weights = {0.40, 0.25, 0.20, 0.10, 0.05}; break; // Minor, Major, Minor Pentatonic, Major Pentatonic, Mixolydian
+            case Genre::JAZZ: weights = {0.30, 0.25, 0.20, 0.15, 0.07, 0.03}; break; // Dorian, Mixolydian, Minor, Major, Whole Tone, Altered
+            case Genre::CLASSICAL: weights = {0.40, 0.30, 0.15, 0.10, 0.05}; break; // Major, Minor, Harmonic Minor, Dorian, Phrygian
+            default: weights = std::vector<double>(scaleNames.size(), 1.0 / scaleNames.size()); break;
+        }
+        weights.resize(scaleNames.size(), weights.back());
+        scaleName = scaleNames[std::discrete_distribution<size_t>(weights.begin(), weights.end())(rng)];
+        ::SDL_Log("Selected scale: %s", scaleName.c_str());
+    }
 
-// Define genre-specific section plans
-std::vector<std::vector<std::tuple<std::string, std::string, float>>> sectionPlans;
+    // Select section plan
+    auto sectionPlan = getSectionPlans(g);
+    std::uniform_int_distribution<size_t> planDist(0, sectionPlan.size() - 1);
+    auto selectedPlan = sectionPlan[planDist(rng)];
+    ::SDL_Log("Selected section plan with %zu sections", selectedPlan.size());
 
-if (g == CLASSICAL || g == AMBIENT) {
-    sectionPlans = {
-        { // Sonata-like form
-            {"Intro", "Intro", 0.0f},
-            {"Exposition", "Verse", 0.2f},
-            {"Development", "Chorus", 0.4f},
-            {"Recapitulation", "Verse", 0.6f},
-            {"Coda", "Outro", 0.8f}
-        },
-        { // ABA form
-            {"Intro", "Intro", 0.0f},
-            {"PartA", "Verse", 0.25f},
-            {"PartB", "Chorus", 0.5f},
-            {"PartA2", "Verse", 0.75f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Through-composed
-            {"Intro", "Intro", 0.0f},
-            {"Section1", "Verse", 0.2f},
-            {"Section2", "Verse", 0.4f},
-            {"Section3", "Chorus", 0.6f},
-            {"Outro", "Outro", 0.8f}
-        }
-    };
-} else if (g == JAZZ || g == BLUES) {
-    sectionPlans = {
-        { // AABA form
-            {"Intro", "Intro", 0.0f},
-            {"Head1", "Verse", 0.2f},
-            {"Bridge", "Chorus", 0.4f},
-            {"Head2", "Verse", 0.6f},
-            {"Outro", "Outro", 0.8f}
-        },
-        { // 12-bar blues
-            {"Intro", "Intro", 0.0f},
-            {"Chorus1", "Chorus", 0.2f},
-            {"Solo", "Verse", 0.4f},
-            {"Chorus2", "Chorus", 0.6f},
-            {"Outro", "Outro", 0.8f}
-        },
-        { // Head-solo-head
-            {"Intro", "Intro", 0.0f},
-            {"Head1", "Verse", 0.2f},
-            {"Solo1", "Chorus", 0.4f},
-            {"Solo2", "Chorus", 0.6f},
-            {"Head2", "Verse", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        }
-    };
-} else if (g == POP || g == ROCK || g == COUNTRY) {
-    sectionPlans = {
-        { // Verse-chorus form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Verse2", "Verse", 0.6f},
-            {"Chorus2", "Chorus", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Verse-chorus with bridge
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Verse2", "Verse", 0.6f},
-            {"Bridge", "Bridge", 0.8f},
-            {"Chorus2", "Chorus", 0.9f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Extended pop form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.15f},
-            {"PreChorus1", "PreChorus", 0.3f},
-            {"Chorus1", "Chorus", 0.45f},
-            {"Verse2", "Verse", 0.6f},
-            {"Chorus2", "Chorus", 0.75f},
-            {"Outro", "Outro", 0.9f}
-        }
-    };
-} else if (g == EDM || g == TECHNO) {
-    sectionPlans = {
-        { // Build-drop form
-            {"Intro", "Intro", 0.0f},
-            {"Build1", "Verse", 0.2f},
-            {"Drop1", "Drop", 0.4f},
-            {"Break", "Verse", 0.6f},
-            {"Build2", "Verse", 0.8f},
-            {"Drop2", "Drop", 0.9f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Progressive form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Build", "PreChorus", 0.4f},
-            {"Drop1", "Drop", 0.6f},
-            {"Verse2", "Verse", 0.8f},
-            {"Drop2", "Drop", 0.9f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Minimal form
-            {"Intro", "Intro", 0.0f},
-            {"Section1", "Verse", 0.25f},
-            {"Break", "Chorus", 0.5f},
-            {"Section2", "Verse", 0.75f},
-            {"Outro", "Outro", 1.0f}
-        }
-    };
-} else if (g == METAL || g == PUNK) {
-    sectionPlans = {
-        { // Verse-chorus with breakdown
-            {"Intro", "Intro", 0.0f},
-            {"Riff1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Riff2", "Verse", 0.6f},
-            {"Breakdown", "Bridge", 0.8f},
-            {"Chorus2", "Chorus", 0.9f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Riff-based form
-            {"Intro", "Intro", 0.0f},
-            {"Riff1", "Verse", 0.2f},
-            {"Riff2", "Chorus", 0.4f},
-            {"Solo", "Verse", 0.6f},
-            {"Riff3", "Chorus", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        }
-    };
-} else if (g == GOSPEL || g == SOUL) {
-    sectionPlans = {
-        { // Verse-chorus with call-response
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Verse2", "Verse", 0.6f},
-            {"Chorus2", "Chorus", 0.8f},
-            {"CallResponse", "Bridge", 0.9f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Extended gospel form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Bridge", "Bridge", 0.6f},
-            {"Verse2", "Verse", 0.75f},
-            {"Chorus2", "Chorus", 0.9f},
-            {"Outro", "Outro", 1.0f}
-        }
-    };
-} else if (g == REGGAE) {
-    sectionPlans = {
-        { // Skank-based form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Verse2", "Verse", 0.6f},
-            {"Chorus2", "Chorus", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Dub-style form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"DubBreak", "Bridge", 0.6f},
-            {"Verse2", "Verse", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        }
-    };
-} else if (g == HIPHOP || g == RAP) {
-    sectionPlans = {
-        { // Verse-hook form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Hook1", "Chorus", 0.4f},
-            {"Verse2", "Verse", 0.6f},
-            {"Hook2", "Chorus", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Extended rap form
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Hook1", "Chorus", 0.35f},
-            {"Verse2", "Verse", 0.5f},
-            {"Bridge", "Bridge", 0.65f},
-            {"Hook2", "Chorus", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        }
-    };
-} else {
-    sectionPlans = {
-        { // Default pop structure
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Verse2", "Verse", 0.6f},
-            {"Chorus2", "Chorus", 0.8f},
-            {"Outro", "Outro", 1.0f}
-        },
-        { // Verse-chorus with bridge
-            {"Intro", "Intro", 0.0f},
-            {"Verse1", "Verse", 0.2f},
-            {"Chorus1", "Chorus", 0.4f},
-            {"Verse2", "Verse", 0.6f},
-            {"Bridge", "Bridge", 0.8f},
-            {"Chorus2", "Chorus", 0.9f},
-            {"Outro", "Outro", 1.0f}
-        }
-    };
-}
-
-// Randomly select a section plan
-std::vector<std::tuple<std::string, std::string, float>> sectionPlan = sectionPlans[rng() % sectionPlans.size()];
-
-// Estimate total duration of base plan
-float basePlanDur = 0.0f;
-for (const auto& [name, templateName, progress] : sectionPlan) {
-    float dur = (name == "Intro" || name == "Outro" || name.find("Coda") != std::string::npos) ? sectionDur * 0.5f : 
-                (name.find("Bridge") != std::string::npos || name.find("Break") != std::string::npos) ? sectionDur * 0.75f : 
-                sectionDur;
-    basePlanDur += dur;
-}
-
-// Extend plan dynamically based on totalDur
-std::vector<std::tuple<std::string, std::string, float>> extendedPlan = sectionPlan;
-if (totalDur > basePlanDur * 1.2f) {
-    int extraSections = static_cast<int>((totalDur - basePlanDur) / sectionDur);
+    // Extend plan if needed (20% chance to add sections)
+    std::vector<std::tuple<std::string, std::string, float>> extendedPlan = selectedPlan;
     int verseCount = 2, chorusCount = 2, bridgeCount = 0, soloCount = 0;
-    for (int i = 0; i < extraSections; ++i) {
-        float prob = rng() / static_cast<float>(rng.max());
-        if (prob < 0.4f) {
-            std::string name = (g == JAZZ || g == BLUES) ? "Head" + std::to_string(++verseCount) : 
-                              (g == METAL || g == PUNK) ? "Riff" + std::to_string(++verseCount) : 
-                              "Verse" + std::to_string(++verseCount);
-            extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.6f + i * 0.1f});
-        } else if (prob < 0.8f) {
-            std::string name = (g == EDM || g == TECHNO) ? "Drop" + std::to_string(++chorusCount) : 
-                              (g == HIPHOP || g == RAP) ? "Hook" + std::to_string(++chorusCount) : 
-                              "Chorus" + std::to_string(++chorusCount);
-            extendedPlan.insert(extendedPlan.end() - 1, {name, "Chorus", 0.8f + i * 0.1f});
-        } else if (prob < 0.9f && bridgeCount < 1) {
-            std::string name = (g == EDM || g == TECHNO) ? "Break" + std::to_string(++bridgeCount) : 
-                              (g == GOSPEL || g == SOUL) ? "CallResponse" : 
-                              "Bridge" + std::to_string(++bridgeCount);
-            extendedPlan.insert(extendedPlan.end() - 1, {name, "Bridge", 0.85f + i * 0.1f});
-        } else {
-            std::string name = (g == JAZZ || g == BLUES || g == METAL || g == ROCK) ? "Solo" + std::to_string(++soloCount) : 
-                              "Verse" + std::to_string(++verseCount);
-            extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.7f + i * 0.1f});
+    if (std::bernoulli_distribution(0.2f)(rng)) {
+        std::uniform_int_distribution<int> extraSections(1, 3);
+        for (int i = 0, n = extraSections(rng); i < n; ++i) {
+            float prob = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+            std::string name, templateName;
+            float progress = 0.6f + i * 0.1f;
+            if (prob < 0.4f) {
+                name = (g == Genre::JAZZ || g == Genre::BLUES) ? "Head" + std::to_string(++verseCount) :
+                       (g == Genre::METAL || g == Genre::PUNK) ? "Riff" + std::to_string(++verseCount) :
+                       "Verse" + std::to_string(++verseCount);
+                templateName = "Verse";
+            } else if (prob < 0.8f) {
+                name = (g == Genre::EDM || g == Genre::TECHNO) ? "Drop" + std::to_string(++chorusCount) :
+                       (g == Genre::HIPHOP || g == Genre::RAP) ? "Hook" + std::to_string(++chorusCount) :
+                       "Chorus" + std::to_string(++chorusCount);
+                templateName = "Chorus";
+                progress += 0.2f;
+            } else if (prob < 0.9f && bridgeCount < 1) {
+                name = (g == Genre::EDM || g == Genre::TECHNO) ? "Break" + std::to_string(++bridgeCount) :
+                       (g == Genre::GOSPEL || g == Genre::SOUL) ? "CallResponse" :
+                       "Bridge" + std::to_string(++bridgeCount);
+                templateName = "Bridge";
+                progress += 0.25f;
+            } else {
+                name = (g == Genre::JAZZ || g == Genre::BLUES || g == Genre::METAL || g == Genre::ROCK) ? "Solo" + std::to_string(++soloCount) :
+                       "Verse" + std::to_string(++verseCount);
+                templateName = "Verse";
+                progress += 0.1f;
+            }
+            extendedPlan.insert(extendedPlan.end() - 1, {name, templateName, std::min(progress, 0.9f)});
+            ::SDL_Log("Added section %s (template: %s, progress: %.2f)", name.c_str(), templateName.c_str(), progress);
         }
     }
+
+    // Generate sections
+    std::vector<Section> sections;
+    float currentTime = 0.0f;
+    for (const auto& [name, templateName, progress] : extendedPlan) {
+        float dur = (name == "Intro" || name == "Outro" || name.find("Coda") != std::string::npos) ? rng.generateUniform(7.0f, 10.0f) :
+                    (name.find("Bridge") != std::string::npos || name.find("Break") != std::string::npos) ? rng.generateUniform(16.0f, 32.0f) :
+                    rng.generateUniform(30.0f, 42.0f);
+        sections.push_back({name, templateName, currentTime, currentTime + dur});
+        currentTime += dur;
+        ::SDL_Log("Section %s (template: %s, duration: %.2f)", name.c_str(), templateName.c_str(), dur);
+    }
+
+    // Adjust final section to match total duration
+    if (!sections.empty() && currentTime < totalDur) {
+        sections.back().endTime = totalDur;
+    }
+
+    // Calculate beat duration
+    float beat = 60.0f / bpm;
+    ::SDL_Log("Beat duration: %.2f seconds (BPM: %.2f)", beat, bpm);
+
+    // Determine intro style (5% chance for vocal-only in specific genres)
+    bool vocalOnlyIntro = (g == Genre::GOSPEL || g == Genre::SOUL || g == Genre::POP || g == Genre::RAP || g == Genre::HIPHOP) &&
+                          std::bernoulli_distribution(0.05f)(rng);
+    ::SDL_Log("Intro style: %s", vocalOnlyIntro ? "Vocal-only" : "Standard");
+	
+std::vector<std::vector<std::tuple<std::string, std::string, float>>> getSectionPlans(Genre g) {
+    std::vector<std::vector<std::tuple<std::string, std::string, float>>> sectionPlans;
+
+    // Common structures for multiple genres
+    std::vector<std::vector<std::tuple<std::string, std::string, float>>> commonPop = {
+        {{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Chorus1", "Chorus", 0.4f}, {"Verse2", "Verse", 0.6f}, {"Chorus2", "Chorus", 0.8f}, {"Outro", "Outro", 1.0f}}, // Verse-chorus
+        {{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Chorus1", "Chorus", 0.4f}, {"Verse2", "Verse", 0.6f}, {"Bridge", "Bridge", 0.8f}, {"Chorus2", "Chorus", 0.9f}, {"Outro", "Outro", 1.0f}} // Verse-chorus with bridge
+    };
+
+    switch (g) {
+        case CLASSICAL: case AMBIENT:
+            sectionPlans = {
+                {{"Intro", "Intro", 0.0f}, {"Exposition", "Verse", 0.2f}, {"Development", "Chorus", 0.4f}, {"Recapitulation", "Verse", 0.6f}, {"Coda", "Outro", 0.8f}}, // Sonata-like
+                {{"Intro", "Intro", 0.0f}, {"PartA", "Verse", 0.25f}, {"PartB", "Chorus", 0.5f}, {"PartA2", "Verse", 0.75f}, {"Outro", "Outro", 1.0f}}, // ABA
+                {{"Intro", "Intro", 0.0f}, {"Section1", "Verse", 0.2f}, {"Section2", "Verse", 0.4f}, {"Section3", "Chorus", 0.6f}, {"Outro", "Outro", 0.8f}} // Through-composed
+            };
+            break;
+        case JAZZ: case BLUES:
+            sectionPlans = {
+                {{"Intro", "Intro", 0.0f}, {"Head1", "Verse", 0.2f}, {"Bridge", "Chorus", 0.4f}, {"Head2", "Verse", 0.6f}, {"Outro", "Outro", 0.8f}}, // AABA
+                {{"Intro", "Intro", 0.0f}, {"Chorus1", "Chorus", 0.2f}, {"Solo", "Verse", 0.4f}, {"Chorus2", "Chorus", 0.6f}, {"Outro", "Outro", 0.8f}}, // 12-bar blues
+                {{"Intro", "Intro", 0.0f}, {"Head1", "Verse", 0.2f}, {"Solo1", "Chorus", 0.4f}, {"Solo2", "Chorus", 0.6f}, {"Head2", "Verse", 0.8f}, {"Outro", "Outro", 1.0f}} // Head-solo-head
+            };
+            break;
+        case POP: case ROCK: case COUNTRY: case FOLK: case REGGAE:
+            sectionPlans = commonPop;
+            sectionPlans.push_back({{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.15f}, {"PreChorus1", "PreChorus", 0.3f}, {"Chorus1", "Chorus", 0.45f}, {"Verse2", "Verse", 0.6f}, {"Chorus2", "Chorus", 0.75f}, {"Outro", "Outro", 0.9f}}); // Extended pop
+            break;
+        case EDM: case TECHNO:
+            sectionPlans = {
+                {{"Intro", "Intro", 0.0f}, {"Build1", "Verse", 0.2f}, {"Drop1", "Drop", 0.4f}, {"Break", "Verse", 0.6f}, {"Build2", "Verse", 0.8f}, {"Drop2", "Drop", 0.9f}, {"Outro", "Outro", 1.0f}}, // Build-drop
+                {{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Build", "PreChorus", 0.4f}, {"Drop1", "Drop", 0.6f}, {"Verse2", "Verse", 0.8f}, {"Drop2", "Drop", 0.9f}, {"Outro", "Outro", 1.0f}}, // Progressive
+                {{"Intro", "Intro", 0.0f}, {"Section1", "Verse", 0.25f}, {"Break", "Chorus", 0.5f}, {"Section2", "Verse", 0.75f}, {"Outro", "Outro", 1.0f}} // Minimal
+            };
+            break;
+        case METAL: case PUNK:
+            sectionPlans = {
+                {{"Intro", "Intro", 0.0f}, {"Riff1", "Verse", 0.2f}, {"Chorus1", "Chorus", 0.4f}, {"Riff2", "Verse", 0.6f}, {"Breakdown", "Bridge", 0.8f}, {"Chorus2", "Chorus", 0.9f}, {"Outro", "Outro", 1.0f}}, // Verse-chorus with breakdown
+                {{"Intro", "Intro", 0.0f}, {"Riff1", "Verse", 0.2f}, {"Riff2", "Chorus", 0.4f}, {"Solo", "Verse", 0.6f}, {"Riff3", "Chorus", 0.8f}, {"Outro", "Outro", 1.0f}} // Riff-based
+            };
+            break;
+        case GOSPEL: case SOUL:
+            sectionPlans = commonPop;
+            sectionPlans.push_back({{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Chorus1", "Chorus", 0.4f}, {"Verse2", "Verse", 0.6f}, {"CallResponse", "Bridge", 0.8f}, {"Chorus2", "Chorus", 0.9f}, {"Outro", "Outro", 1.0f}}); // Verse-chorus with call-response
+            break;
+        case HIPHOP: case RAP:
+            sectionPlans = {
+                {{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Hook1", "Chorus", 0.4f}, {"Verse2", "Verse", 0.6f}, {"Hook2", "Chorus", 0.8f}, {"Outro", "Outro", 1.0f}}, // Verse-hook
+                {{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Hook1", "Chorus", 0.35f}, {"Verse2", "Verse", 0.5f}, {"Bridge", "Bridge", 0.65f}, {"Hook2", "Chorus", 0.8f}, {"Outro", "Outro", 1.0f}} // Extended rap
+            };
+            break;
+        case FUNK:
+            sectionPlans = {
+                {{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Chorus1", "Chorus", 0.4f}, {"Verse2", "Verse", 0.6f}, {"Groove", "Bridge", 0.8f}, {"Chorus2", "Chorus", 0.9f}, {"Outro", "Outro", 1.0f}}, // Verse-chorus with groove
+                {{"Intro", "Intro", 0.0f}, {"Riff1", "Verse", 0.2f}, {"Chorus1", "Chorus", 0.4f}, {"Riff2", "Verse", 0.6f}, {"Break", "Bridge", 0.8f}, {"Outro", "Outro", 1.0f}} // Riff-based funk
+            };
+            break;
+        case WORLD:
+            sectionPlans = {
+                {{"Intro", "Intro", 0.0f}, {"Section1", "Verse", 0.2f}, {"Section2", "Chorus", 0.4f}, {"Section3", "Verse", 0.6f}, {"Climax", "Bridge", 0.8f}, {"Outro", "Outro", 1.0f}}, // Modal narrative
+                {{"Intro", "Intro", 0.0f}, {"Verse1", "Verse", 0.2f}, {"Chorus1", "Chorus", 0.4f}, {"Verse2", "Verse", 0.6f}, {"Bridge", "Bridge", 0.8f}, {"Chorus2", "Chorus", 0.9f}, {"Outro", "Outro", 1.0f}} // Verse-chorus with bridge
+            };
+            break;
+        default:
+            sectionPlans = commonPop;
+            break;
+    }
+
+    return sectionPlans;
 }
-
-// Generate sections
-for (size_t i = 0; i < extendedPlan.size() && t < totalDur; ++i) {
-    const auto& [name, templateName, progress] = extendedPlan[i];
-    float dur = (name == "Intro" || name == "Outro" || name.find("Coda") != std::string::npos) ? sectionDur * 0.5f : 
-                (name.find("Bridge") != std::string::npos || name.find("Break") != std::string::npos) ? sectionDur * 0.75f : 
-                sectionDur;
-    float endTime = t + dur;
-    if (endTime > totalDur) endTime = totalDur;
-    sections.emplace_back(name, t, endTime, progress, templateName);
-    ::SDL_Log("Added section %s: %.2f to %.2f seconds", name.c_str(), t, endTime);
-    t = endTime;
-}
-
-// Adjust final section to exactly match totalDur
-if (!sections.empty() && sections.back().endTime < totalDur) {
-    sections.back().endTime = totalDur;
-    ::SDL_Log("Adjusted final section %s end time to %.2f seconds", sections.back().name.c_str(), totalDur);
-}
-
-float beat = 60.0f / bpm; // 1.5
-
-// Determine intro style
-bool vocalOnlyIntro = (g == GOSPEL || g == SOUL || g == POP || g == RAP || g == HIPHOP) && rng() % 2 == 0;
-::SDL_Log("Intro style: %s", vocalOnlyIntro ? "Vocal-only" : "Standard");
-
+    // Estimate total duration of base plan
+    float basePlanDur = 0.0f;
+    for (size_t i = 0; i < sectionPlan.size(); ++i) {
+        const auto& [name, templateName, progress] = extendedPlan[i];
+        // Assign duration based on section type
+		static thread_local AudioUtils::RandomGenerator rng;
+        float dur;
+		if (name == "Intro" || name == "Outro" || name.find("Coda") != std::string::npos) {
+    		dur = rng.generateUniform(7.0f, 10.0f); // Example duration as 7 to 10 seconds for Intro/Outro/Coda
+		} else if (name.find("Bridge") != std::string::npos || name.find("Break") != std::string::npos) {
+    		dur = rng.generateUniform(16.0f, 32.0f); // Example duration for Bridge/Break
+		} else {
+    		dur = rng.generateUniform(30.0f, 42.0f); // Default duration
+		}
+        
+        basePlanDur += dur;
+    }
+    // Extend plan dynamically based on totalDur
+    extendedPlan = sectionPlan;
+    if (totalDur > basePlanDur * 1.2f) {
+        int extraSections = static_cast<int>(totalDur - basePlanDur);
+        int verseCount = 2, chorusCount = 2, bridgeCount = 0, soloCount = 1;
+        std::uniform_real_distribution<float> probDist(0.0f, 1.0f);
+        for (int i = 0; i < extraSections; ++i) {
+            float prob = probDist(rng); // Use global rng for probability
+            if (prob < 0.4f) {
+                std::string name = (g == Genre::JAZZ || g == Genre::BLUES) ? "Head" + std::to_string(++verseCount) : 
+                                  (g == Genre::METAL || g == Genre::PUNK) ? "Riff" + std::to_string(++verseCount) : 
+                                  "Verse" + std::to_string(++verseCount);
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.6f + i * 0.1f});
+            } else if (prob < 0.8f) {
+                std::string name = (g == Genre::EDM || g == Genre::TECHNO) ? "Drop" + std::to_string(++chorusCount) : 
+                                  (g == Genre::HIPHOP || g == Genre::RAP) ? "Hook" + std::to_string(++chorusCount) : 
+                                  "Chorus" + std::to_string(++chorusCount);
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Chorus", 0.8f + i * 0.1f});
+            } else if (prob < 0.9f && bridgeCount < 1) {
+                std::string name = (g == Genre::EDM || g == Genre::TECHNO) ? "Break" + std::to_string(++bridgeCount) : 
+                                  (g == Genre::GOSPEL || g == Genre::SOUL) ? "CallResponse" : 
+                                  "Bridge" + std::to_string(++bridgeCount);
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Bridge", 0.85f + i * 0.1f});
+            } else {
+                std::string name = (g == Genre::JAZZ || g == Genre::BLUES || g == Genre::METAL || g == Genre::ROCK) ? "Solo" + std::to_string(++soloCount) : 
+                                  "Verse" + std::to_string(++verseCount);
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.7f + i * 0.1f});
+            }
+        }
+    }
+    // Generate sections
+    for (size_t i = 0; i < extendedPlan.size(); ++i) {
+        const auto& [name, templateName, progress] = extendedPlan[i];
+        float endTime = progress;
+        if (endTime > totalDur) endTime = totalDur;
+        sections.emplace_back(name, endTime, progress, templateName);        
+    }
+    // Adjust final section to exactly match totalDur
+    if (!sections.empty() && sections.back().endTime < totalDur) {
+        sections.back().endTime = totalDur;
+        ::SDL_Log("Adjusted final section %s end time to %.2f seconds", sections.back().name.c_str(), totalDur);
+    }
+	
 // Select instruments per section
 std::map<std::string, std::vector<std::string>> sectionInstruments;
 const auto& availableInstruments = genreInstruments[g];
 for (const auto& section : sections) {
     std::vector<std::string> insts;
     if (section.name == "Intro" && vocalOnlyIntro) {
-        insts.push_back((rng() % 2) ? "vocal_0" : "vocal_1");
+        insts.push_back(rng ? "vocal_0" : "vocal_1");
     } else {
         // Base instruments for all sections
-        insts.push_back(availableInstruments[rng() % availableInstruments.size()]); // Melody-like
-        insts.push_back("bass"); // Always include bass for harmonic foundation
+        insts.push_back(availableInstruments[rng % availableInstruments.size()]); // Melody-like
+		
         // Add genre-specific instruments
         if (section.templateName == "Chorus") {
             if (g == EDM || g == TECHNO || g == AMBIENT) insts.push_back("subbass");
             if (g == CLASSICAL || g == AMBIENT || g == GOSPEL) insts.push_back("pad");
-            insts.push_back(availableInstruments[rng() % availableInstruments.size()]); // Extra for chorus
+            insts.push_back(availableInstruments[rng % availableInstruments.size()]); // Extra for chorus
         } else if (section.templateName == "Verse" || section.templateName == "Solo" || section.templateName == "Head") {
             if (g == ROCK || g == PUNK || g == METAL || g == COUNTRY || g == FOLK || g == REGGAE) insts.push_back("guitar");
             if (g == JAZZ || g == BLUES) insts.push_back("saxophone");
@@ -428,8 +331,8 @@ for (const auto& section : sections) {
             insts.push_back("snare");
         }
         // Add vocal for specific genres and sections
-        if ((g == RAP || g == HIPHOP || g == GOSPEL || g == SOUL || (g == POP && rng() % 2)) && section.templateName != "Intro") {
-            insts.push_back((rng() % 2) ? "vocal_0" : "vocal_1");
+        if ((g == RAP || g == HIPHOP || g == GOSPEL || g == SOUL || (g == POP && rng % 2) && section.templateName != "Intro") {
+            insts.push_back(rng ? "vocal_0" : "vocal_1");
         }
     }
     // Remove duplicates while preserving order
@@ -655,8 +558,7 @@ void saveToFile(const std::string& title, const std::string& genres, float bpm, 
 }
 
     private: // songgen.h handles it.
-        std::mt19937 rng{std::random_device{}()};
-        const float sampleRate = 44100.0f;
+        const float sampleRate = 44100.0f; // max SDL2 supports and then crosseyed.
         const std::vector<float> durations = {
             0.0284091f, 0.0625f, 0.073864f, 0.125f, 0.136364f, 0.147726f, 0.210226f,
             0.25f, 0.272727f, 0.460224f, 0.5f, 0.886364f, 1.0f
@@ -706,12 +608,28 @@ void saveToFile(const std::string& title, const std::string& genres, float bpm, 
             {HIPHOP, {"kick", "snare", "hihat_closed", "bass", "vocal_0", "syntharp"}}
         };
 
-        std::map<Genre, float> genreBPM = {
-            {CLASSICAL, 80.0f}, {JAZZ, 100.0f}, {POP, 120.0f}, {ROCK, 130.0f}, {TECHNO, 140.0f}, {RAP, 90.0f},
-            {BLUES, 100.0f}, {COUNTRY, 110.0f}, {FOLK, 100.0f}, {REGGAE, 80.0f}, {METAL, 150.0f}, {PUNK, 160.0f},
-            {DISCO, 120.0f}, {FUNK, 110.0f}, {SOUL, 100.0f}, {GOSPEL, 90.0f}, {AMBIENT, 70.0f}, {EDM, 130.0f},
-            {LATIN, 110.0f}, {HIPHOP, 95.0f}
-        };
+ std::map<Genre, std::uniform_real_distribution<float>> genreBPM = {
+    {CLASSICAL, dist(60.0f, 120.0f)}, // Broad range for various classical styles (e.g., adagio to allegro)
+    {JAZZ, dist(80.0f, 160.0f)},      // Wider range to cover swing, bebop, and faster jazz styles
+    {POP, dist(100.0f, 140.0f)},      // Accurate for mainstream pop, dance-pop, and ballads
+    {ROCK, dist(90.0f, 160.0f)},      // Adjusted to include slower ballads and faster rock subgenres
+    {TECHNO, dist(120.0f, 150.0f)},   // Standard techno range, covering most substyles
+    {RAP, dist(80.0f, 110.0f)},       // Covers slower boom-bap to faster trap styles
+    {BLUES, dist(60.0f, 120.0f)},     // Broad range for slow blues to uptempo shuffle
+    {COUNTRY, dist(90.0f, 130.0f)},   // Includes ballads and upbeat country styles
+    {FOLK, dist(80.0f, 120.0f)},      // Covers traditional and modern folk variations
+    {REGGAE, dist(60.0f, 90.0f)},     // Reflects roots reggae and one-drop rhythms
+    {METAL, dist(100.0f, 180.0f)},    // Wide range for doom metal to thrash and speed metal
+    {PUNK, dist(140.0f, 200.0f)},     // Fast tempos for punk and hardcore subgenres
+    {DISCO, dist(110.0f, 130.0f)},    // Standard for danceable disco grooves
+    {FUNK, dist(90.0f, 120.0f)},      // Covers funky grooves and upbeat funk styles
+    {SOUL, dist(80.0f, 120.0f)},      // Includes slow soul ballads and upbeat Motown
+    {GOSPEL, dist(70.0f, 110.0f)},    // Covers traditional and contemporary gospel
+    {AMBIENT, dist(50.0f, 90.0f)},    // Slow tempos for atmospheric and chill vibes
+    {EDM, dist(120.0f, 140.0f)},      // Standard for house, trance, and other EDM subgenres
+    {LATIN, dist(90.0f, 130.0f)},     // Covers salsa, merengue, and other Latin styles
+    {HIPHOP, dist(80.0f, 110.0f)}     // Similar to RAP but slightly broader for hip-hop subgenres
+};
 
         std::map<Genre, std::string> genreNames = {
             {CLASSICAL, "Classical"}, {JAZZ, "Jazz"}, {POP, "Pop"}, {ROCK, "Rock"}, {TECHNO, "Techno"},
@@ -802,6 +720,7 @@ std::string generateTitle() {
     ::SDL_Log("Generating song title");
 
     // Word lists
+	// will be a fun piece to edit
     std::vector<std::string> adjectives = {
         "Cosmic", "Epic", "Mystic", "Vibrant", "Ethereal", "Sonic", "Radiant", "Dreamy", "Galactic", "Infinite",
         "Lunar", "Stellar", "Velvet", "Crimson", "Azure", "Glimmering", "Haunted", "Flickering", "Blazing", "Serene",
@@ -838,38 +757,38 @@ std::string generateTitle() {
     std::uniform_int_distribution<> templateDist(0, 8); // 9 templates
 
     // Select a random template
-    int templateId = templateDist(rng);
+    int templateId = templateDist(AudioUtils::RandomGenerator rng);
     std::string title;
 
     switch (templateId) {
         case 0: // Adj Noun
-            title = adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)];
+            title = adjectives[adjDist(rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
         case 1: // Verb the Noun
-            title = verbs[verbDist(rng)] + " the " + nouns[nounDist(rng)];
+            title = verbs[verbDist(rng)] + " the " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
         case 2: // Adj Noun Prep Noun
-            title = adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)] + " " +
-                    prepositions[prepDist(rng)] + " " + nouns[nounDist(rng)];
+            title = adjectives[adjDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)] + " " +
+                    prepositions[prepDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
         case 3: // Verb Adv
-            title = verbs[verbDist(rng)] + " " + adverbs[advDist(rng)];
+            title = verbs[verbDist(AudioUtils::RandomGenerator rng)] + " " + adverbs[advDist(AudioUtils::RandomGenerator rng)];
             break;
         case 4: // Adj Noun Prep Adj Noun
-            title = adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)] + " " +
-                    prepositions[prepDist(rng)] + " " + adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)];
+            title = adjectives[adjDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)] + " " +
+                    prepositions[prepDist(AudioUtils::RandomGenerator rng)] + " " + adjectives[adjDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
         case 5: // Noun Prep Noun
-            title = nouns[nounDist(rng)] + " " + prepositions[prepDist(rng)] + " " + nouns[nounDist(rng)];
+            title = nouns[nounDist(AudioUtils::RandomGenerator rng)] + " " + prepositions[prepDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
         case 6: // Verb the Adj Noun
-            title = verbs[verbDist(rng)] + " the " + adjectives[adjDist(rng)] + " " + nouns[nounDist(rng)];
+            title = verbs[verbDist(AudioUtils::RandomGenerator rng)] + " the " + adjectives[adjDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
         case 7: // Adj Verb Noun
-            title = adjectives[adjDist(rng)] + " " + verbs[verbDist(rng)] + " " + nouns[nounDist(rng)];
+            title = adjectives[adjDist(AudioUtils::RandomGenerator rng)] + " " + verbs[verbDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
         case 8: // Adv Verb Noun
-            title = adverbs[advDist(rng)] + " " + verbs[verbDist(rng)] + " " + nouns[nounDist(rng)];
+            title = adverbs[advDist(AudioUtils::RandomGenerator rng)] + " " + verbs[verbDist(AudioUtils::RandomGenerator rng)] + " " + nouns[nounDist(AudioUtils::RandomGenerator rng)];
             break;
     }
 
@@ -894,303 +813,86 @@ std::string generateTitle() {
         }
 
 std::vector<std::vector<int>> getChordProgressions(const std::string& scaleName, Genre g) {
-    std::vector<std::vector<int>> progs;
-
-    // Base progressions for each scale
+    // Define base progressions for each scale
+    std::vector<std::vector<int>> baseProgs;
     if (scaleName == "major") {
-        progs = {
-            {1, 4, 5, 1},  // I-IV-V-I
-            {1, 5, 6, 4},  // I-V-vi-IV (pop classic)
-            {1, 6, 4, 5},  // I-vi-IV-V
-            {1, 2, 5, 4},  // I-ii-V-IV
-            {1, 3, 6, 4},  // I-iii-vi-IV
-            {2, 5, 1, 4},  // ii-V-I-IV
-            {1, 4, 6, 5},  // I-IV-vi-V
-            {1, 5, 4, 6},  // I-V-IV-vi
-            {4, 5, 1, 6},  // IV-V-I-vi
-            {1, 2, 4, 5},  // I-ii-IV-V
-            {6, 4, 1, 5},  // vi-IV-I-V
-            {1, 3, 4, 5},  // I-iii-IV-V
-            {2, 5, 6, 4},  // ii-V-vi-IV
-            {1, 4, 2, 5},  // I-IV-ii-V
-            {1, 6, 2, 5}   // I-vi-ii-V
-        };
+        baseProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{1,2,5,4},{1,3,6,4},{2,5,1,4},{1,4,6,5},{1,5,4,6},{4,5,1,6},{1,2,4,5},{6,4,1,5},{1,3,4,5},{2,5,6,4},{1,4,2,5},{1,6,2,5}};
     } else if (scaleName == "minor") {
-        progs = {
-            {6, 4, 1, 5},  // i-VI-III-VII
-            {6, 3, 4, 5},  // i-v-VI-VII
-            {6, 7, 1, 4},  // i-VII-III-VI
-            {6, 2, 5, 3},  // i-iv-VII-v
-            {6, 1, 4, 7},  // i-III-VI-VII
-            {3, 6, 4, 5},  // v-i-VI-VII
-            {6, 4, 7, 1},  // i-VI-VII-III
-            {6, 5, 3, 4},  // i-VII-v-VI
-            {4, 6, 7, 1},  // VI-i-VII-III
-            {6, 2, 4, 5},  // i-iv-VI-VII
-            {1, 6, 4, 5},  // III-i-VI-VII
-            {6, 3, 7, 4},  // i-v-VII-VI
-            {2, 5, 6, 1},  // iv-VII-i-III
-            {6, 4, 2, 5}   // i-VI-iv-VII
-        };
+        baseProgs = {{6,4,1,5},{6,3,4,5},{6,7,1,4},{6,2,5,3},{6,1,4,7},{3,6,4,5},{6,4,7,1},{6,5,3,4},{4,6,7,1},{6,2,4,5},{1,6,4,5},{6,3,7,4},{2,5,6,1},{6,4,2,5}};
     } else if (scaleName == "dorian") {
-        progs = {
-            {2, 7, 1, 4},  // ii-VII-III-VI
-            {2, 5, 6, 7},  // ii-V-i-VII
-            {2, 4, 7, 1},  // ii-VI-VII-III
-            {2, 1, 4, 5},  // ii-III-VI-V
-            {2, 6, 4, 7},  // ii-i-VI-VII
-            {4, 2, 7, 1},  // VI-ii-VII-III
-            {2, 5, 4, 6},  // ii-V-VI-i
-            {2, 7, 4, 1},  // ii-VII-VI-III
-            {1, 2, 5, 6},  // III-ii-V-i
-            {2, 4, 1, 7}   // ii-VI-III-VII
-        };
+        baseProgs = {{2,7,1,4},{2,5,6,7},{2,4,7,1},{2,1,4,5},{2,6,4,7},{4,2,7,1},{2,5,4,6},{2,7,4,1},{1,2,5,6},{2,4,1,7}};
     } else if (scaleName == "mixolydian") {
-        progs = {
-            {5, 1, 4, 7},  // V-I-IV-vii
-            {5, 6, 1, 4},  // V-vi-I-IV
-            {5, 3, 6, 7},  // V-iii-vi-vii
-            {5, 4, 1, 6},  // V-IV-I-vi
-            {1, 5, 4, 6},  // I-V-IV-vi
-            {5, 7, 1, 4},  // V-vii-I-IV
-            {4, 5, 6, 1},  // IV-V-vi-I
-            {5, 1, 6, 4},  // V-I-vi-IV
-            {5, 4, 7, 1},  // V-IV-vii-I
-            {6, 5, 1, 4}   // vi-V-I-IV
-        };
+        baseProgs = {{5,1,4,7},{5,6,1,4},{5,3,6,7},{5,4,1,6},{1,5,4,6},{5,7,1,4},{4,5,6,1},{5,1,6,4},{5,4,7,1},{6,5,1,4}};
     } else if (scaleName == "blues") {
-        progs = {
-            {1, 4, 1, 5},  // I-IV-I-V (12-bar blues)
-            {1, 5, 4, 1},  // I-V-IV-I
-            {1, 4, 5, 1},  // I-IV-V-I
-            {1, 4, 1, 4},  // I-IV-I-IV
-            {4, 1, 5, 4},  // IV-I-V-IV
-            {1, 5, 1, 4},  // I-V-I-IV
-            {4, 5, 1, 1},  // IV-V-I-I
-            {1, 1, 4, 5},  // I-I-IV-V
-            {5, 4, 1, 1},  // V-IV-I-I
-            {1, 4, 5, 5}   // I-IV-V-V
-        };
+        baseProgs = {{1,4,1,5},{1,5,4,1},{1,4,5,1},{1,4,1,4},{4,1,5,4},{1,5,1,4},{4,5,1,1},{1,1,4,5},{5,4,1,1},{1,4,5,5}};
     } else if (scaleName == "harmonic_minor") {
-        progs = {
-            {1, 6, 3, 5},  // i-vi-iii-V
-            {1, 4, 6, 7},  // i-iv-vi-VII
-            {1, 5, 6, 3},  // i-V-vi-iii
-            {1, 7, 3, 6},  // i-VII-iii-vi
-            {6, 1, 4, 5},  // vi-i-iv-V
-            {1, 3, 7, 6},  // i-iii-VII-vi
-            {4, 1, 6, 7},  // iv-i-vi-VII
-            {1, 6, 5, 3},  // i-vi-V-iii
-            {7, 1, 4, 6},  // VII-i-iv-vi
-            {1, 4, 7, 3}   // i-iv-VII-iii
-        };
+        baseProgs = {{1,6,3,5},{1,4,6,7},{1,5,6,3},{1,7,3,6},{6,1,4,5},{1,3,7,6},{4,1,6,7},{1,6,5,3},{7,1,4,6},{1,4,7,3}};
     } else if (scaleName == "whole_tone") {
-        progs = {
-            {1, 3, 5, 1},  // I-III-V-I
-            {1, 4, 2, 5},  // I-IV-II-V
-            {1, 5, 3, 4},  // I-V-III-IV
-            {2, 1, 4, 5},  // II-I-IV-V
-            {1, 2, 5, 3},  // I-II-V-III
-            {3, 1, 4, 2}   // III-I-IV-II
-        };
+        baseProgs = {{1,3,5,1},{1,4,2,5},{1,5,3,4},{2,1,4,5},{1,2,5,3},{3,1,4,2}};
     } else if (scaleName == "pentatonic_major") {
-        progs = {
-            {1, 4, 5, 1},  // I-IV-V-I
-            {1, 5, 6, 4},  // I-V-vi-IV
-            {1, 6, 4, 5},  // I-vi-IV-V
-            {1, 2, 5, 4},  // I-ii-V-IV
-            {4, 1, 6, 5},  // IV-I-vi-V
-            {1, 4, 2, 5}   // I-IV-ii-V
-        };
+        baseProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{1,2,5,4},{4,1,6,5},{1,4,2,5}};
     } else if (scaleName == "pentatonic_minor") {
-        progs = {
-            {6, 4, 1, 5},  // i-VI-III-VII
-            {6, 1, 4, 5},  // i-III-VI-VII
-            {4, 6, 5, 1},  // VI-i-VII-III
-            {6, 5, 4, 1},  // i-VII-VI-III
-            {1, 6, 4, 5},  // III-i-VI-VII
-            {6, 4, 5, 1}   // i-VI-VII-III
-        };
+        baseProgs = {{6,4,1,5},{6,1,4,5},{4,6,5,1},{6,5,4,1},{1,6,4,5},{6,4,5,1}};
     } else {
-        progs = {{1, 4, 5, 4}}; // Default fallback
+        baseProgs = {{1,4,5,4}}; // Default fallback
     }
 
-    // Add genre-specific progressions and variations
+    // Genre-specific progressions
+    std::vector<std::vector<int>> genreProgs;
     switch (g) {
-        case JAZZ:
-        case BLUES:
-            progs.insert(progs.end(), {
-                {2, 5, 1, 6},  // ii-V-I-vi
-                {2, 5, 1, 4},  // ii-V-I-IV
-                {2, 7, 3, 6},  // ii-VII-iii-vi
-                {1, 6, 2, 5},  // I-vi-ii-V
-                {2, 5, 3, 6},  // ii-V-iii-vi
-                {1, 4, 2, 5},  // I-IV-ii-V (turnaround)
-                {2, 5, 6, 1},  // ii-V-vi-I
-                {3, 6, 2, 5},  // iii-vi-ii-V
-                {1, 5, 2, 5}   // I-V-ii-V (extended turnaround)
-            });
+        case JAZZ: case BLUES:
+            genreProgs = {{2,5,1,6},{2,5,1,4},{2,7,3,6},{1,6,2,5},{2,5,3,6},{1,4,2,5},{2,5,6,1},{3,6,2,5},{1,5,2,5}};
             break;
         case CLASSICAL:
-            progs.insert(progs.end(), {
-                {1, 6, 2, 5},  // I-vi-ii-V
-                {1, 4, 6, 5},  // I-IV-vi-V
-                {4, 1, 5, 6},  // IV-I-V-vi
-                {1, 3, 4, 5},  // I-iii-IV-V
-                {1, 6, 4, 2},  // I-vi-IV-ii
-                {2, 5, 1, 6},  // ii-V-I-vi
-                {1, 7, 4, 5},  // I-VII-IV-V (modal interchange)
-                {1, 3, 6, 2}   // I-iii-vi-ii
-            });
+            genreProgs = {{1,6,2,5},{1,4,6,5},{4,1,5,6},{1,3,4,5},{1,6,4,2},{2,5,1,6},{1,7,4,5},{1,3,6,2}};
             break;
-        case POP:
-        case ROCK:
-        case COUNTRY:
-            progs.insert(progs.end(), {
-                {1, 5, 4, 6},  // I-V-IV-vi
-                {4, 5, 1, 6},  // IV-V-I-vi
-                {1, 4, 6, 2},  // I-IV-vi-ii
-                {1, 6, 5, 4},  // I-vi-V-IV
-                {2, 5, 4, 1},  // ii-V-IV-I
-                {1, 2, 6, 5},  // I-ii-vi-V
-                {4, 1, 6, 5},  // IV-I-vi-V
-                {1, 5, 6, 2},  // I-V-vi-ii
-                {6, 4, 5, 1}   // vi-IV-V-I
-            });
+        case POP: case ROCK: case COUNTRY:
+            genreProgs = {{1,5,4,6},{4,5,1,6},{1,4,6,2},{1,6,5,4},{2,5,4,1},{1,2,6,5},{4,1,6,5},{1,5,6,2},{6,4,5,1}};
             break;
-        case GOSPEL:
-        case SOUL:
-            progs.insert(progs.end(), {
-                {1, 4, 6, 5},  // I-IV-vi-V
-                {1, 6, 4, 5},  // I-vi-IV-V
-                {4, 1, 5, 6},  // IV-I-V-vi
-                {1, 2, 5, 4},  // I-ii-V-IV
-                {6, 5, 1, 4},  // vi-V-I-IV
-                {1, 3, 6, 5},  // I-iii-vi-V
-                {2, 5, 6, 1},  // ii-V-vi-I
-                {1, 4, 2, 5}   // I-IV-ii-V
-            });
+        case GOSPEL: case SOUL:
+            genreProgs = {{1,4,6,5},{1,6,4,5},{4,1,5,6},{1,2,5,4},{6,5,1,4},{1,3,6,5},{2,5,6,1},{1,4,2,5}};
             break;
         case METAL:
-            progs.insert(progs.end(), {
-                {1, 7, 4, 5},  // i-VII-IV-V
-                {1, 4, 7, 1},  // i-IV-VII-i
-                {6, 7, 1, 4},  // vi-VII-i-IV
-                {1, 5, 4, 7},  // i-V-IV-VII
-                {1, 3, 7, 4},  // i-iii-VII-IV
-                {7, 1, 4, 6},  // VII-i-IV-vi
-                {1, 6, 7, 4},  // i-vi-VII-IV
-                {4, 7, 1, 5}   // IV-VII-i-V
-            });
+            genreProgs = {{1,7,4,5},{1,4,7,1},{6,7,1,4},{1,5,4,7},{1,3,7,4},{7,1,4,6},{1,6,7,4},{4,7,1,5}};
             break;
         case LATIN:
-            progs.insert(progs.end(), {
-                {1, 4, 2, 5},  // I-IV-ii-V
-                {1, 6, 4, 5},  // I-vi-IV-V
-                {4, 1, 5, 2},  // IV-I-V-ii
-                {2, 5, 1, 4},  // ii-V-I-IV
-                {1, 4, 6, 2},  // I-IV-vi-ii
-                {6, 4, 1, 5},  // vi-IV-I-V
-                {1, 2, 4, 6},  // I-ii-IV-vi
-                {4, 5, 2, 1}   // IV-V-ii-I
-            });
+            genreProgs = {{1,4,2,5},{1,6,4,5},{4,1,5,2},{2,5,1,4},{1,4,6,2},{6,4,1,5},{1,2,4,6},{4,5,2,1}};
             break;
-        case EDM:
-        case TECHNO:
-            progs.insert(progs.end(), {
-                {1, 4, 5, 6},  // I-IV-V-vi
-                {4, 5, 1, 6},  // IV-V-I-vi
-                {1, 6, 4, 5},  // I-vi-IV-V
-                {6, 4, 1, 5},  // vi-IV-I-V
-                {1, 5, 4, 6},  // I-V-IV-vi
-                {4, 1, 6, 5},  // IV-I-vi-V
-                {1, 4, 2, 5},  // I-IV-ii-V
-                {2, 5, 1, 4},  // ii-V-I-IV
-                {1, 6, 5, 4},  // I-vi-V-IV
-                {4, 6, 1, 5},  // IV-vi-I-V
-                {1, 5, 6, 2},  // I-V-vi-ii
-                {6, 5, 4, 1},  // vi-V-IV-I
-                {1, 4, 6, 2},  // I-IV-vi-ii
-                {2, 6, 4, 1},  // ii-vi-IV-I
-                {1, 2, 5, 6},  // I-ii-V-vi
-                {4, 5, 6, 1}   // IV-V-vi-I
-            });
+        case EDM: case TECHNO:
+            genreProgs = {{1,4,5,6},{4,5,1,6},{1,6,4,5},{6,4,1,5},{1,5,4,6},{4,1,6,5},{1,4,2,5},{2,5,1,4},{1,6,5,4},{4,6,1,5},{1,5,6,2},{6,5,4,1},{1,4,6,2},{2,6,4,1},{1,2,5,6},{4,5,6,1}};
             break;
         case REGGAE:
-            progs.insert(progs.end(), {
-                {1, 4, 5, 1},  // I-IV-V-I
-                {1, 6, 4, 5},  // I-vi-IV-V
-                {4, 1, 6, 5},  // IV-I-vi-V
-                {1, 5, 6, 4},  // I-V-vi-IV
-                {2, 5, 1, 4},  // ii-V-I-IV
-                {6, 4, 1, 5},  // vi-IV-I-V
-                {1, 4, 2, 5},  // I-IV-ii-V
-                {1, 6, 5, 4},  // I-vi-V-IV
-                {4, 5, 1, 6},  // IV-V-I-vi
-                {1, 2, 6, 5},  // I-ii-vi-V
-                {6, 5, 4, 1},  // vi-V-IV-I
-                {1, 4, 5, 6},  // I-IV-V-vi
-                {4, 6, 1, 5},  // IV-vi-I-V
-                {1, 5, 4, 2}   // I-V-IV-ii
-            });
+            genreProgs = {{1,4,5,1},{1,6,4,5},{4,1,6,5},{1,5,6,4},{2,5,1,4},{6,4,1,5},{1,4,2,5},{1,6,5,4},{4,5,1,6},{1,2,6,5},{6,5,4,1},{1,4,5,6},{4,6,1,5},{1,5,4,2}};
             break;
         case AMBIENT:
-            progs.insert(progs.end(), {
-                {1, 3, 5, 4},  // I-iii-V-IV
-                {1, 6, 4, 5},  // I-vi-IV-V
-                {4, 1, 5, 6},  // IV-I-V-vi
-                {1, 4, 6, 3},  // I-IV-vi-iii
-                {6, 4, 1, 5},  // vi-IV-I-V
-                {1, 5, 3, 4},  // I-V-iii-IV
-                {2, 6, 4, 1},  // ii-vi-IV-I
-                {1, 4, 5, 2},  // I-IV-V-ii
-                {1, 6, 5, 4},  // I-vi-V-IV
-                {4, 5, 1, 6},  // IV-V-I-vi
-                {1, 3, 4, 6},  // I-iii-IV-vi
-                {6, 5, 4, 1},  // vi-V-IV-I
-                {1, 4, 2, 6},  // I-IV-ii-vi
-                {2, 5, 1, 4},  // ii-V-I-IV
-                {1, 6, 3, 5}   // I-vi-iii-V
-            });
+            genreProgs = {{1,3,5,4},{1,6,4,5},{4,1,5,6},{1,4,6,3},{6,4,1,5},{1,5,3,4},{2,6,4,1},{1,4,5,2},{1,6,5,4},{4,5,1,6},{1,3,4,6},{6,5,4,1},{1,4,2,6},{2,5,1,4},{1,6,3,5}};
             break;
-        case HIPHOP:
-        case RAP:
-            progs.insert(progs.end(), {
-                {6, 4, 1, 5},  // i-VI-III-VII
-                {1, 6, 4, 5},  // I-vi-IV-V
-                {4, 1, 6, 5},  // IV-I-vi-V
-                {1, 5, 6, 4},  // I-V-vi-IV
-                {6, 5, 4, 1},  // i-VII-VI-III
-                {1, 4, 2, 5},  // I-IV-ii-V
-                {2, 5, 1, 4},  // ii-V-I-IV
-                {6, 4, 5, 1},  // i-VI-VII-III
-                {1, 6, 5, 4},  // I-vi-V-IV
-                {4, 6, 1, 5},  // IV-vi-I-V
-                {1, 2, 6, 5},  // I-ii-vi-V
-                {6, 5, 1, 4},  // i-VII-III-VI
-                {1, 4, 5, 6},  // I-IV-V-vi
-                {4, 5, 6, 1}   // IV-V-vi-I
-            });
+        case HIPHOP: case RAP:
+            genreProgs = {{6,4,1,5},{1,6,4,5},{4,1,6,5},{1,5,6,4},{6,5,4,1},{1,4,2,5},{2,5,1,4},{6,4,5,1},{1,6,5,4},{4,6,1,5},{1,2,6,5},{6,5,1,4},{1,4,5,6},{4,5,6,1}};
+            break;
+        case FOLK:
+            genreProgs = {{1,4,5,1},{1,6,4,5},{4,1,5,6},{1,2,5,4},{1,3,4,5},{6,4,1,5},{1,4,2,5},{2,5,1,4}};
+            break;
+        case FUNK:
+            genreProgs = {{1,5,4,1},{6,4,1,5},{1,7,4,5},{1,4,6,7},{2,5,1,4},{1,6,5,4},{4,1,6,5},{1,4,2,5}};
+            break;
+        case WORLD:
+            genreProgs = {{1,4,6,5},{2,7,1,4},{6,4,1,5},{1,3,4,6},{4,1,5,2},{1,6,2,5},{2,5,6,1},{1,4,7,3}};
             break;
         default:
-            progs.insert(progs.end(), {
-                {1, 4, 5, 1},  // I-IV-V-I
-                {1, 5, 6, 4},  // I-V-vi-IV
-                {1, 6, 4, 5},  // I-vi-IV-V
-                {4, 5, 1, 6},  // IV-V-I-vi
-                {1, 4, 2, 5},  // I-IV-ii-V
-                {2, 5, 1, 4},  // ii-V-I-IV
-                {6, 4, 1, 5},  // vi-IV-I-V
-                {1, 4, 5, 6}   // I-IV-V-vi
-            });
+            genreProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{4,5,1,6},{1,4,2,5},{2,5,1,4},{6,4,1,5},{1,4,5,6}};
             break;
     }
 
-    return progs;
+    // Combine and deduplicate progressions
+    std::set<std::vector<int>> uniqueProgs(baseProgs.begin(), baseProgs.end());
+    uniqueProgs.insert(genreProgs.begin(), genreProgs.end());
+
+    return {uniqueProgs.begin(), uniqueProgs.end()};
 }
 
-// AI stuff
 std::vector<float> buildChord(int degree, const std::string& scaleName, float rootFreq, Genre g, int inversion = 0) {
+	static thread_local AudioUtils::RandomGenerator rng;
     if (!std::isfinite(rootFreq) || rootFreq <= 0.0f) {
         ::SDL_Log("Invalid rootFreq %.2f in buildChord, using 440.0 Hz", rootFreq);
         rootFreq = 440.0f;
@@ -1201,24 +903,24 @@ std::vector<float> buildChord(int degree, const std::string& scaleName, float ro
     int baseIdx = (degree - 1 + intervals.size()) % intervals.size(); // Ensure non-negative index
 
     // Define chord intervals based on genre
-    std::vector<int> chordIntervals;
+    std::vector<float> chordIntervals;
     if (g == JAZZ || g == BLUES || g == GOSPEL || g == SOUL) {
         // Use 7th chords for jazz, blues, gospel, soul
-        chordIntervals = (rng() % 2 == 0) ? std::vector<int>{0, 4, 7, 11} : std::vector<int>{0, 4, 7, 10}; // Maj7 or min7
+        chordIntervals = (rng::generateUniform(0.0f, 0.01f) % 2 == 0) ? std::vector<int>{0, 4, 7, 11} : std::vector<int>{0, 4, 7, 10}; // Maj7 or min7
     } else if (g == METAL && degree == 1) {
         // Power chords for metal
         chordIntervals = {0, 7}; // Root and fifth
     } else if (g == POP || g == ROCK || g == COUNTRY || g == REGGAE) {
         // Triads with occasional 7ths
-        chordIntervals = (rng() % 3 == 0) ? std::vector<int>{0, 4, 7, 10} : std::vector<int>{0, 4, 7}; // Add 7th 33% of the time
+        chordIntervals = (generateUniform(0.0f, 0.01f) % 3 == 0) ? std::vector<int>{0, 4, 7, 10} : std::vector<int>{0, 4, 7}; // Add 7th 33% of the time
     } else if (g == EDM || g == TECHNO || g == HIPHOP || g == RAP) {
         // Triads with occasional sus2/sus4 for modern feel
-        chordIntervals = (rng() % 4 == 0) ? std::vector<int>{0, 2, 7} : // sus2
-                         (rng() % 4 == 1) ? std::vector<int>{0, 5, 7} : // sus4
+        chordIntervals = (generateUniform(0.0f, 0.01f) % 4 == 0) ? std::vector<int>{0, 2, 7} : // sus2
+                         (generateUniform(0.0f, 0.01f) % 4 == 1) ? std::vector<int>{0, 5, 7} : // sus4
                          std::vector<int>{0, 4, 7}; // Triad
     } else if (g == AMBIENT || g == CLASSICAL) {
         // Triads with occasional 7ths or 9ths for lush harmonies
-        chordIntervals = (rng() % 3 == 0) ? std::vector<int>{0, 4, 7, 14} : // Add 9th
+        chordIntervals = (rng % 3 == 0) ? std::vector<int>{0, 4, 7, 14} : // Add 9th
                          std::vector<int>{0, 4, 7};
     } else {
         chordIntervals = {0, 4, 7}; // Default triad

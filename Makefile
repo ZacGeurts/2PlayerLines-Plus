@@ -49,7 +49,7 @@
 
 # Compiler and flags (these tell the computer how to build the programs)
 CC = g++
-CFLAGS = -Wall -O3 -Iinclude -Iinstruments -std=c++17
+CFLAGS = -Wall -O3 -Iinclude -Iinstruments -std=c++20
 LDFLAGS = -lSDL2 -lSDL2_image -lGL -pthread
 SONGGEN_LDFLAGS = -lSDL2 -pthread
 

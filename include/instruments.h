@@ -58,29 +58,26 @@
 #include <unistd.h>
 #endif
 
-struct AutomationPoint {
-    float time;
-    float value;
-    AutomationPoint(float t, float v) : time(t), value(v) {}
-};
-
+// AudioUtils are multipurpose and modular
 namespace AudioUtils {
     constexpr float DEFAULT_SAMPLE_RATE = 44100.0f; // max SDL2 supports
-    constexpr int BUFFER_SIZE = 128;
+    constexpr int BUFFER_SIZE = 1024;
     constexpr int RING_BUFFER_COUNT = 4;
 
+	// the AI I used said this is the newest and shiniest.
+	// I dusted the ancient thing off and seeing if I can make use of it.
     class RandomGenerator {
         thread_local static std::vector<uint8_t> buffer;
         thread_local static size_t buffer_pos;
         static constexpr size_t BUFFER_SIZE = 1024;
-        std::random_device rd;
-        std::mt19937 gen;
-        std::uniform_real_distribution<float> dist;
+        std::random_device rng;
+        std::uniform_real_distribution<long double> dist;
 
         static void fill_buffer() {
             buffer.resize(BUFFER_SIZE);
             buffer_pos = 0;
-            #ifdef _WIN32
+			
+        #ifdef _WIN32
             HCRYPTPROV hCryptProv = 0;
             if (!CryptAcquireContext(&hCryptProv, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
                 throw std::runtime_error("Failed to acquire cryptographic context");
@@ -90,7 +87,7 @@ namespace AudioUtils {
                 throw std::runtime_error("Failed to generate random bytes");
             }
             CryptReleaseContext(hCryptProv, 0);
-            #else
+        #else
             int fd = open("/dev/urandom", O_RDONLY);
             if (fd == -1) {
                 throw std::runtime_error("Failed to open /dev/urandom");
@@ -113,37 +110,76 @@ namespace AudioUtils {
             }
             return result;
         }
-
-        float random_float() {
+		
+		float random_float() {
             constexpr uint64_t max_val = 1ULL << 53;
             uint64_t x = get_random_uint32();
             x = (x << 32) | get_random_uint32();
             x &= (max_val - 1);
             return static_cast<float>(x) / max_val;
         }
-
+		
+		long double generateWhiteNoise() { return dist(min, max); }
+		
+		long double generatePinkNoise() {
+        	thread_local static long double b0 = 0.0L, b1 = 0.0L, b2 = 0.0L;
+			long double white = generateWhiteNoise();
+			b0 = 0.99886L * b0 + white * 0.0555179L;
+			b1 = 0.99332L * b1 + white * 0.0750759L;
+			b2 = 0.96900L * b2 + white * 0.1538520L;
+		
+			return 0.2L * (b0 + b1 + b2 + generateWhiteNoise() * 0.1848L);
+		}
+	
+		static_cast<int>random_int(random_float());
     public:
-        RandomGenerator() : rd(), gen(rd()), dist(-1.0f, 1.0f) {
+        RandomGenerator() : rd, dist(min, max), random_float(), random_int(), generateWhiteNoise(), generatePinkNoise() {
             fill_buffer();
         }
+		
+		// bonus - see below roll_dice		
+		template<typename T, typename U>
+		signed int roll_dice(T min, U max) {
+    		// Ensure inputs are arithmetic types
+    		static_assert(std::is_arithmetic_v<T> && std::is_arithmetic_v<U>,
+                  "Input types must be numeric (int, float, double, etc.)");
 
-        float generateWhiteNoise() { return dist(gen); }
-        float generatePinkNoise() {
-            thread_local static float b0 = 0.0f, b1 = 0.0f, b2 = 0.0f;
-            float white = dist(gen);
-            b0 = 0.99886f * b0 + white * 0.0555179f;
-            b1 = 0.99332f * b1 + white * 0.0750759f;
-            b2 = 0.96900f * b2 + white * 0.1538520f;
-            return 0.2f * (b0 + b1 + b2 + white * 0.1848f);
-        }
-        float generateUniform(float min, float max) {
-            std::uniform_real_distribution<float> uniform_dist(min, max);
-            return uniform_dist(gen);
-        }
+    		// Convert inputs to long double for uniform_real_distribution
+    		long double min_val = static_cast<long double>(min);
+    		long double max_val = static_cast<long double>(max);
+
+			// Swap if min_val > max_val to ensure valid range
+    		if (min_val > max_val) {
+        		std::swap(min_val, max_val);
+    		}
+
+    		// Clamp to signed int range to avoid overflow
+    		long double int_min = static_cast<long double>(std::numeric_limits<signed int>::min());
+    		long double int_max = static_cast<long double>(std::numeric_limits<signed int>::max());
+    		min_val = std::max(min_val, int_min);
+    		max_val = std::min(max_val, int_max);
+
+    		// Generate random number and cast to signed int
+    		return static_cast<signed int>(std::floor(dist(min_val, max_val)));
+		}
+		
+		// bonus - high powered rng. #include "instruments.h" - not free software
+		signed int flip_coin() { return roll_dice(0,1); }
+		signed int roll_d2() { return roll_dice(1,2); }
+		signed int roll_d4() { return roll_dice(1,4); }
+		signed int roll_d6() { return roll_dice(1,6); }
+		signed int roll_d8() { return roll_dice(1,8); }
+		signed int roll_d10() { return roll_dice(1,10); }
+		signed int roll_d12() { return roll_dice(1,12); }
+		signed int roll_d20() { return roll_dice(1,20); }
+		signed int roll_d100() { return roll_dice(1,100); }
+		signed int roll_2d10() { return (roll_d10() * 10 + roll_d10()) }
+		signed int roll_3d6() { return (roll_d6() + roll_d6() + roll_d6()) }
     };
 
     thread_local std::vector<uint8_t> RandomGenerator::buffer;
     thread_local size_t RandomGenerator::buffer_pos = 0;
+	// newest and shiniest
 
     class Distortion {
         float drive, threshold;

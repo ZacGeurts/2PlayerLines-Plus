@@ -286,7 +286,7 @@ Vec2 AI::calculateTargetDirection(const Player& aiPlayer, const Collectible& col
     bool nearCollectible = std::abs(aiPlayer.pos.x - collectible.pos.x) <= COLLECTIBLE_HALF_SIZE &&
                           std::abs(aiPlayer.pos.y - collectible.pos.y) <= COLLECTIBLE_HALF_SIZE;
 
-    // Opponent avoidance
+    // Opponent - harrass - update this
     Vec2 toOpponent = opponent.pos - aiPlayer.pos;
     float opponentDistance = toOpponent.magnitude();
     if (opponentDistance < OPPONENT_AVOIDANCE && opponent.alive) {

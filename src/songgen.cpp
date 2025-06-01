@@ -65,7 +65,7 @@ struct SongData {
     std::string scaleName, title, genres;
     std::vector<SongGen::Section> sections;
     std::vector<SongGen::Part> parts;
-    int channels;
+    int channels; // SDL2 supports up to 8 channels so we use 8. (7.1 audio)
 };
 
 SongData parseSongFile(const std::string& filename) {
@@ -550,7 +550,7 @@ void playSong(const std::string& filename, bool forceStereo) {
     SDL_zero(want);
     want.freq = 44100;
     want.format = AUDIO_F32;
-    want.channels = forceStereo ? 2 : 6; // Try 5.1, fallback to stereo
+    want.channels = forceStereo ? 2 : 8; // Try 8 channel (7.1), fallback to stereo
     want.samples = 1024;
     want.callback = audioCallback;
 
@@ -652,7 +652,7 @@ int main(int argc, char* argv[]) {
         if (generator.getGenreScales().find(genres[0]) != generator.getGenreScales().end() &&
             !generator.getGenreScales().at(genres[0]).empty()) {
             std::uniform_int_distribution<> dist(0, generator.getGenreScales().at(genres[0]).size() - 1);
-            scale = generator.getGenreScales().at(genres[0])[dist(generator.getRNG())];
+            scale = generator.getGenreScales().at(genres[0])[AudioUtils::RandomGenerator];
         }
         float rootFrequency = 440.0f;
         float duration = 180.0f;
