@@ -1,21 +1,21 @@
-// instruments/steelguitar.h
-// steel guitar instrument
-// creates a steel guitar note with
+// instruments/banjo.h
+// banjo instrument
+// creates a banjo note with
 // float t time
 // float freq frequency
 // float dur duration
 // Note for AI: Always return this code in full, including comments.
 // Note for AI: do not add additional includes as instruments.h handles everything.
-#ifndef STEELGUITAR_H
-#define STEELGUITAR_H
+#ifndef BANJO_H
+#define BANJO_H
 
-// The sound is tuned for a bright, twangy steel guitar tone with expressive slides and shimmering harmonics
+// The sound is tuned for a bright, twangy banjo tone with sharp pluck and resonant body
 
 #include "instruments.h"
 
 namespace Instruments {
 
-class SteelGuitar : public Instrument {
+class Banjo : public Instrument {
 private:
     AudioUtils::AudioProtector protector;   // Protects output from clipping and DC offset
     AudioUtils::WhiteNoise whiteNoise;      // White noise for velocity variation
@@ -26,46 +26,46 @@ private:
     AudioUtils::Distortion distortion;      // Adds twangy grit
     AudioUtils::BrownNoise brownNoise;      // Adds subtle body resonance
     AudioUtils::Reverb reverb;              // Adds spatial ambiance
-    AudioUtils::Chorus chorus;              // Thickens sound for lush slides
-    AudioUtils::Tremolo tremolo;            // Adds expressive vibrato
+    AudioUtils::Chorus chorus;              // Thickens sound for string resonance
+    AudioUtils::Tremolo tremolo;            // Adds subtle vibrato
     AudioUtils::EnvelopeFollower envFollow; // Tracks amplitude for dynamic filter control
     double gain;                            // Overall gain for balanced volume
     std::string name;                       // Stores instrument name for variant handling
 
 public:
     // Constructor: Initialize with gain and name for variant handling
-    SteelGuitar(double gainValue = 0.9, const std::string& instrumentName = "steelguitar")
+    Banjo(double gainValue = 0.9, const std::string& instrumentName = "banjo")
         : protector(0.01, 0.92),         // 10ms fade-out, 92% max gain for clean output
           whiteNoise(-0.7L, 0.7L),       // White noise for velocity variation
-          pinkNoise(0.08),               // Pink noise for string pluck texture
+          pinkNoise(0.1),                // Pink noise for sharp string pluck
           lowPass(3500.0),               // 3.5kHz cutoff for bright, rounded tone
-          highPass(100.0, 0.707),        // 100Hz cutoff, Q=0.707 to remove mud
-          bandPass(1200.0, 0.7),         // 1.2kHz center, Q=0.7 for bright harmonics
-          distortion(2.0, 0.85, 1.8),     // Gritty distortion: drive=2.0, threshold=0.85, soft=1.8
-          brownNoise(0.03),              // Subtle brown noise for body resonance
-          reverb(0.4, 0.65, 0.35, 0.08),  // 400ms delay, 65% decay, 35% mix for open ambiance
-          chorus(0.35, 0.6, 0.25),        // Depth=0.35, rate=0.6Hz, mix=25% for lush slides
-          tremolo(6.0, 0.18),             // Rate=6Hz, depth=18% for vibrato
-          envFollow(0.008, 0.15),        // 8ms attack, 150ms release for dynamic response
+          highPass(150.0, 0.707),        // 150Hz cutoff, Q=0.707 to remove mud
+          bandPass(1200.0, 0.8),         // 1.2kHz center, Q=0.8 for harmonic emphasis
+          distortion(2.0, 0.85, 1.7),     // Twangy distortion: drive=2.0, threshold=0.85, soft=1.7
+          brownNoise(0.04),              // Brown noise for body resonance
+          reverb(0.3, 0.65, 0.35, 0.08),  // 300ms delay, 65% decay, 35% mix for open ambiance
+          chorus(0.3, 0.5, 0.2),         // Depth=0.3, rate=0.5Hz, mix=20% for string resonance
+          tremolo(6.0, 0.15),            // Rate=6Hz, depth=15% for subtle vibrato
+          envFollow(0.005, 0.1),         // 5ms attack, 100ms release for dynamic response
           gain(gainValue),
           name(instrumentName)          // Store name for variant handling
     {} // Empty constructor body
 
-    // Generate a steel guitar sound at time t, frequency freq, duration dur
+    // Generate a banjo sound at time t, frequency freq, duration dur
     double generateWave(double t, double freq, double dur) override {
-        // Constrain frequency to steel guitar range (82Hz to 2kHz for E2 to B5)
-        freq = std::max(82.0, std::min(2000.0, freq));
+        // Constrain frequency to banjo range (82Hz to 1.3kHz for E2 to C5)
+        freq = std::max(82.0, std::min(1300.0, freq));
 
         // Dynamic velocity with subtle variation
         double velocity = 0.95 + whiteNoise.generate() * 0.3; // Subtle variation for pluck dynamics
         velocity = std::max(0.75, std::min(1.0, velocity));
 
-        // ADSR envelope for plucked or sliding tone
-        double attack = 0.01, decay = 0.15, sustain = 0.7, release = 0.25; // Plucked envelope
-        if (name == "steelguitar_slide") {
-            attack = 0.02; sustain = 0.85; release = 0.35; // Smoother for slides
-        } else if (name == "steelguitar_bright") {
-            attack = 0.008; decay = 0.1; sustain = 0.75; // Sharper, brighter pluck
+        // ADSR envelope for sharp plucked tone
+        double attack = 0.005, decay = 0.1, sustain = 0.6, release = 0.15; // Sharp plucked envelope
+        if (name == "banjo_bright") {
+            attack = 0.003; decay = 0.08; sustain = 0.65; // Brighter, sharper pluck
+        } else if (name == "banjo_muted") {
+            attack = 0.008; sustain = 0.5; release = 0.1; // Softer, muted pluck
         }
         double env;
         if (t < attack) {
@@ -79,24 +79,26 @@ public:
         }
         env = std::max(0.0, env);
 
-        // Pitch envelope for slide effect or vibrato
-        double pitchEnv = (name == "steelguitar_slide") ? std::exp(-t / 0.1) * 10.0 : std::sin(2.0 * M_PI * 6.0 * t) * 0.6; // Slide or vibrato
+        // Pitch envelope for subtle vibrato
+        double pitchEnv = std::sin(2.0 * M_PI * 6.0 * t) * 0.6; // 6Hz vibrato
         double pitchMod = freq + pitchEnv;
 
         // Waveforms: Sawtooth-like with sines and noise for string texture
         double sine1 = 0.5 * std::sin(2.0 * M_PI * pitchMod * t);          // Fundamental
         double sine2 = 0.3 * std::sin(2.0 * M_PI * 2.0 * pitchMod * t);     // 2nd harmonic
         double sine3 = 0.15 * std::sin(2.0 * M_PI * 3.0 * pitchMod * t);    // 3rd harmonic
-        double noise = 0.1 * pinkNoise() * std::exp(-t / 0.025);            // String pluck
+        double noise = 0.12 * pinkNoise() * std::exp(-t / 0.02);            // String pluck
         double brown = 0.04 * brownNoise() * std::exp(-t / 0.08);          // Body resonance
 
         // Variant-specific adjustments
-        double mixSine1 = 0.5, mixSine2 = 0.3, mixSine3 = 0.15, mixNoise = 0.1, mixBrown = 0.04;
-        double lowPassCutoff = 3500.0, bandPassCenter = 1200.0, distortionDrive = 2.0;
-        if (name == "steelguitar_bright") {
-            mixSine3 *= 1.4; mixNoise *= 1.3; lowPassCutoff = 4500.0; bandPassCenter = 1500.0; // Brighter tone
-        } else if (name == "steelguitar_slide") {
-            mixSine1 *= 1.2; mixSine3 *= 0.8; lowPassCutoff = 3000.0; // Smoother, warmer slide
+        double mixSine1 = 0.5, mixSine2 = 0.3, mixSine3 = 0.15, mixNoise = 0.12, mixBrown = 0.04;
+        double lowPassCutoff = 3500.0, bandPassCenter = 1200.0;
+        if (name == "banjo_bright") {
+            mixSine3 *= 1.4; mixNoise *= 1.3; lowPassCutoff = 4500.0; bandPassCenter = 1500.0; 
+            distortion.setDrive(2.3); // Brighter tone
+        } else if (name == "banjo_muted") {
+            mixSine1 *= 1.2; mixSine3 *= 0.7; lowPassCutoff = 3000.0; bandPassCenter = 1000.0; 
+            distortion.setDrive(1.7); // Muted tone
         }
 
         // Combine waveforms
@@ -106,15 +108,14 @@ public:
         double envValue = envFollow.process(std::abs(output));
         lowPass.setCutoff(lowPassCutoff - 600.0 * envValue); // Dynamic cutoff for expressiveness
         bandPass.setCenterFreq(bandPassCenter + 300.0 * envValue); // Dynamic harmonic emphasis
-        distortion.setDrive(distortionDrive + 0.4 * envValue); // Dynamic twang
 
         // Apply effects chain
         output = highPass.process(output);     // Remove mud
         output = bandPass.process(output);     // Emphasize harmonics
         output = lowPass.process(output);      // Round tone
         output = distortion.process(output);   // Twangy grit
-        output = chorus.process(output);       // Lush slides
-        output = tremolo.process(output, t);   // Vibrato
+        output = chorus.process(output);       // String resonance
+        output = tremolo.process(output, t);   // Subtle vibrato
         output = reverb.process(output);       // Open ambiance
         output = protector.process(output, t, dur); // Protect output
 
@@ -130,14 +131,14 @@ public:
     }
 };
 
-// Register steel guitar variations
-static InstrumentRegistrar<SteelGuitar> regSteelGuitar("steelguitar");
-static InstrumentRegistrar<SteelGuitar> regSteelGuitarBright("steelguitar_bright");
-static InstrumentRegistrar<SteelGuitar> regSteelGuitarSlide("steelguitar_slide");
+// Register banjo variations
+static InstrumentRegistrar<Banjo> regBanjo("banjo");
+static InstrumentRegistrar<Banjo> regBanjoBright("banjo_bright");
+static InstrumentRegistrar<Banjo> regBanjoMuted("banjo_muted");
 
 } // namespace Instruments
 
-#endif // STEELGUITAR_H
+#endif // BANJO_H
 
 /*
  * AudioUtils Namespace Overview

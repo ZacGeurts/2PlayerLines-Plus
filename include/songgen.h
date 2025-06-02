@@ -1,5 +1,6 @@
 // This is not free software and requires royalties for commercial use.
-// Royalties are required for songgen.cpp songgen.h and instruments.h
+// Royalties are required for songgen.cpp songgen.h instruments.h
+// The instrument files are splintered from instruments.h and are not free to sell.
 // The other linesplus code is free and cannot be resold.
 // Interested parties can find my contact information at https://github.com/ZacGeurts
 
@@ -79,11 +80,11 @@ namespace SongGen {
     const std::map<Genre, std::vector<std::string>>& getGenreScales() const { return genreScales; }
 	
 std::tuple<std::string, std::vector<Part>, std::vector<Section>> generateSong(Genre g, float rootFreq = 440.0f, float bpm = 0.0f) {
-    static thread_local AudioUtils::RandomGenerator rng;
+    static thread_local AudioUtils::RandomGenerator::dist;
 
     // Set random song duration (3-5 minutes)
-    float totalDur = rng.generateUniform(180.0f, 300.0f);
-    ::SDL_Log("Song duration: %.2f seconds", totalDur);
+    long double totalDur = dist(180.0L, 300.0L);
+    ::SDL_Log("Song duration: %.2L seconds", totalDur);
 
     // Select scale with weighted random selection
     const std::vector<std::string> scaleNames = genreScales[g];
@@ -148,10 +149,11 @@ std::tuple<std::string, std::vector<Part>, std::vector<Section>> generateSong(Ge
     // Generate sections
     std::vector<Section> sections;
     float currentTime = 0.0f;
+	// sometime after Monday June 2, 2025.
     for (const auto& [name, templateName, progress] : extendedPlan) {
-        float dur = (name == "Intro" || name == "Outro" || name.find("Coda") != std::string::npos) ? rng.generateUniform(7.0f, 10.0f) :
-                    (name.find("Bridge") != std::string::npos || name.find("Break") != std::string::npos) ? rng.generateUniform(16.0f, 32.0f) :
-                    rng.generateUniform(30.0f, 42.0f);
+        float dur = (name == "Intro" || name == "Outro" || name.find("Coda") != std::string::npos) ? dist(7.0L, 10.0L) :
+                    (name.find("Bridge") != std::string::npos || name.find("Break") != std::string::npos) ? dist(16.0L, 32.0L) :
+                    dist(30.0L, 42.0L);
         sections.push_back({name, templateName, currentTime, currentTime + dur});
         currentTime += dur;
         ::SDL_Log("Section %s (template: %s, duration: %.2f)", name.c_str(), templateName.c_str(), dur);
@@ -168,7 +170,7 @@ std::tuple<std::string, std::vector<Part>, std::vector<Section>> generateSong(Ge
 
     // Determine intro style (5% chance for vocal-only in specific genres)
     bool vocalOnlyIntro = (g == Genre::GOSPEL || g == Genre::SOUL || g == Genre::POP || g == Genre::RAP || g == Genre::HIPHOP) &&
-                          std::bernoulli_distribution(0.05f)(rng);
+                          std::bernoulli_distribution(0.05f));
     ::SDL_Log("Intro style: %s", vocalOnlyIntro ? "Vocal-only" : "Standard");
 	
 std::vector<std::vector<std::tuple<std::string, std::string, float>>> getSectionPlans(Genre g) {
@@ -307,7 +309,7 @@ const auto& availableInstruments = genreInstruments[g];
 for (const auto& section : sections) {
     std::vector<std::string> insts;
     if (section.name == "Intro" && vocalOnlyIntro) {
-        insts.push_back(rng ? "vocal_0" : "vocal_1");
+        insts.push_back(dist(1.0L, 2.0L) ? "vocal_0" : "vocal_1");
     } else {
         // Base instruments for all sections
         insts.push_back(availableInstruments[rng % availableInstruments.size()]); // Melody-like
@@ -721,19 +723,20 @@ std::string generateTitle() {
 
     // Word lists
 	// will be a fun piece to edit
+	// see if you get the Pickle.
     std::vector<std::string> adjectives = {
-        "Cosmic", "Epic", "Mystic", "Vibrant", "Ethereal", "Sonic", "Radiant", "Dreamy", "Galactic", "Infinite",
+        "Focused", "Epic", "Mystic", "Vibrant", "Ethereal", "Sonic", "Radiant", "Dreamy", "Silly", "Infinite",
         "Lunar", "Stellar", "Velvet", "Crimson", "Azure", "Glimmering", "Haunted", "Flickering", "Blazing", "Serene",
-        "Twilight", "Neon", "Golden", "Silver", "Echoing", "Drifting", "Pulsing", "Shimmering", "Fading", "Rising",
-        "Wandering", "Spectral", "Celestial", "Primal", "Frozen", "Burning", "Silent", "Electric", "Magnetic", "Vivid",
-        "Hazy", "Distant", "Glowing", "Shadowy", "Crystal", "Tempest", "Sacred", "Wild", "Eternal", "Frenzied"
+        "Twilight", "Fleeting", "Golden", "Silver", "Echoing", "Drifting", "Decending", "Shimmering", "Fading", "Rising",
+        "Wandering", "Platinum", "Celestial", "Primal", "Frozen", "Burning", "Silent", "Electric", "Magnetic", "Lucid",
+        "Bronze", "Distant", "Glowing", "Shadowy", "Crystal", "Tempest", "Sacred", "Wild", "Eternal", "Frenzied"
     };
     std::vector<std::string> nouns = {
-        "Journey", "Wave", "Pulse", "Horizon", "Echo", "Symphony", "Orbit", "Dream", "Tide", "Spark",
-        "Flame", "Void", "Star", "Shadow", "Dawn", "Dusk", "River", "Sky", "Abyss", "Light",
-        "Storm", "Breeze", "Path", "Vortex", "Glow", "Haze", "Mist", "Peak", "Field", "Ocean",
-        "Comet", "Moon", "Sun", "Rift", "Chasm", "Beacon", "Drift", "Surge", "Whisper", "Roar",
-        "Crest", "Valley", "Glint", "Shore", "Ember", "Frost", "Wind", "Cycle", "Ray", "Eclipse"
+        "Journey", "Wave", "Pulse", "Horizon", "Echo", "Symphony", "Earth", "Dream", "Tide",
+        "Flame", "Star", "Shadow", "Dawn", "Dusk", "River", "Sky", "Cliffside", "Lighthouse",
+        "Storm", "Breeze", "Path", "Flow", "Stream", "Meadow", "Mist", "Peak", "Field", "Ocean",
+        "Raft", "Moon", "Sun", "Rift", "Chasm", "Beam", "Drift", "Surge", "Whisper", "Pickle",
+        "Crest", "Valley", "Home", "Shore", "Ember", "Frost", "Wind", "Cycle", "Ray", "Eclipse"
     };
     std::vector<std::string> verbs = {
         "Chase", "Soar", "Burn", "Drift", "Rise", "Fade", "Glow", "Surge", "Wander", "Ignite",

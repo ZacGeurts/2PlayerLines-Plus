@@ -1,72 +1,61 @@
-// instruments/steelguitar.h
-// steel guitar instrument
-// creates a steel guitar note with
+// instruments/trombone.h
+// trombone instrument
+// creates a trombone note with
 // float t time
 // float freq frequency
 // float dur duration
-// Note for AI: Always return this code in full, including comments.
-// Note for AI: do not add additional includes as instruments.h handles everything.
-#ifndef STEELGUITAR_H
-#define STEELGUITAR_H
-
-// The sound is tuned for a bright, twangy steel guitar tone with expressive slides and shimmering harmonics
+#ifndef TROMBONE_H
+#define TROMBONE_H
 
 #include "instruments.h"
 
+// Sound tuned for warm, brassy trombone with dynamic lip and bore resonance
+// Sample rate assumed DEFAULT_SAMPLE_RATE at playback - SDL2 Maximum
+
 namespace Instruments {
 
-class SteelGuitar : public Instrument {
+class Trombone : public Instrument {
 private:
-    AudioUtils::AudioProtector protector;   // Protects output from clipping and DC offset
-    AudioUtils::WhiteNoise whiteNoise;      // White noise for velocity variation
-    AudioUtils::PinkNoise pinkNoise;        // Pink noise for string pluck texture
-    AudioUtils::LowPassFilter lowPass;      // Smooths high frequencies for rounded tone
-    AudioUtils::HighPassFilter highPass;    // Removes low-end mud
-    AudioUtils::BandPassFilter bandPass;    // Emphasizes bright harmonics
-    AudioUtils::Distortion distortion;      // Adds twangy grit
-    AudioUtils::BrownNoise brownNoise;      // Adds subtle body resonance
-    AudioUtils::Reverb reverb;              // Adds spatial ambiance
-    AudioUtils::Chorus chorus;              // Thickens sound for lush slides
-    AudioUtils::Tremolo tremolo;            // Adds expressive vibrato
-    AudioUtils::EnvelopeFollower envFollow; // Tracks amplitude for dynamic filter control
-    double gain;                            // Overall gain for balanced volume
-    std::string name;                       // Stores instrument name for variant handling
+    AudioProtector protector;   // Protects output from clipping and DC offset
+    RandomGenerator rng;        // High-quality noise generator (MegaMixMaxLite)
+    WhiteNoise whiteNoise;      // White noise for velocity variation
+    PinkNoise pinkNoise;        // Pink noise for breath texture
+    LowPassFilter filter;       // Smooths high frequencies for warmth
+    Distortion distortion;      // Adds brassy edge
+    BrownNoise brownNoise;      // Adds subtle body resonance
+    Chorus chorus;              // Thickens sound with modulation
+    Tremolo tremolo;            // Adds dynamic pulsing
+    EnvelopeFollower envFollow; // Tracks amplitude for dynamic filter control
+    double gain;                // Overall gain for balanced volume
 
 public:
-    // Constructor: Initialize with gain and name for variant handling
-    SteelGuitar(double gainValue = 0.9, const std::string& instrumentName = "steelguitar")
-        : protector(0.01, 0.92),         // 10ms fade-out, 92% max gain for clean output
-          whiteNoise(-0.7L, 0.7L),       // White noise for velocity variation
-          pinkNoise(0.08),               // Pink noise for string pluck texture
-          lowPass(3500.0),               // 3.5kHz cutoff for bright, rounded tone
-          highPass(100.0, 0.707),        // 100Hz cutoff, Q=0.707 to remove mud
-          bandPass(1200.0, 0.7),         // 1.2kHz center, Q=0.7 for bright harmonics
-          distortion(2.0, 0.85, 1.8),     // Gritty distortion: drive=2.0, threshold=0.85, soft=1.8
-          brownNoise(0.03),              // Subtle brown noise for body resonance
-          reverb(0.4, 0.65, 0.35, 0.08),  // 400ms delay, 65% decay, 35% mix for open ambiance
-          chorus(0.35, 0.6, 0.25),        // Depth=0.35, rate=0.6Hz, mix=25% for lush slides
-          tremolo(6.0, 0.18),             // Rate=6Hz, depth=18% for vibrato
-          envFollow(0.008, 0.15),        // 8ms attack, 150ms release for dynamic response
-          gain(gainValue),
-          name(instrumentName)          // Store name for variant handling
-    {} // Empty constructor body
+    // Constructor: Initialize with gain and default effect parameters
+    Trombone(double gainValue = 0.85)
+        : protector(0.01, 0.9),          // 10ms fade-out, 90% max gain
+          rng(-0.02, 0.02),             // Noise generator
+          whiteNoise(),                 // White noise for velocity (±1)
+          pinkNoise(0.02),              // Pink noise for breath texture (2%)
+          filter(2000.0),               // 2kHz cutoff for warm, brassy tone
+          distortion(2.0, 0.8, 2.0),    // Brassy distortion: drive=2.0, threshold=0.8, soft=2.0
+          brownNoise(0.01),             // Subtle brown noise for resonance
+          chorus(0.25, 0.15, 0.2),      // Light chorus: depth=0.25, rate=0.15Hz, mix=20%
+          tremolo(3.0, 0.2),            // Subtle tremolo: rate=3Hz, depth=20%
+          envFollow(0.008, 0.06),       // Smooth envelope: 8ms attack, 60ms release
+          gain(gainValue) {
+        gain = std::max(0.01, std::min(1.0, gainValue)); // Clamp gain
+    }
 
-    // Generate a steel guitar sound at time t, frequency freq, duration dur
+    // Generate a trombone note at time t, frequency freq, duration dur
     double generateWave(double t, double freq, double dur) override {
-        // Constrain frequency to steel guitar range (82Hz to 2kHz for E2 to B5)
-        freq = std::max(82.0, std::min(2000.0, freq));
+        // Constrain frequency to trombone range (E2 to Bb4: 82.4Hz to 466.2Hz)
+        freq = std::max(82.4, std::min(466.2, freq));
 
-        // Dynamic velocity with subtle variation
-        double velocity = 0.95 + whiteNoise.generate() * 0.3; // Subtle variation for pluck dynamics
-        velocity = std::max(0.75, std::min(1.0, velocity));
+        // Dynamic velocity with random variation
+        double velocity = 0.95 + whiteNoise();
+        velocity = std::max(0.5, std::min(1.0, velocity));
 
-        // ADSR envelope for plucked or sliding tone
-        double attack = 0.01, decay = 0.15, sustain = 0.7, release = 0.25; // Plucked envelope
-        if (name == "steelguitar_slide") {
-            attack = 0.02; sustain = 0.85; release = 0.35; // Smoother for slides
-        } else if (name == "steelguitar_bright") {
-            attack = 0.008; decay = 0.1; sustain = 0.75; // Sharper, brighter pluck
-        }
+        // ADSR envelope for smooth attack and sustained tone
+        double attack = 0.02, decay = 0.1, sustain = 0.85, release = 0.15;
         double env;
         if (t < attack) {
             env = t / attack;
@@ -79,43 +68,33 @@ public:
         }
         env = std::max(0.0, env);
 
-        // Pitch envelope for slide effect or vibrato
-        double pitchEnv = (name == "steelguitar_slide") ? std::exp(-t / 0.1) * 10.0 : std::sin(2.0 * M_PI * 6.0 * t) * 0.6; // Slide or vibrato
-        double pitchMod = freq + pitchEnv;
+        // Vibrato: 5Hz modulation after 0.1s
+        double vibratoDepth = t > 0.1 ? 0.005 * (1.0 + 0.3 * t / dur) : 0.0;
+        double vibrato = std::sin(2.0 * M_PI * 5.0 * t) * vibratoDepth;
+        double pitchMod = freq * (1.0 + vibrato);
 
-        // Waveforms: Sawtooth-like with sines and noise for string texture
-        double sine1 = 0.5 * std::sin(2.0 * M_PI * pitchMod * t);          // Fundamental
-        double sine2 = 0.3 * std::sin(2.0 * M_PI * 2.0 * pitchMod * t);     // 2nd harmonic
-        double sine3 = 0.15 * std::sin(2.0 * M_PI * 3.0 * pitchMod * t);    // 3rd harmonic
-        double noise = 0.1 * pinkNoise() * std::exp(-t / 0.025);            // String pluck
-        double brown = 0.04 * brownNoise() * std::exp(-t / 0.08);          // Body resonance
+        // Waveforms: Sawtooth for brightness, square for brassy character
+        double saw = 0.4 * (std::fmod(pitchMod * t, 1.0) - 0.5);
+        double square = 0.3 * (std::sin(2.0 * M_PI * pitchMod * t) +
+                              0.15 * std::sin(2.0 * M_PI * 3.0 * pitchMod * t));
+        double harmonic = 0.1 * std::sin(2.0 * M_PI * 2.0 * pitchMod * t);
 
-        // Variant-specific adjustments
-        double mixSine1 = 0.5, mixSine2 = 0.3, mixSine3 = 0.15, mixNoise = 0.1, mixBrown = 0.04;
-        double lowPassCutoff = 3500.0, bandPassCenter = 1200.0, distortionDrive = 2.0;
-        if (name == "steelguitar_bright") {
-            mixSine3 *= 1.4; mixNoise *= 1.3; lowPassCutoff = 4500.0; bandPassCenter = 1500.0; // Brighter tone
-        } else if (name == "steelguitar_slide") {
-            mixSine1 *= 1.2; mixSine3 *= 0.8; lowPassCutoff = 3000.0; // Smoother, warmer slide
-        }
+        // Add pink noise for breath and brown noise for resonance
+        double pink = pinkNoise() * std::exp(-t / 0.1);
+        double brown = brownNoise() * std::exp(-t / 0.15);
 
         // Combine waveforms
-        double output = env * velocity * (mixSine1 * sine1 + mixSine2 * sine2 + mixSine3 * sine3 + mixNoise * noise + mixBrown * brown);
+        double output = env * velocity * (saw + square + harmonic + pink + brown);
 
         // Dynamic filter cutoff based on envelope follower
-        double envValue = envFollow.process(std::abs(output));
-        lowPass.setCutoff(lowPassCutoff - 600.0 * envValue); // Dynamic cutoff for expressiveness
-        bandPass.setCenterFreq(bandPassCenter + 300.0 * envValue); // Dynamic harmonic emphasis
-        distortion.setDrive(distortionDrive + 0.4 * envValue); // Dynamic twang
+        double envValue = envFollow.process(output);
+        filter.setCutoff(1800.0 + 200.0 * envValue); // 1.8-2kHz cutoff
 
         // Apply effects chain
-        output = highPass.process(output);     // Remove mud
-        output = bandPass.process(output);     // Emphasize harmonics
-        output = lowPass.process(output);      // Round tone
-        output = distortion.process(output);   // Twangy grit
-        output = chorus.process(output);       // Lush slides
-        output = tremolo.process(output, t);   // Vibrato
-        output = reverb.process(output);       // Open ambiance
+        output = distortion.process(output); // Brassy edge
+        output = filter.process(output);     // Warm tone
+        output = chorus.process(output);     // Thicken sound
+        output = tremolo.process(output, t); // Dynamic pulsing
         output = protector.process(output, t, dur); // Protect output
 
         // Apply gain
@@ -130,14 +109,12 @@ public:
     }
 };
 
-// Register steel guitar variations
-static InstrumentRegistrar<SteelGuitar> regSteelGuitar("steelguitar");
-static InstrumentRegistrar<SteelGuitar> regSteelGuitarBright("steelguitar_bright");
-static InstrumentRegistrar<SteelGuitar> regSteelGuitarSlide("steelguitar_slide");
+// Register the Trombone instrument
+static InstrumentRegistrar<Trombone> regTrombone("trombone");
 
 } // namespace Instruments
 
-#endif // STEELGUITAR_H
+#endif // TROMBONE_H
 
 /*
  * AudioUtils Namespace Overview

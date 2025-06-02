@@ -1,9 +1,8 @@
 // songgen.cpp
 // This is not free software and requires royalties for commercial use.
-// Royalties are required for songgen.cpp, songgen.h, instruments.h
+// Royalties are required for songgen.cpp songgen.h instruments.h
+// The instrument files are splintered from instruments.h and are not free to sell.
 // The other linesplus code is free and cannot be resold.
-// Copyright (c) 2023 Zac Brown
-// Licensed under the MIT License
 // Interested parties can find my contact information at https://github.com/ZacGeurts
 
 #include "songgen.h"
