@@ -16,6 +16,7 @@ Songgen creates and plays music .song files.<BR />
 Do not be mean to pets. Protect your hearing.<BR />
 We are working with 0-44100hz https://www.szynalski.com/tone-generator<BR />
 Do not be mean to pets. Courts rule that we cannot extinct mosquitoes.<BR />
+Protect your hearing.<BR />
 <BR />
 # Requirements
 sudo apt only run once if needed.<BR />
