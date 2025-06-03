@@ -139,200 +139,114 @@ static InstrumentRegistrar<Sitar> regSitarDrone("sitar_drone");
 
 #endif // SITAR_H
 
-/*
- * AudioUtils Namespace Overview
- * ============================
- * The AudioUtils namespace contains a suite of audio processing utilities designed
- * for high-quality instrument synthesis.
- * All utilities operate at DEFAULT_SAMPLE_RATE (44100.0f) and use double precision
- * for numerical stability. They integrate seamlessly with RandomGenerator (using
- * MegaMixMaxLite) for noise generation and are optimized for real-time audio with
- * robust parameter validation and output clamping.
+/* 
+ * AudioUtils Namespace
+ * ===================
+ * Provides utilities for audio processing and synthesis, designed for thread-safety and robustness.
+ * Uses DEFAULT_SAMPLE_RATE (44100 Hz) and 8 channels (SDL2 max). All utilities include validation and clamping.
  *
- * Existing Utilities
- * -----------------
  * 1. RandomGenerator
- *    - Purpose: Generates high-quality random numbers for white noise, pink noise,
- *      and uniform distributions, used for velocity variation, string noise, or
- *      stochastic effects. Uses a 262,144-bit state (MegaMixMaxLite) for superior
- *      statistical quality.
- *    - Features:
- *      - White noise: Uniform random values in a specified range.
- *      - Pink noise: 1/f noise for natural string buzz or ambient texture.
- *      - Thread-safe with clock-free seeding.
- *    - Call Example:
- *      RandomGenerator rng(-1.0, 1.0);				// Initialize random generator
- *      int diceroll = rng.roll_d6();				// Roll a 6-sided die
- *		int diceroll = rng.roll_dice(min, max);		// specify range to random
+ *    - Generates high-quality random numbers for noise or stochastic effects.
+ *    - Features: Thread-safe, 262,144-bit state (MegaMixMaxLite), clock-free entropy seeding.
+ *    - Usage:
+ *      static thread_local AudioUtils::RandomGenerator rng;
+ *      int roll = rng.roll_d20();				// 1-20
+ *      int percent = rng.roll_2d10();			// 0-99
+ *      int range = rng.roll_dice(min, max);	// Custom range
+ *      long double val = rng.random_L();		// Random long double [0,1)
+ *      long double dist = rng.dist(1, 11);		// Random long double [1,11]
  *
  * 2. HighPassFilter
- *    - Purpose: Removes low frequencies below a cutoff, used for DC blocking or
- *      emphasizing high-end in bass synthesis.
- *    - Features:
- *      - Biquad filter with dynamic cutoff and Q-factor.
- *      - Precomputed coefficients for efficiency.
- *      - Dynamic parameter updates and state reset.
- *    - Call Example:
- *      HighPassFilter hpf(100.0, 0.707);			// 100Hz cutoff, Q=0.707
- *      double output = hpf.process(white);			// Process white noise
- *      hpf.setCutoff(150.0);						// Update cutoff
+ *    - Removes frequencies below cutoff (e.g., DC blocking, bass high-end emphasis).
+ *    - Features: Biquad filter, dynamic cutoff/Q-factor, precomputed coefficients, state reset.
+ *    - Usage:
+ *      HighPassFilter hpf(100.0L, 0.707L);		// 100Hz cutoff, Q=0.707
+ *      long double out = hpf.process(input);	// Process signal
+ *      hpf.setCutoff(150.0L);					// Update cutoff
  *
  * 3. LowPassFilter
- *    - Purpose: Removes high frequencies above a cutoff, used for warming bass tones.
- *    - Features:
- *      - First-order filter with dynamic cutoff.
- *      - Precomputed smoothing factor for efficiency.
- *      - State reset for stability.
- *    - Call Example:
- *      LowPassFilter lpf(250.0); // 250Hz cutoff
- *      double output = lpf.process(pink);			// Process pink noise
- *      lpf.setCutoff(300.0);						// Update cutoff
+ *    - Removes frequencies above cutoff (e.g., warming bass tones).
+ *    - Features: First-order filter, dynamic cutoff, precomputed smoothing, state reset.
+ *    - Usage:
+ *      LowPassFilter lpf(250.0L);                // 250Hz cutoff
+ *      long double out = lpf.process(input);      // Process signal
+ *      lpf.setCutoff(300.0L);                    // Update cutoff
  *
  * 4. BandPassFilter
- *    - Purpose: Isolates a frequency band, used for resonant bass effects or formant-like tones.
- *    - Features:
- *      - Biquad filter with dynamic center frequency and bandwidth.
- *      - Precomputed coefficients for efficiency.
- *      - Dynamic updates and state reset.
- *    - Call Example:
- *      BandPassFilter bpf(1000.0, 0.5);			// 1kHz center, Q=0.5
- *      double output = bpf.process(white);			// Process white noise
- *      bpf.setCenterFreq(1200.0);					// Update center frequency
+ *    - Isolates frequency band (e.g., resonant bass effects).
+ *    - Features: Biquad filter, dynamic center frequency/bandwidth, precomputed coefficients.
+ *    - Usage:
+ *      BandPassFilter bpf(1000.0L, 0.5L);        // 1kHz center, Q=0.5
+ *      long double out = bpf.process(input);      // Process signal
+ *      bpf.setCenterFreq(1200.0L);               // Update center frequency
  *
  * 5. Reverb
- *    - Purpose: Adds spatial ambiance, simulating room reflections for a live bass sound.
- *    - Features:
- *      - Delay-based reverb with modulated feedback for richness.
- *      - Dynamic delay time, decay, mix, and modulation.
- *      - Buffer resizing and state reset.
- *    - Call Example:
- *      Reverb reverb(0.2, 0.6, 0.4, 0.1);			// 200ms delay, 60% decay, 40% mix, 10% mod
- *      double output = reverb.process(pink);		// Process pink noise
- *      reverb.setParameters(0.3, 0.5, 0.3, 0.05);	// Update parameters
+ *    - Adds spatial ambiance (room reflections).
+ *    - Features: Delay-based, modulated feedback, adjustable delay/decay/mix/modulation.
+ *    - Usage:
+ *      Reverb reverb(0.2L, 0.6L, 0.4L, 0.1L);    // 200ms delay, 60% decay, 40% mix, 10% mod
+ *      long double out = reverb.process(input);   // Process signal
+ *      reverb.setParameters(0.3L, 0.5L, 0.3L, 0.05L); // Update parameters
  *
  * 6. Distortion
- *    - Purpose: Adds harmonic grit, emulating bass amp overdrive or string distortion.
- *    - Features:
- *      - Soft clipping with tanh for natural distortion.
- *      - Dynamic drive, threshold, and softness.
- *      - Output clamping for stability.
- *    - Call Example:
- *      Distortion dist(1.8, 0.75, 2.0);			// Drive=1.8, threshold=0.75, soft=2.0
- *      double output = dist.process(white);		// Process white noise
- *      dist.setDrive(2.0);							// Update drive
+ *    - Adds harmonic grit (e.g., bass amp overdrive).
+ *    - Features: Soft clipping (tanh), dynamic drive/threshold/softness, output clamping.
+ *    - Usage:
+ *      Distortion dist(1.8L, 0.75L, 2.0L);        // Drive=1.8, threshold=0.75, softness=2.0
+ *      long double out = dist.process(input);     // Process signal
+ *      dist.setDrive(2.0L);                      // Update drive
  *
  * 7. AudioProtector
- *    - Purpose: Ensures clean audio output by removing DC offset, applying fade-out,
- *      soft clipping, and gain limiting.
- *    - Features:
- *      - Integrates HighPassFilter for DC blocking.
- *      - Dynamic fade-out and gain limit.
- *      - State reset for stability.
- *    - Call Example:
- *      AudioProtector protector(0.01, 0.85);		// 10ms fade-out, 85% max gain
- *      double output = protector.process(pink, 0.1, 1.0);	// Process with t=0.1s, dur=1s
- *      protector.setMaxGain(0.9);					// Update max gain
+ *    - Ensures clean audio via DC blocking, fade-out, soft clipping, gain limiting.
+ *    - Features: Integrates HighPassFilter, dynamic fade-out/gain limit, state reset.
+ *    - Usage:
+ *      AudioProtector protector(0.01L, 0.85L);    // 10ms fade-out, 85% max gain
+ *      long double out = protector.process(input, 0.1L, 1.0L); // Process with t=0.1s, dur=1s
+ *      protector.setMaxGain(0.9L);               // Update max gain
  *
- * 8. BrownNoise
- *    - Purpose: Generates brown (1/f²) noise for deep, rumbly textures like amp hum
- *      or room ambiance, enhancing bass guitar realism.
- *    - Features:
- *      - Integrates RandomGenerator’s white noise for Brownian motion.
- *      - Adjustable amplitude scale.
- *      - State reset to prevent drift.
- *    - Call Example:
- *      BrownNoise brown(0.03);						// 3% amplitude scale
- *      double output = brown.process();			// Generate brown noise sample
- *      brown.reset();								// Reset state
+ * 8. WhiteNoise
+ *    - Generates white noise for stochastic effects.
+ *    - Features: Uses RandomGenerator, configurable range, output clamping.
+ *    - Usage:
+ *      WhiteNoise white(-1.0L, 1.0L);            // Range [-1,1]
+ *      long double out = white.process();        // Generate noise
  *
- * 9. Chorus
- *    - Purpose: Thickens bass sound with modulated delay, simulating doubled tracks
- *      or detuning for a richer tone.
- *    - Features:
- *      - Variable delay (5-10ms) with dynamic depth, rate, and mix.
- *      - Linear interpolation for smooth modulation.
- *      - Buffer management and state reset.
- *    - Call Example:
- *      Chorus chorus(0.4, 0.3, 0.25);				// Depth=0.4, rate=0.3Hz, mix=25%
- *      double output = chorus.process(pink);		// Process pink noise
- *      chorus.reset();								// Reset state
+ * 9. BrownNoise
+ *    - Generates brown (1/f²) noise for deep textures (e.g., amp hum).
+ *    - Features: Uses RandomGenerator, adjustable amplitude, state reset.
+ *    - Usage:
+ *      BrownNoise brown(0.03L);                  // 3% amplitude
+ *      long double out = brown.process();        // Generate noise
+ *      brown.reset();                            // Reset state
  *
- * 10. Tremolo
- *     - Purpose: Adds amplitude pulsing for dynamic bass effects, emulating expressive
- *       playing or amp tremolo.
- *     - Features:
- *       - Sinusoidal amplitude modulation with dynamic rate and depth.
- *       - Lightweight and efficient.
- *     - Call Example:
- *       Tremolo tremolo(3.0, 0.3);					// Rate=3Hz, depth=30%
- *       double output = tremolo.process(white, 0.1); // Process with t=0.1s
+ * 10. Chorus
+ *     - Thickens sound with modulated delay (e.g., doubled tracks).
+ *     - Features: Variable delay (5-10ms), dynamic depth/rate/mix, state reset.
+ *     - Usage:
+ *       Chorus chorus(0.4L, 0.3L, 0.25L);       // Depth=0.4, rate=0.3Hz, mix=25%
+ *       long double out = chorus.process(input); // Process signal
+ *       chorus.reset();                         // Reset state
  *
- * 11. EnvelopeFollower
- *     - Purpose: Tracks signal amplitude to dynamically control effects (e.g., filter
- *       cutoff), adding responsiveness to bass dynamics.
- *     - Features:
- *       - Adjustable attack and release times.
- *       - Smooth envelope tracking with state reset.
- *     - Call Example:
- *       EnvelopeFollower envFollow(0.005, 0.05);	// 5ms attack, 50ms release
- *       double env = envFollow.process(pink);		// Track amplitude
- *       envFollow.reset();							// Reset state
+ * 11. Tremolo
+ *     - Adds amplitude pulsing (e.g., expressive bass effects).
+ *     - Features: Sinusoidal modulation, dynamic rate/depth.
+ *     - Usage:
+ *       Tremolo tremolo(3.0L, 0.3L);            // Rate=3Hz, depth=30%
+ *       long double out = tremolo.process(input, 0.1L); // Process with t=0.1s
  *
- * 12. WhiteNoise
- *     - Purpose: Generates white noise (uniform random values) for velocity variation
- *       or stochastic effects in instrument synthesis.
- *     - Features:
- *       - Uses RandomGenerator for high-quality randomness.
- *       - Configurable range [min, max].
- *       - Output clamping for stability.
- *     - Call Example:
- *       RandomGenerator rng(-1.0, 1.0);			// Initialize random generator
- *       WhiteNoise white(rng, -0.15, 0.15);		// ±15% range
- *       double output = white.process();			// Generate white noise sample
-
+ * 12. EnvelopeFollower
+ *     - Tracks signal amplitude for dynamic effect control.
+ *     - Features: Adjustable attack/release, smooth tracking, state reset.
+ *     - Usage:
+ *       EnvelopeFollower env(0.005L, 0.05L);     // 5ms attack, 50ms release
+ *       long double out = env.process(input);    // Track amplitude
+ *       env.reset();                            // Reset state
+ *
  * 13. PinkNoise
- *     - Purpose: Generates pink (1/f) noise for natural string buzz or ambient texture,
- *       enhancing instrument realism.
- *     - Features:
- *       - Three-stage filter on white noise for 1/f spectrum.
- *       - Adjustable amplitude scale.
- *       - State reset for filter stability.
- *     - Call Example:
- *       RandomGenerator rng(-1.0, 1.0);			// Initialize random generator
- *       PinkNoise pink(rng, 0.05);					// 5% amplitude
- *       double output = pink.process();			// Generate pink noise sample
- *       pink.reset();								// Reset state
- *
- * Integration Example
- * ------------------
- * To create a realistic bass guitar sound, chain utilities with RandomGenerator:
- *   RandomGenerator rng(-1.0, 1.0);
- *   LowPassFilter lpf(250.0);
- *   Distortion dist(1.8, 0.75, 2.0);
- *   Chorus chorus(0.4, 0.3, 0.25);
- *   Tremolo tremolo(3.0, 0.3);
- *   EnvelopeFollower envFollow(0.005, 0.05);
- *   BrownNoise brown(0.03);
- *   AudioProtector protector(0.01, 0.85);
- *
- *   double t = 0.1, dur = 1.0;
- *   double sample = rng.generatePinkNoise() + brown.process() * 0.5; // Combine noises
- *   double env = envFollow.process(sample);		// Track amplitude
- *   lpf.setCutoff(150.0 + 100.0 * env);			// Dynamic filter
- *   sample = dist.process(sample);					// Add grit
- *   sample = lpf.process(sample);					// Warm tone
- *   sample = chorus.process(sample);				// Thicken sound
- *   sample = tremolo.process(sample, t);			// Add pulsing
- *   sample = protector.process(sample, t, dur);	// Protect output
- *
- * Notes
- * -----
- * - All utilities use DEFAULT_SAMPLE_RATE (44100.0f) for SDL2 compatibility.
- * - Calculations use double precision for stability, compatible with RandomGenerator’s
- *   long double output (cast to double).
- * - Utilities are thread-safe where applicable (e.g., RandomGenerator) and include
- *   validation and clamping for robustness.
- * - Designed for real-time audio with minimal computational overhead.
- * - Enhances synthesis by adding noise textures, dynamic effects, and
- *   professional polish.
+ *     - Generates pink (1/f) noise for natural textures (e.g., string buzz).
+ *     - Features: Three-stage filtered white noise, adjustable amplitude, state reset.
+ *     - Usage:
+ *       PinkNoise pink(0.05L);                  // 5% amplitude
+ *       long double out = pink.process();       // Generate noise
+ *       pink.reset();                           // Reset state
  */
