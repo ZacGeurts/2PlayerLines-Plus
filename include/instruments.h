@@ -1,44 +1,58 @@
-// instruments.h - generates sound from instruments folder instrument files.
+// instruments.h - generates sound from instruments folder instrument files. Custom RNG.
+
 // This is not free software and requires royalties for commercial use.
-// Royalties are required for songgen.cpp songgen.h instruments.h
-// The instrument files are splintered from instruments.h and modifications are not free to generate profit.
-// The other linesplus code is free and cannot be resold.
-// They are separate programs and can be built independantly.
-// If you have specific concerns or requests for updates:
+// Royalties are required for songgen.cpp songgen.h instruments.h and instrument files
 // Interested parties can find my contact information at https://github.com/ZacGeurts
 // If you make commercial gain, you can do the math and update my Patreon.
-//
+
+// Follow the local law.
+// FCC in the USA restricts what frequencies you can broadcast.
+// Most, if not all countries restrict frequencies.
+// Audible frequencies in the USA are a First Amendment Right. 
+// There are some nefarious limitations, like faking a policeman phone call, but making sound is a human right.
+// Maybe there is a usage for frequencies exceeding this many 31415926535897932384626433832795029L
+/* 	
+	Far out of this scope. I cap to 20hz and less than 44100hz (SDL2 maximum and exceeds human hearing).
+ 	We can go below 20hz down to 0hz, but top of the line car stereos might hit 8hz-12hz with expensive equipment.
+ 	It requires too much voltage to go lower and you would not hear a difference.
+ 	20hz-80hz should be top quality for a subwoofer and it does not try blowing out pc speakers.
+*/
+// You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.
+// Do not restrict emergency communications or damage heart pace makers, etc.
+// Always put hearing safety first. It does not grow back.
+// Be kind to pets.
+
+
 // This system requries some skill level to fully enjoy all the features.
 // This is only tested for Linux currently.
-// 		Basic file management skills with multiple windows (check out the various instruments within the instruments folder)
+// 		Basic file management skills with multiple windows
 // 		Text editing skills. (copy, paste, etc.)
 // 		A functional AI to paste code back and forth.
 //
 //		Computer Terminal keyboard skills will be of assistance.
 // 		We need to be able to write 'make clean' and 'make'
-//		within a terminal within the 2PlayerLines-Plus folder.
+//		Knowing how to program will help with making more complicated changes.
 //
-// note: the AI responses are not that long, read it and see if you need changes.
+// note: the AI should have enough memory to take a full instrument file.
 // include telling it what kind of instrument it is that you would Love to hear.
-// you can compare more than one. Lesson 1: Patience // *takes nap*
+//
+// Start with an existing instrument and see if your AI can make it sound better.
+// song1.song is designed to be changed to different instruments, so you can test your instrument sound.
+// AudioUtils is explained at the bottom of an instrument's .h file, but it is there for the AI.
+// Lesson 1: Patience // *takes nap*
 //
 // All instrument files share a similar template, so they are easily comparable.
-// AudioUtils has powerfull tools at our disposal.
+// AudioUtils has powerfull tools at an instrument's disposal.
 // It should be able to generate every hearable sound using only frequency tones.
-// AudioUtils is explained within the instrument folder at the bottom of an instrument .h file.
-// You can use banjo.h as a template.
-// If you create a new instrument you will need to see the include Register at the very bottom of this file.
 //
-// I built the RNG rng random number generator from the best Grok3 had, and then updated it.
-// If you keep it within the 'only true rng' confines then the rng engine portion should still be replaceable / updateable.
-// It had better be after Sunday June 1, 2025 or one of us was lied to.
+// If you create a NEW instrument you will need to see the include Register at the very bottom of this file.
 //
 // To add a new instrument (e.g., steeldrum.h):
 //
 // 1. Copy and paste an existing instrument from the folder and tell AI you want a steeldrum and paste the code response into a new steeldrum.h.
 // 1a. Save the new header file steeldrum.h within the instruments folder.
 //
-// 2. Update the Register and includes at the bottom of this file. Save.
+// 2. Update the Register and include at the bottom of this file. Save.
 //
 // 3. Rebuild the project with 'make clean && make' from a terminal prompt.
 // 3b. run 'make clean && make' after every time you have saved a change you would like to test.
@@ -54,34 +68,35 @@
 // No fancy tricks. I permit every instrument an audio frequency tone generator and those 3 things.
 // The AI needs to make a Cello or a Trumpet, with fractions of a second, sound like the thing.
 // Sound has time. This looks like a wave. A quarter note is 4 waves per second if they took turns.
-// Frequency is how wide or tight the waves are.
+// Frequency is how wide or close together the waves are.
 // Duration is how long the AI has to make it sound like the thing.
-// It needs to work off of knowing how much time it has to do the thing.
+// How does an instrument create the wave when it does it?
+// And then for that quarter second make it sound like the thing. 
+// pluck, toot, or drum
 //
 // Except for vocal.
 // The Vocal "instrument" uses a special overload,
 // Note for Vocal Overload:
-//		 Do not add vocal, modify existing if you dare. (singers). songgen.h handles vocals poorly so far.
-//       generateWave(t, freq, phoneme, dur, variant), where variant 0 is male (vocal_0) and variant 1 is female (vocal_1).
+//		 Do not add vocal, modify existing. (simulates singers).
+//       generateWave(t, freq, phoneme, dur, variant), variant 0 is male (vocal_0), variant 1 is female (vocal_1).
 //       Both vocal_0 and vocal_1 are registered separately but use the same Vocal class with different variant parameters.
 //
 // AudioUtils takes the waves and does filtering, distortion, noise, and gives the AI what it needs to update sound.
 // It can sound and look like a heart monitor with a heartbeat.
 // It can turn the wave into a laser beam wider than every sound you can hear at once.
-// Math should be able to get us audio everywhere inbetween.
+// Math should be able to get us audio everywhere between.
 // Instrments are like pond ripples from throwing a rock. The water underneath is turbulent as well.
 // Unique stones, we are trying to replicate the ripples.
 // It should be simple to create beep.h after the steeldrum.h, but I think you can be more creative.
+//
 // I do not expect computers will be getting slower, so I went overboard in some areas.
 // I had AI implement threading already, so the program distributes across processor cores nicely.
-// Tell it the file is self contained if it tells you to modify more than one file at a time and you do not feel up for it.
 // Have fun! Make waves. God Bless.
 
 #ifndef INSTRUMENTS_H //standard C++ code
 #define INSTRUMENTS_H
 
 #include <cmath>
-#include <random>
 #include <vector>
 #include <thread>
 #include <future>
@@ -97,6 +112,7 @@
 #include <stdexcept>
 #include <limits>
 #include <SDL2/SDL.h>
+// #include <random> // nope
 
 #ifdef _WIN32
 #include <windows.h>
@@ -109,12 +125,15 @@
 
 #define DEBUG_LOG 0 // leave 0 not 1
 
+// fast tab is searching for --- and nexting.
+
 // AUDIOUTILS AudioUtils are multipurpose and modular
 namespace AudioUtils {
     constexpr float DEFAULT_SAMPLE_RATE = 44100.0f; // max SDL2 supports
     constexpr int BUFFER_SIZE = 1024;
     constexpr int RING_BUFFER_COUNT = 4;
 
+// -----------------------------
 // The AI I used said this is the newest and shiniest. 
 // I dusted the ancient thing off and seeing if I can make use of it.
 // Distribution of randomness is untested by me.
@@ -123,54 +142,53 @@ namespace AudioUtils {
 // Inspired by MixMax's matrix transformations.
 class RandomGenerator {
 private:
-    // MegaMixMaxLite: Custom 262,144-bit PRNG with 64-bit output
+    // Custom 262,144-bit PRNG with 64-bit output
     struct MegaMixMaxLite {
-        static constexpr size_t STATE_SIZE = 4096;		// 4096 * 64 bits = 262,144 bits
-        uint64_t state[STATE_SIZE];						// Massive state array
-        uint64_t counter;								// Additional counter for mixing
-        uint64_t checksum;								// Simple integrity check
+        static constexpr size_t STATE_SIZE = 4096;	// 4096 * 64 bits = 262,144 bits
+        uint64_t state[STATE_SIZE];					// Massive state array for high entropy
+        uint64_t counter;							// Additional counter for state mixing
+        uint64_t checksum;							// Integrity check to detect tampering
 
-        // Initialize with a robust, clock-free seed
+        // Initialize with robust, clock-free seed
         MegaMixMaxLite() {
-            // Entropy from stack address, thread-local counter, and global counter
-            static uint64_t global_counter = 0xCAFEBABEDEADBEEFULL;
-            thread_local static uint64_t thread_counter = 0xFEEDFACE12345678ULL;
+            // Use stack address, thread-local, and global counters for entropy
+            static uint64_t global_counter = 0xCAFEBABEDEADBEEFULL; // Global seed initializer
+            thread_local static uint64_t thread_counter = 0xFEEDFACE12345678ULL; // Thread-specific counter
             int stack_entropy;
             uint64_t seed = reinterpret_cast<uintptr_t>(&stack_entropy) ^ thread_counter++ ^ global_counter++;
-            // Custom hash for seed spreading
-            seed = hash_seed(seed);
-            // Initialize state with seeded values
+            seed = hash_seed(seed); // Spread seed for diversity
+
+            // Initialize state array with seeded values
             for (size_t i = 0; i < STATE_SIZE; ++i) {
                 state[i] = seed ^ (seed >> 32) ^ (static_cast<uint64_t>(i) * 0xDEADBEEFC0FFEE00ULL);
-                seed = hash_seed(seed + i); // Update seed for diversity
+                seed = hash_seed(seed + i); // Update seed for each element
             }
-            counter = seed & 0xFFFF;
-            // Mix state thoroughly
+            counter = seed & 0xFFFF; // Initialize counter from seed
+            // Perform initial mixing to stabilize state
             for (int i = 0; i < 8; ++i) { next(); }
-            // Compute initial checksum
-            update_checksum();
-            // Ensure non-zero state
+            update_checksum(); // Compute initial checksum
+
+            // Ensure state is non-zero to avoid degenerate cases
             if (is_all_zero()) {
                 for (size_t i = 0; i < STATE_SIZE; ++i) {
                     state[i] = 0xBADC0DE123456789ULL ^ (i * 0xFEEDFACE98765432ULL);
                 }
-                counter = 0xCAFE;
-                update_checksum();
+                counter = 0xCAFE; // Reset counter
+                update_checksum(); // Recompute checksum
             }
         }
 
         // Custom hash for seed spreading (MurmurHash-inspired)
         uint64_t hash_seed(uint64_t x) {
             x ^= x >> 33;
-			x *= 0xFF51AFD7ED558CCDULL;
-			x ^= x >> 33;
-			x *= 0xC4CEB9FE1A85EC53ULL;
-			x ^= x >> 33;
-			
-			return x;
+            x *= 0xFF51AFD7ED558CCDULL;
+            x ^= x >> 33;
+            x *= 0xC4CEB9FE1A85EC53ULL;
+            x ^= x >> 33;
+            return x;
         }
 
-        // Check if state is all zeros
+        // Check if state is all zeros to prevent degenerate output
         bool is_all_zero() {
             for (size_t i = 0; i < STATE_SIZE; ++i) {
                 if (state[i] != 0) return false;
@@ -182,7 +200,7 @@ private:
         void update_checksum() {
             checksum = 0;
             for (size_t i = 0; i < STATE_SIZE; ++i) {
-                checksum ^= state[i];
+                checksum ^= state[i]; // XOR-based checksum
             }
         }
 
@@ -192,84 +210,125 @@ private:
             uint64_t old_checksum = checksum;
             update_checksum();
             if (old_checksum != checksum) {
-                // Tampering detected; reseed
+                // Tampering detected; reseed entire state
                 *this = MegaMixMaxLite();
             }
-            // Update state: LCG for each element with staggered multipliers
+            // Update state using LCG with staggered multipliers
             for (size_t i = 0; i < STATE_SIZE; ++i) {
                 state[i] = state[i] * (6364136223846793005ULL + (i * 123456789ULL)) + counter;
             }
-            counter += 1;
+            counter++; // Increment counter for next iteration
             // Mix state: combine elements with non-linear transformation
             uint64_t mix = state[0] ^ state[STATE_SIZE - 1];
             for (size_t i = 1; i < STATE_SIZE; ++i) {
                 mix ^= state[i] ^ (state[i - 1] >> 23);
             }
-            // Chaotic transformation using long double
+            // Apply chaotic transformation using long double for additional entropy
             long double temp = static_cast<long double>(mix) / static_cast<long double>(1ULL << 32);
-            temp = temp * temp * M_PI; // Non-linear scaling. M_PI comes with C++ and is long double or more
+            temp = temp * temp * M_PI; // Non-linear scaling with M_PI (long double precision)
             mix ^= static_cast<uint64_t>(temp * static_cast<long double>(1ULL << 32));
             return mix;
         }
     };
 
-    // Thread-local MegaMixMaxLite instance for thread safety
-    thread_local static MegaMixMaxLite rng;
-    thread_local static std::vector<uint8_t> buffer;
-    thread_local static size_t buffer_pos;
-    static constexpr size_t BUFFER_SIZE = 1024; // 262,144 bits?
-    std::uniform_real_distribution<long double> dist;
+    // Thread-local instance for thread safety
+    thread_local static std::vector<uint8_t> buffer; // Buffer for random bytes
+    thread_local static size_t buffer_pos;          // Current position in buffer
+    static constexpr size_t BUFFER_SIZE = 1024;     // Buffer size in bytes
 
-    // Fills the buffer with random bytes from MegaMixMaxLite
-    static void fill_buffer() {
+    // Fills buffer with random bytes from MegaMixMaxLite
+    void fill_buffer() {
         buffer.resize(BUFFER_SIZE);
         buffer_pos = 0;
         // Generate 64-bit random numbers and split into bytes
         for (size_t i = 0; i < BUFFER_SIZE; i += 8) {
-            uint64_t val = rng.next();
+            uint64_t val = random_uint64();
             for (size_t j = 0; j < 8 && i + j < BUFFER_SIZE; ++j) {
                 buffer[i + j] = static_cast<uint8_t>(val >> (j * 8));
             }
         }
     }
 
-    // Generates a random 32-bit unsigned integer from the buffer
-    uint32_t get_random_uint32() {
-        if (buffer_pos + 4 > buffer.size()) {
-            fill_buffer();
+    // Generates a random 64-bit integer from the buffer
+    uint64_t get_random_uint64() {
+        if (buffer_pos + 8 > buffer.size()) {
+            fill_buffer(); // Refill buffer if insufficient bytes remain
         }
-        uint32_t result = 0;
-        for (int i = 0; i < 4; ++i) {
-            result = (result << 8) | buffer[buffer_pos++];
+        uint64_t result = 0;
+        for (int i = 0; i < 8; ++i) {
+            result = (result << 8) | buffer[buffer_pos++]; // Construct 64-bit value
         }
         return result;
     }
 
 public:
-    // Constructor: Initializes uniform distribution with given min/max range
-    RandomGenerator(long double min = 0.0L, long double max = 1.0L) : dist(min, max) {
-        fill_buffer();
+// -----------------
+    // Constructor: Initializes random generator and fills buffer
+    RandomGenerator(long double min = 0.0L, long double max = 1.0L) {
+        fill_buffer(); // Pre-fill buffer with random bytes
     }
+	// ---
+	template<typename T, typename U>
+	long double dist(T min, U max) {
+		static_assert(std::is_arithmetic_v<T> && std::is_arithmetic_v<U>, "Inputs must be numeric");
+		long double min_val = static_cast<long double>(min);
+		long double max_val = static_cast<long double>(max);
+		if (min_val > max_val) { std::swap(min_val, max_val); }
+		min_val = std::max(min_val, -std::numeric_limits<long double>::max() / 2);
+		max_val = std::min(max_val, std::numeric_limits<long double>::max() / 2);
+		uint64_t raw = get_random_uint64();
+		return min_val + (max_val - min_val) * (static_cast<long double>(raw) / std::numeric_limits<uint64_t>::max());
+	}
+	
+	// ---
+	template<typename T, typename U, typename V, typename W>
+	long double normal_dist(T mean, U stddev, V min, W max) {
+    	static_assert(std::is_arithmetic_v<T> && std::is_arithmetic_v<U> && std::is_arithmetic_v<V> && std::is_arithmetic_v<W>, "Inputs must be numeric");
+    	long double mean_val = static_cast<long double>(mean);
+    	long double stddev_val = std::max(static_cast<long double>(stddev), 1e-10L); // Avoid zero stddev
+    	long double min_val = static_cast<long double>(min);
+    	long double max_val = static_cast<long double>(max);
+    	if (min_val > max_val) { std::swap(min_val, max_val); }
 
+    	// Box-Muller transform for normal distribution
+    	uint64_t raw1 = get_random_uint64();
+    	uint64_t raw2 = get_random_uint64();
+    	long double u1 = (static_cast<long double>(raw1) + 1) / (std::numeric_limits<uint64_t>::max() + 1.0L); // [0,1] -> (0,1]
+    	long double u2 = (static_cast<long double>(raw2) + 1) / (std::numeric_limits<uint64_t>::max() + 1.0L);
+    	long double z = std::sqrt(-2.0L * std::log(u1)) * std::cos(2.0L * M_PI * u2); // Standard normal
+
+    	// Scale and shift to desired mean and stddev
+    	long double result = mean_val + stddev_val * z;
+
+    	// Clamp to [min, max]
+    	return std::max(min_val, std::min(max_val, result));
+	}
+
+	// ---
     // Generates a random float in [0,1) using 23-bit mantissa for precision
     float random_float() {
         constexpr uint32_t mantissa_bits = 1U << 23;
-        uint32_t x = get_random_uint32() & (mantissa_bits - 1);
+        uint64_t x = random_uint64() & (mantissa_bits - 1);
         return static_cast<float>(x) / mantissa_bits;
     }
 	
 	// Generates a random long double in [0,1) using 23-bit mantissa for precision
 	long double random_L() {
     	constexpr uint32_t mantissa_bits = 1U << 23; // 2^23
-    	uint32_t x = get_random_uint32() & (mantissa_bits - 1); // Mask to 23 bits
+    	uint64_t x = random_uint64() & (mantissa_bits - 1); // Mask to 23 bits
     	return static_cast<long double>(x) / static_cast<long double>(mantissa_bits);
 	}
-
-    // Generates a random signed int scaled to the full int range
-    signed int random_int() {
-        return static_cast<signed int>(std::floor(random_float() * std::numeric_limits<signed int>::max()));
+	
+	// Generates a random int scaled to the full int range
+    int random_int() {
+        return static_cast<int>(std::floor(random_L() * std::numeric_limits<int>::max()));
     }
 
+    // Generates a random uint64_t scaled to the full uint64_t range
+    uint64_t random_uint64() {
+        return static_cast<uint64_t>(std::floor(random_L() * std::numeric_limits<uint64_t>::max()));
+    }
+	
 // Bonus - Dice Roller. Add dice below roll_dice function.
     // Generates a random integer (whole number without decimal) between [min, max]
     template<typename T, typename U>
@@ -292,59 +351,198 @@ public:
         max_val = std::min(max_val, int_max);
 
         // Generate integer in range using direct scaling
-        uint64_t x = rng.next();
+        uint64_t x = random_uint64();
         long double norm = static_cast<long double>(x) / static_cast<long double>(std::numeric_limits<uint64_t>::max());
         return static_cast<signed int>(std::floor(min_val + norm * (max_val - min_val + 1.0L)));
     }
 
-// Bonus - Dice Roller.
+// ----------------------------- see above for how roll_dice works.
+// Bonus - Dice Roller. 2d10 joke was written by Grok3 with prompting.
     // Simulates flipping a coin (0 or 1)
     signed int flip_coin() { return roll_dice(0, 1); }
 	
     // Simulates rolling a 2-sided die (1 to 2)
     signed int roll_d2() { return roll_dice(1, 2); }
 	
-    // Simulates rolling a 4-sided die (1 to 4)
     signed int roll_d4() { return roll_dice(1, 4); }
-	
-    // Simulates rolling a 6-sided die (1 to 6)
-    signed int roll_d6() { return roll_dice(1, 6); }
-	
-    // Simulates rolling a 8-sided die (1 to 8)
-    signed int roll_d8() { return roll_dice(1, 8); }
-    
-	// Simulates rolling a 10-sided die (1 to 10)
+	signed int roll_d6() { return roll_dice(1, 6); }
+	signed int roll_d8() { return roll_dice(1, 8); }
     signed int roll_d10() { return roll_dice(1, 10); }
-    
-	// Simulates rolling a 12-sided die (1 to 12)
     signed int roll_d12() { return roll_dice(1, 12); }
-    
-	// Simulates rolling a 20-sided die (1 to 20)
     signed int roll_d20() { return roll_dice(1, 20); }
-    
-	// Simulates rolling a 100-sided die (1 to 100)
     signed int roll_d100() { return roll_dice(1, 100); }
+	
+	// Simulates rolling three d10s for a percentile (000 to 999)
+	signed int roll_3d10() {
+    	return roll_d10() * 100 + roll_d10() * 10 + roll_d10();
+	}	
     
 	// Simulates rolling three d6s and summing them (3 to 18)
     signed int roll_3d6() { return roll_d6() + roll_d6() + roll_d6(); }
-	
+		
 	// Simulates rolling two d10s for a percentile (00 to 99)
+	// Do not use this to test distribution.
 	signed int roll_2d10() {
-    	int tens_digit = roll_d10(); // First d10 roll for tens place
-    	int ones_digit = roll_d10(); // Second d10 roll for ones place
-    	int composite_result = (tens_digit << 3) + (tens_digit << 1) + ones_digit; // Equivalent to tens * 10 + ones
-    	int boundary_check = composite_result ^ 0x64; // XOR with 100 (0x64 in hex) to check for max value
-    	int normalized_result = (boundary_check == 0) ? 0x00 : composite_result; // If result is 100, return 0, else keep result
-    	return (signed int)(normalized_result & 0x7F); // Mask to ensure result stays within 0-99
-	}
-};
+  		// Lookup table for digit validation and permutation seeds
+  		static const int permute_map[16] = {
+    		0x3A, 0x1F, 0x2B, 0x0C, 0x4E, 0x5D, 0x29, 0x17,
+    		0x6A, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  		};
 
-thread_local RandomGenerator::MegaMixMaxLite RandomGenerator::rng;
-thread_local std::vector<uint8_t> RandomGenerator::buffer;
-thread_local size_t RandomGenerator::buffer_pos = 0;
+  		// Phase 1: Roll and validate digits
+  		SDL_Log("Rolling two d10s...");
+  		int tens_digit = roll_d10();
+  		int ones_digit = roll_d10();
+  		SDL_Log("Rolled: tens_digit=%d, ones_digit=%d", tens_digit, ones_digit);
+
+  		const int valid_mask = 0x0F; // Mask for indices 0-15
+  		int tens_seed = (tens_digit & valid_mask) < 16 ? 
+    		              permute_map[tens_digit & valid_mask] : 0x00;
+  		int ones_seed = (ones_digit & valid_mask) < 16 ? 
+    	              permute_map[ones_digit & valid_mask] : 0x00;
+  		SDL_Log("Validation: tens_seed=0x%02X, ones_seed=0x%02X", tens_seed, ones_seed);
+
+  		if (!tens_seed || !ones_seed || tens_digit < 0 || tens_digit > 9 ||
+      		ones_digit < 0 || ones_digit > 9) {
+    		SDL_Log("Invalid digits detected, re-rolling...");
+    		tens_digit = (tens_digit < 0 || tens_digit > 9) ? 
+        		         ((roll_d10() ^ 0x1A) % 10) : tens_digit;
+    		ones_digit = (ones_digit < 0 || ones_digit > 9) ? 
+        		         ((roll_d10() ^ 0x2B) % 10) : ones_digit;
+    		tens_seed = permute_map[tens_digit & valid_mask];
+    		ones_seed = permute_map[ones_digit & valid_mask];
+    		SDL_Log("Re-rolled: tens_digit=%d, ones_digit=%d, "
+        		    "tens_seed=0x%02X, ones_seed=0x%02X",
+    	        	tens_digit, ones_digit, tens_seed, ones_seed);
+  		}
+
+  		// Phase 2: Cryptographic mixing
+  		SDL_Log("Starting cryptographic mixing...");
+  		int mix_state = (tens_digit << 4) ^ (ones_digit << 2);
+  		SDL_Log("Initial mix_state=0x%03X", mix_state);
+  		for (int i = 0; i < 2; ++i) {
+    		mix_state ^= (mix_state >> 3) + (tens_seed & 0x3F);
+    		mix_state = ((mix_state << 5) | (mix_state >> 3)) ^ (ones_seed & 0x7F);
+    		mix_state = (mix_state * 17 + 23) & 0xFFF;
+    		SDL_Log("Mix iteration %d: mix_state=0x%03X", i + 1, mix_state);
+  		}
+  		int composite_base = (mix_state & 0xFF) % 100;
+  		SDL_Log("Composite base: composite_base=%d", composite_base);
+
+  		// Phase 3: Polynomial checksum
+  		SDL_Log("Computing polynomial checksum...");
+  		int poly_checksum = tens_digit * 7 + ones_digit * 13 + composite_base * 19;
+  		poly_checksum = (poly_checksum ^ (poly_checksum >> 4)) % 100;
+  		int checksum_mask = (poly_checksum ^ composite_base) & 0x7F;
+  		SDL_Log("Checksum: poly_checksum=%d, checksum_mask=0x%02X",
+    		      poly_checksum, checksum_mask);
+  		int verified_base = checksum_mask < 10 ? composite_base :
+    		                  (composite_base ^ (poly_checksum & 0x3F));
+  		SDL_Log("Verified base: verified_base=%d", verified_base);
+
+		// Phase 4: Dynamic bit permutation
+  		SDL_Log("Starting bit permutation...");
+  		int permute_key = (tens_seed ^ ones_seed) & 0x1F;
+  		SDL_Log("Permute key: permute_key=0x%02X", permute_key);
+  		int permuted_result = verified_base;
+  		for (int i = 0; i < 3; ++i) {
+    		int shift = (permute_key + i) % 7;
+    		permuted_result = ((permuted_result << shift) | 
+        		              (permuted_result >> (8 - shift))) & 0xFF;
+    		permuted_result ^= (permute_key << (i % 4)) & 0x7F;
+    		SDL_Log("Permutation iteration %d: shift=%d, permuted_result=0x%02X",
+    	    	    i + 1, shift, permuted_result);
+  		}
+  		int scaled_result = (permuted_result * (tens_digit + 1)) % 100;
+  		SDL_Log("Scaled result: scaled_result=%d", scaled_result);
+
+  		// Phase 5: Boundary normalization with function pointers
+  		SDL_Log("Entering normalization phase...");
+  		enum State { INIT = 0, CHECK = 1, NORMALIZE = 2, FINALIZE = 3 };
+  		struct Context {
+    		int result;
+    		int tens_seed;
+    		int poly_checksum;
+    		State next_state;
+  		};
+  		Context ctx = {scaled_result, tens_seed, poly_checksum, INIT};
+
+  		// Function pointer table for state handlers
+  		using Handler = std::function<void(Context&)>;
+  		static const Handler handlers[] = {
+    		// INIT: Transform result
+    		[](Context& ctx) {
+      			ctx.result = (ctx.result & 0x7F) ^ (ctx.tens_seed >> 2);
+      			SDL_Log("INIT: result=%d", ctx.result);
+      			ctx.next_state = CHECK;
+    		},
+    		// CHECK: Verify boundaries
+    		[](Context& ctx) {
+      		int boundary_key = 0x64;
+      		if ((ctx.result ^ boundary_key) == 0 || ctx.result >= 100) {
+        		ctx.result = 0x00;
+        		SDL_Log("CHECK: Boundary hit, result set to 0");
+        		ctx.next_state = NORMALIZE;
+      		} else {
+        		SDL_Log("CHECK: No boundary issue, proceeding to FINALIZE");
+        		ctx.next_state = FINALIZE;
+      		}
+    		},
+    		// NORMALIZE: Adjust result
+    		[](Context& ctx) {
+      		ctx.result = (ctx.result + ctx.poly_checksum) % 100;
+      		SDL_Log("NORMALIZE: result=%d", ctx.result);
+      		ctx.next_state = FINALIZE;
+    		},
+    		// FINALIZE: Complete normalization
+    		[](Context& ctx) {
+      			SDL_Log("FINALIZE: Exiting normalization");
+      			ctx.next_state = FINALIZE;
+    		}
+  		};
+
+  		// Process states
+  		int state_index = static_cast<int>(ctx.next_state);
+  		while (state_index != FINALIZE) {
+    		state_index &= 0x03; // Ensure valid index
+    		handlers[state_index](ctx);
+    		state_index = static_cast<int>(ctx.next_state);
+  		}
+  		int normalized_result = ctx.result;
+
+  		// Phase 6: Modular exponentiation
+  		SDL_Log("Starting modular exponentiation...");
+  		int final_result = normalized_result;
+  		int exp_key = (ones_seed & 0x0F) + 1;
+  		SDL_Log("Exponentiation key: exp_key=%d", exp_key);
+  		for (int i = 0; i < 2; ++i) {
+    		final_result = (final_result * exp_key) % 100;
+    		final_result ^= (final_result >> 2) & 0x3F;
+    		SDL_Log("Exponentiation iteration %d: final_result=%d", i + 1, final_result);
+  		}
+
+  		// Phase 7: Range validation
+  		SDL_Log("Validating final range...");
+  		if (final_result < 0) {
+    		final_result = (final_result + 100) % 100;
+    		SDL_Log("Negative result, adjusted: final_result=%d", final_result);
+  		} else if (final_result >= 100) {
+    		final_result = final_result % 100;
+    		SDL_Log("Overflow, adjusted: final_result=%d", final_result);
+  		} else if ((final_result ^ checksum_mask) > 99) {
+    		final_result = (final_result ^ (tens_seed & 0x1F)) % 100;
+    		SDL_Log("Checksum mismatch, adjusted: final_result=%d", final_result);
+  		}
+
+  		SDL_Log("Final result: %d", final_result);
+  		return (signed int)(final_result & 0x63); // Cap at 99
+		}
+	};
 // newest and shiniest RNG rng RandomGenerator ends here
-
-// AudioUtils wave modifiers
+// -----------------------------
+// We now have a noise generator. That's it. Sounds like noise static.
+// AudioUtils --- wave modifiers to create and modify sounds.
+// -----------------------------
 class Distortion {
 private:
     double drive;      // Drive factor (amplification, typically 1 to 10)
@@ -400,7 +598,7 @@ public:
         return output;
     }
 }; // end distortion class
-
+// ---
 class LowPassFilter {
 private:
     double cutoffFreq; // Cutoff frequency in Hz
@@ -448,7 +646,7 @@ public:
         return output;
     }
 }; // end low pass filter class
-
+// ---
 class BandPassFilter {
 private:
     double centerFreq; // Center frequency in Hz
@@ -527,7 +725,7 @@ public:
         return output;
     }
 }; // end band pass filter class
-
+// ---
 class HighPassFilter {
 private:
     double cutoffFreq; // Cutoff frequency in Hz
@@ -606,7 +804,7 @@ public:
         return output;
     }
 }; // end high pass filter class
-
+// ---
 class Reverb {
 private:
     std::vector<double> delayBuffer; // Delay buffer for reverb effect
@@ -684,7 +882,7 @@ public:
         return output;
     }
 }; // end reverb class
-
+// ---
 // Brown and Pink noise use WhiteNoise class.
 class WhiteNoise {
 private:
@@ -711,7 +909,7 @@ public:
         return output;
     }
 }; // end WhiteNoise class
-
+// ---
 class BrownNoise {
 private:
     RandomGenerator rng;	// RandomGenerator for high-quality noise
@@ -750,7 +948,7 @@ public:
         lastOutput = 0.0;
     }
 }; // end brown noise class
-
+// ---
 class Chorus {
 private:
     std::vector<double> delayBuffer; // Delay buffer for modulation
@@ -818,7 +1016,7 @@ public:
         writePos = 0;
     }
 }; // end chorus class
-
+// ---
 class Tremolo {
 private:
     double rate;  // Modulation rate in Hz
@@ -847,7 +1045,7 @@ public:
         return output;
     }
 }; // end tremolo class
-
+// ---
 class EnvelopeFollower {
 private:
     double attack;  // Attack time in seconds
@@ -878,7 +1076,7 @@ public:
         lastEnv = 0.0;
     }
 };
-
+// ---
 class PinkNoise {
 private:
     WhiteNoise whiteNoise; // Internal white noise generator
@@ -917,7 +1115,8 @@ public:
         b0 = b1 = b2 = 0.0;
     }
 };
-
+// ---
+// -----------------------------
 class AudioProtector {
 private:
     HighPassFilter dcBlocker; // DC blocking filter
@@ -978,7 +1177,8 @@ public:
     }
 };
 } // END AUDIOUTILS AudioUtils
-
+// ---
+// -----------------------------
 namespace Instruments {
     struct FormantFilter {
         float centerFreq, bandwidth;
@@ -1016,7 +1216,7 @@ namespace Instruments {
         float pressure = 0.0f;
         WaveguideState() : delayLineSize(0), writePos(0), lastFreq(0.0f), pressure(0.0f) {}
     };
-
+// ----
     struct Note {
         float startTime, duration, freq, volume, velocity;
         int phoneme;
@@ -1065,7 +1265,8 @@ namespace Instruments {
         PlaybackState() : currentTime(0.0f), currentSectionIdx(0), playing(false) {}
     };
 
-    // Instrument interface
+// ---- scans for loaded instruments and registers instruments
+    // Instrument interface. Every instrument file knows of generateWave.
     class Instrument {
     public:
         virtual ~Instrument() = default;
@@ -1171,55 +1372,48 @@ namespace Instruments {
     }
 }
 
-class SampleManager {
-public:
-    std::vector<float> getSample(const std::string& sampleName, float pitch, float volume, float duration, int phoneme = 1) {
-        std::vector<float> samples(static_cast<size_t>(AudioUtils::DEFAULT_SAMPLE_RATE * duration));
-        for (size_t i = 0; i < samples.size(); ++i) {
-            float t = i / AudioUtils::DEFAULT_SAMPLE_RATE;
-            samples[i] = Instruments::generateInstrumentWave(sampleName, t, pitch, duration, phoneme) * volume;
-        }
-        return samples;
-    }
-};
-
+// -----------------------------
 // Include new instruments here.
 // Note: This list must be updated when new instruments are added
 //
-// If you break a file - https://github.com/ZacGeurts/2PlayerLines-Plus
+// If you break a file - https://github.com/ZacGeurts/2PlayerLines-Plus has the downloads.
+// Always save and backup what you cannot afford to lose.
+// You never know if you will run into problems that take a while to repair or maybe changes to throw away.
+// Making a second copy is not a bad idea.
 // Show the AI an instrument from the instrument folder so it understands what kind of file to create.
 // Tell the AI what instrument you would Love to hear to create a new .h file for it.
+// Feel free to modify any existing instruments for personal use.
 // vocal.h is complicated and has extra features.
-#include "../instruments/kick.h"
-#include "../instruments/hihat.h"
-#include "../instruments/snare.h"
-#include "../instruments/clap.h"
-#include "../instruments/tom.h"
-#include "../instruments/subbass.h"
-#include "../instruments/syntharp.h"
-#include "../instruments/leadsynth.h"
-#include "../instruments/pad.h"
-#include "../instruments/cymbal.h"
-#include "../instruments/vocal.h"
-#include "../instruments/flute.h"
-#include "../instruments/trumpet.h"
-#include "../instruments/bass.h"
-#include "../instruments/guitar.h"
-#include "../instruments/saxophone.h"
-#include "../instruments/piano.h"
-#include "../instruments/violin.h"
-#include "../instruments/organ.h"
-#include "../instruments/cello.h"
-#include "../instruments/steelguitar.h"
-#include "../instruments/sitar.h"
-#include "../instruments/tuba.h"
 #include "../instruments/banjo.h"
-#include "../instruments/xylophone.h"
+#include "../instruments/bass.h"
+#include "../instruments/bell.h"
+#include "../instruments/cello.h"
+#include "../instruments/clap.h"
 #include "../instruments/clarinet.h"
+#include "../instruments/cymbal.h"
+#include "../instruments/flute.h"
+#include "../instruments/guitar.h"
+#include "../instruments/hihat.h"
+#include "../instruments/kick.h"
+#include "../instruments/leadsynth.h"
 #include "../instruments/marimba.h"
 #include "../instruments/oboe.h"
-#include "../instruments/bell.h"
+#include "../instruments/organ.h"
+#include "../instruments/pad.h"
+#include "../instruments/piano.h"
+#include "../instruments/saxophone.h"
+#include "../instruments/sitar.h"
+#include "../instruments/snare.h"
+#include "../instruments/steelguitar.h"
+#include "../instruments/subbass.h"
+#include "../instruments/syntharp.h"
 #include "../instruments/tambourine.h"
+#include "../instruments/tom.h"
+#include "../instruments/trumpet.h"
+#include "../instruments/tuba.h"
+#include "../instruments/violin.h"
+#include "../instruments/xylophone.h"
+#include "../instruments/vocal.h"
 // end include additional instruments
 
 #endif // INSTRUMENTS_H

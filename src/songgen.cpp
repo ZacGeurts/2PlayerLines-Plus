@@ -1,9 +1,27 @@
-// songgen.cpp
+// songgen.cpp - plays songgen.h .song files with instruments.h sound generation.
+// Binds the two files together and is the command ./songgen
+
 // This is not free software and requires royalties for commercial use.
-// Royalties are required for songgen.cpp songgen.h instruments.h
-// The instrument files are splintered from instruments.h and are not free to sell.
-// The other linesplus code is free and cannot be resold.
+// Royalties are required for songgen.cpp songgen.h instruments.h and instrument files
 // Interested parties can find my contact information at https://github.com/ZacGeurts
+// If you make commercial gain, you can do the math and update my Patreon.
+
+// Follow the local law.
+// FCC in the USA restricts what frequencies you can broadcast.
+// Most, if not all countries restrict frequencies.
+// Audible frequencies in the USA are a First Amendment Right. 
+// There are some nefarious limitations, like faking a policeman phone call, but making sound is a human right.
+// Maybe there is a usage for frequencies exceeding this many 31415926535897932384626433832795029L
+/* 	
+	Far out of this scope. I cap to 20hz and less than 44100hz (SDL2 maximum and exceeds human hearing).
+ 	We can go below 20hz down to 0hz, but top of the line car stereos might hit 8hz-12hz with expensive equipment.
+ 	It requires too much voltage to go lower and you would not hear a difference.
+ 	20hz-80hz should be top quality for a subwoofer and it does not try blowing out pc speakers.
+*/
+// You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.
+// Do not restrict emergency communications or damage heart pace makers, etc.
+// Always put hearing safety first. It does not grow back.
+// Be kind to pets.
 
 #include "songgen.h"
 #include "instruments.h"
@@ -20,6 +38,9 @@
 #include <cctype>
 #include <signal.h>
 #include <SDL2/SDL.h>
+// #include <random> // nope
+
+bool IS_STEREO = false; // leave false, playback adjusts itself.
 
 // Flag to handle program termination
 static volatile sig_atomic_t running = true;
@@ -35,16 +56,20 @@ void printHelp() {
     std::cout << "Generates songs\n";
     std::cout << "Usage:\n";
     std::cout << "  ./songgen jazz\n";
-    std::cout << "  ./songgen song1.song\n";
     std::cout << " \n";
     std::cout << "Playback\n";
     std::cout << "  ./songgen song1.song\n";
 	std::cout << "\n";
-    std::cout << "Available genres:\n";
-    std::cout << "  classical, jazz, pop, rock, techno, rap, blues, country, folk, reggae,\n";
-    std::cout << "  metal, punk, disco, funk, soul, gospel, ambient, edm, latin, hiphop\n";
-    std::cout << "\n";
-    std::cout << "Songgen numbers song#.song as you create them.\n";
+    std::cerr << "Available Genres: ";
+    bool first = true;
+    for (const auto& [genre, name] : SongGen::genreNames) {
+        std::string lowerName = name;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        std::cerr << (first ? "" : ", ") << lowerName;
+        first = false;
+    }
+    std::cerr << "\n";
+    std::cout << "Songgen numbers your songs as you create them.\n";
 }
 
 std::string trim(const std::string& str) {
@@ -412,60 +437,67 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 }
 
                 for (auto it = active.begin(); it != active.end();) {
-                    const auto& note = part.notes[it->noteIndex];
-                    if (t <= it->endTime) {
-                        float noteTime = t - note.startTime;
-                        float sample;
-                        if (part.instrument == "vocal_0" || part.instrument == "vocal_1") {
-                            sample = Instruments::generateInstrumentWave(
-                                part.instrument, noteTime, note.freq, note.duration, sampleRate);
-                            sample *= (note.open ? 1.0f : 0.8f);
-                        } else {
-                            SampleManager sampleManager;
-                            const std::vector<float>& samples = sampleManager.getSample(
-                                part.instrument, note.freq, note.volume, note.duration);
-                            size_t sampleIndex = static_cast<size_t>(noteTime * sampleRate);
-                            sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
-                            if (samples.empty()) {
-                                SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
-                            }
-                        }
-                        sample *= note.volume * note.velocity * volume * fadeGain;
-                        if (part.useDistortion) {
-                            sample = state->distortions[partIdx].process(sample);
-                        }
-                        if (part.useReverb) {
-                            sample = state->reverbs[partIdx].process(sample * (1.0f - reverbMix)) + sample * reverbMix;
-                        }
+        			const auto& note = part.notes[it->noteIndex];
+        			if (t <= it->endTime) {
+            			float noteTime = t - note.startTime;
+            			float sample;
+            			if (part.instrument == "vocal_0" || part.instrument == "vocal_1") {
+                			sample = Instruments::generateInstrumentWave(
+                    		part.instrument, noteTime, note.freq, note.duration, AudioUtils::DEFAULT_SAMPLE_RATE);
+                			sample *= (note.open ? 1.0f : 0.8f);
+            			} else {
+                			std::vector<float> samples(static_cast<size_t>(AudioUtils::DEFAULT_SAMPLE_RATE * note.duration));
+                			for (size_t i = 0; i < samples.size(); ++i) {
+                    			float t = i / AudioUtils::DEFAULT_SAMPLE_RATE;
+                    			samples[i] = Instruments::generateInstrumentWave(part.instrument, t, note.freq, note.duration, 1) * note.volume;
+                			}
+                			size_t sampleIndex = static_cast<size_t>(noteTime * AudioUtils::DEFAULT_SAMPLE_RATE);
+                			sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
+                			if (samples.empty()) {
+                    			SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
+                			}
+            			}
+            			sample *= note.volume * note.velocity * volume * fadeGain;
+            			if (part.useDistortion) {
+                			sample = state->distortions[partIdx].process(sample);
+            			}
+            			if (part.useReverb) {
+                			sample = state->reverbs[partIdx].process(sample * (1.0f - reverbMix)) + sample * reverbMix;
+           			 	}
+// --- speakers - instead of raw numbers we specify positions for audio samples.
+            L += sample * leftGain * sideWeight;
+            R += sample * rightGain * sideWeight;
+            C += sample * centerWeight;
+            LFE += sample * lfeWeight;
+            Ls += sample * surroundGain * sideWeight;
+            Rs += sample * surroundGain * sideWeight;
+            Lsb += sample * surroundBackGain * sideWeight;
+            Rsb += sample * surroundBackGain * sideWeight;
 
-                        L += sample * leftGain * sideWeight;
-                        R += sample * rightGain * sideWeight;
-                        C += sample * centerWeight;
-                        LFE += sample * lfeWeight;
-                        Ls += sample * surroundGain * sideWeight;
-                        Rs += sample * surroundGain * sideWeight;
-
-                        ++activeNoteCount;
-                        ++it;
-                    } else {
-                        it = active.erase(it);
-                    }
-                }
+            			++activeNoteCount;
+            			++it;
+        			} else {
+            			it = active.erase(it);
+        			}
+    			}
             }
 
-            if (isStereo) {
-                float L_out = L + 0.707f * C + 0.707f * LFE + 0.5f * Ls;
-                float R_out = R + 0.707f * C + 0.707f * LFE + 0.5f * Rs;
-                localOutput[i * 2 + 0] = std::max(-1.0f, std::min(1.0f, L_out));
-                localOutput[i * 2 + 1] = std::max(-1.0f, std::min(1.0f, R_out));
-            } else {
-                localOutput[i * 6 + 0] = std::max(-1.0f, std::min(1.0f, L));
-                localOutput[i * 6 + 1] = std::max(-1.0f, std::min(1.0f, R));
-                localOutput[i * 6 + 2] = std::max(-1.0f, std::min(1.0f, C));
-                localOutput[i * 6 + 3] = std::max(-1.0f, std::min(1.0f, LFE));
-                localOutput[i * 6 + 4] = std::max(-1.0f, std::min(1.0f, Ls));
-                localOutput[i * 6 + 5] = std::max(-1.0f, std::min(1.0f, Rs));
-            }
+			// Stereo speakers combine 7.1 channels into two with standard downmix coefficients
+			if (isStereo) {
+    			long double L_out = L + 0.707L * C + 0.707L * LFE + 0.5L * Ls + 0.5L * Lsb;
+    			long double R_out = R + 0.707L * C + 0.707L * LFE + 0.5L * Rs + 0.5L * Rsb;
+    			localOutput[i * 2 + 0] = std::max(-1.0L, std::min(1.0L, L_out));
+    			localOutput[i * 2 + 1] = std::max(-1.0L, std::min(1.0L, R_out));
+			} else {
+    			localOutput[i * 8 + 0] = std::max(-1.0L, std::min(1.0L, L));
+    			localOutput[i * 8 + 1] = std::max(-1.0L, std::min(1.0L, R));
+    			localOutput[i * 8 + 2] = std::max(-1.0L, std::min(1.0L, C));
+    			localOutput[i * 8 + 3] = std::max(-1.0L, std::min(1.0L, LFE));
+    			localOutput[i * 8 + 4] = std::max(-1.0L, std::min(1.0L, Ls));
+    			localOutput[i * 8 + 5] = std::max(-1.0L, std::min(1.0L, Rs));
+    			localOutput[i * 8 + 6] = std::max(-1.0L, std::min(1.0L, Lsb));
+    			localOutput[i * 8 + 7] = std::max(-1.0L, std::min(1.0L, Rsb));
+			}
         }
 
         if (activeNoteCount == 0 && threadIdx == 0) {
@@ -547,7 +579,7 @@ void playSong(const std::string& filename, bool forceStereo) {
 
     SDL_AudioSpec want, have;
     SDL_zero(want);
-    want.freq = 44100;
+    want.freq = DEFAULT_SAMPLE_RATE;
     want.format = AUDIO_F32;
     want.channels = forceStereo ? 2 : 8; // Try 8 channel (7.1), fallback to stereo
     want.samples = 1024;
@@ -559,7 +591,7 @@ void playSong(const std::string& filename, bool forceStereo) {
 
     SDL_AudioDeviceID device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
     if (device == 0 && !forceStereo) {
-        SDL_Log("Failed to open 5.1 audio device: %s, attempting stereo", SDL_GetError());
+        SDL_Log("Failed to open 7.1 audio device: %s, attempting stereo", SDL_GetError());
         want.channels = 2;
         song.channels = 2;
         device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
@@ -593,34 +625,44 @@ void playSong(const std::string& filename, bool forceStereo) {
     SDL_Log("Playback stopped: %s at timestamp %.2f", running ? "Song completed" : "User interrupted", state.currentTime);
 }
 
+void logGenres() {
+    std::string genreList = "Loaded genres: ";
+    bool first = true;
+    for (const auto& [genre, name] : SongGen::genreNames) {
+        std::string lowerName = name;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        genreList += (first ? "" : ", ") + lowerName;
+        first = false;
+    }
+    SDL_Log("%s", genreList.c_str());
+}
+
 int main(int argc, char* argv[]) {
     if (argc == 1) {
         printHelp();
         return 0;
     }
+	
+	playSong(argv[1], IS_STEREO); // argv[1],0 is 8 channel and argv[1],1 forces stereo
 
-    std::map<std::string, SongGen::Genre> genreMap = {
-        {"classical", SongGen::CLASSICAL}, {"jazz", SongGen::JAZZ}, {"pop", SongGen::POP},
-        {"rock", SongGen::ROCK}, {"techno", SongGen::TECHNO}, {"rap", SongGen::RAP},
-        {"blues", SongGen::BLUES}, {"country", SongGen::COUNTRY}, {"folk", SongGen::FOLK},
-        {"reggae", SongGen::REGGAE}, {"metal", SongGen::METAL}, {"punk", SongGen::PUNK},
-        {"disco", SongGen::DISCO}, {"funk", SongGen::FUNK}, {"soul", SongGen::SOUL},
-        {"gospel", SongGen::GOSPEL}, {"ambient", SongGen::AMBIENT}, {"edm", SongGen::EDM},
-        {"latin", SongGen::LATIN}, {"hiphop", SongGen::HIPHOP}
-    };
+    // Log loaded genres
+    logGenres();
 
-    if (argc >= 2 && argv[1][0] != '-' && std::string(argv[1]).find(".song") != std::string::npos) {
-        bool forceStereo = (argc >= 3 && std::string(argv[2]) == "--stereo");
-        playSong(argv[1], forceStereo);
-        return 0;
+    // Create reverse genre map for string-to-Genre lookup from songgen.h
+    std::map<std::string, SongGen::Genre> genreLookup;
+    for (const auto& [genre, name] : SongGen::genreNames) {
+        std::string lowerName = name;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        genreLookup[lowerName] = genre;
     }
 
+    // Parse genres
     std::vector<SongGen::Genre> genres;
     for (int i = 1; i < argc && genres.size() < 3; ++i) {
         std::string genreStr(argv[i]);
         std::transform(genreStr.begin(), genreStr.end(), genreStr.begin(), ::tolower);
-        auto it = genreMap.find(genreStr);
-        if (it != genreMap.end()) {
+        auto it = genreLookup.find(genreStr);
+        if (it != genreLookup.end()) {
             genres.push_back(it->second);
         } else {
             std::cerr << "Unknown genre: " << genreStr << std::endl;
@@ -637,7 +679,7 @@ int main(int argc, char* argv[]) {
     SongGen::MusicGenerator generator;
     std::string filename = "song1.song";
     int songNum = 1;
-    while (std::ifstream(filename)) {
+    while (std::ifstream(filename)) { // while song name is used, pick the next song number
         songNum++;
         filename = "song" + std::to_string(songNum) + ".song";
     }
@@ -645,22 +687,23 @@ int main(int argc, char* argv[]) {
     try {
         auto [title, parts, sections] = generator.generateSong(genres[0]);
 
-        float bpm = generator.getGenreBPM().find(genres[0]) != generator.getGenreBPM().end() ?
-            generator.getGenreBPM().at(genres[0]) : 120.0f;
+        long double bpm = generator.getGenreBPM().find(genres[0]) != generator.getGenreBPM().end() ?
+            generator.getGenreBPM().at(genres[0]) : 120.0L;
         std::string scale = "major";
         if (generator.getGenreScales().find(genres[0]) != generator.getGenreScales().end() &&
             !generator.getGenreScales().at(genres[0]).empty()) {
-            std::uniform_int_distribution<> dist(0, generator.getGenreScales().at(genres[0]).size() - 1);
-            scale = generator.getGenreScales().at(genres[0])[AudioUtils::RandomGenerator];
+            AudioUtils::RandomGenerator rng;
+            std::uniform_int_distribution<size_t> dist(0, generator.getGenreScales().at(genres[0]).size() - 1);
+            scale = generator.getGenreScales().at(genres[0])[dist(rng.rng)];
         }
-        float rootFrequency = 440.0f;
-        float duration = 180.0f;
+        long double rootFrequency = 440.0L;
+        long double duration = 180.0L;
         if (!sections.empty()) {
             duration = std::max_element(sections.begin(), sections.end(),
                 [](const auto& a, const auto& b) { return a.endTime < b.endTime; })->endTime;
         }
 
-        std::string genreStr(argv[1]);
+        std::string genreStr = SongGen::genreNames.at(genres[0]);
         std::string genreStrUpper = genreStr;
         std::transform(genreStrUpper.begin(), genreStrUpper.end(), genreStrUpper.begin(), ::toupper);
         generator.saveToFile(title, genreStrUpper, bpm, scale, rootFrequency, duration, parts, sections, filename);

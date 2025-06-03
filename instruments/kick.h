@@ -115,11 +115,8 @@ static InstrumentRegistrar<Kick> regKick("kick");
 /*
  * AudioUtils Namespace Overview
  * ============================
- * The AudioUtils namespace contains a suite of audio processing utilities designed
- * for high-quality instrument synthesis.
  * All utilities operate at maximum DEFAULT_SAMPLE_RATE (44100.0f)
- *
- * robust parameter validation and output clamping.
+ * 8 channel audio is supported and handles stereo conversion elsewhere.
  *
  * Existing Utilities
  * -----------------
@@ -129,14 +126,15 @@ static InstrumentRegistrar<Kick> regKick("kick");
  *      stochastic effects. Uses a 262,144-bit state (MegaMixMaxLite) for superior
  *      statistical quality.
  *    - Features:
- *      - White noise: Uniform random values in a specified range.
- *      - Pink noise: 1/f noise for natural string buzz or ambient texture.
  *      - Thread-safe with clock-free seeding.
  *    - Call Example:
  *      RandomGenerator rng(-1.0L, 1.0L);			// Initialize random generator
- *      int diceroll = rng.roll_d20();				// Roll a 20-sided die
- *      int diceroll = rng.roll_dice(min, max);		// Specify range to random
- *		float numberfloat = rng.random_float();		// Return a float
+ *      int diceroll = roll_d20();					// Roll a 20-sided die
+ *      int diceroll = roll_2d10();					// Roll a percentage 00-99
+ *      int diceroll = roll_dice(min, max);			// Specify range to random
+ *		float numberfloat = random_float();			// Return a float
+ *		long double bigL = random_L();				// long double
+ *		long double bigL = dist(1,11)				// pick a long double 1-11;
  *
  * 2. HighPassFilter
  *    - Purpose: Removes low frequencies below a cutoff, used for DC blocking or

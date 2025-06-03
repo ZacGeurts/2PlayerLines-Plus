@@ -86,6 +86,7 @@ SONGVIEW_EXEC = songview
 
 # Default target: build ./linesplus and ./songgen
 all: $(EXEC) $(SONGGEN_EXEC)
+	@echo "Always put hearing safety first. It does not grow back."
 	@echo "*** Successfully built linesplus and songgen! ***"
 	@echo "***********************************************"
 	@echo "Run './linesplus' to play or './songgen' to create a song."
@@ -106,6 +107,7 @@ all: $(EXEC) $(SONGGEN_EXEC)
 	@echo " ./songgen rock creates a rock song."
 	@echo " Press CTRL-C to exit Songgen playback."
 	@echo "***********************************************"
+	@echo "Always put hearing safety first. It does not grow back."
 
 # Build ./linesplus
 $(EXEC): $(OBJECTS)
