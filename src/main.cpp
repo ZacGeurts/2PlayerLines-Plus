@@ -6,16 +6,17 @@
 #include <sstream>
 #include <string>
 
-// Always put hearing safety first. It does not grow back.
+// This is for linesplus for 2 player and is free.
+// songgen.cpp for the ./songgen program.
 
-// Note: long double and custom rng is Songgen only. Linesplus is a different program (this) and uses the amazing mt19937 RNG.
-// We do not include instruments.h songen.h or songgen.cpp as they are a seperate program that we run to play music.
+// We do not include instruments.h songen.h or songgen.cpp as they are a seperate program that gets run to play music.
+// type ./songgen after building to check out songgen.
 
 // Hi. Not much to see here in the main.cpp. Just some setup.
+// if you are not interested in game.ini setup then check out types.h game.h and game.cpp or try updating something.
 // This is the starting point if you want to expand game.ini.
 // Next stop is types.h. This overwrites types.h with game.ini. (changing values in GameConfig should be done with game.ini)
-// If you add to game.ini, start down here then types.h.
-// game.cpp and game.h and types.h are the real starting points.
+// If you want to add something new to game.ini, start with this code in main.cpp then types.h.
 
 // linesplus and songgen are 2 different programs.
 // songgen.h songgen.cpp instruments.h and instrument files are not free distribution.
@@ -31,18 +32,20 @@
 // Issues do not to be detailed as long as I can understand the issue.
 // If you make money off songgen, contact me and we can discuss.
 
-// Next to none of the code in these files is AI written.
+// Next to none of the code in these files is AI written. It is AI written, written, AI rewriten, writen, AI rewriten.....
 // My process is to get code from AI, rewrite it, and resubmit it if there are bugs. Sometimes just to have it add comments.
-// The code I am adjusting is my own.
-// Some code blocks are copied directly from AI, but it is modifying my code with usually a compiler error fix.
-// If formatting looks like I copied and pasted directly from AI, I probably did.
+// The code I am adjusting is my own. Formatting issues are sometimes ignored until I run uncrustify. Sometimes I have it insert tabs.
+// Most code blocks are copied directly from AI, but it is modifying my code with usually a compiler error fix.
+// If formatting looks like I copied and pasted directly from AI, I probably did because I proofread most of it but I do not bother remembering too much of it until I need it. Like the time I coded the RNG, I had no idea at the time that the AudioManager was such a big deal. I cranked AudioUtils up to 11.
 // What I usually copy is my code back with the one or two adjustments AI does to tweak a code block faster than me.
-// or the fun ones like "alphabetize this"
+// like "alphabetize this".
 // The code is prompted and curated how I choose to be the designer of this and other software.
 // That being said, there still a few areas I have yet to go over and rewrite, but probably all were at least cursory reviewed.
 // AI is dumb and will never see truly what it is you are working on and would like to accomplish.
 // Maybe pasting fixed and slightly broken code helps the AI training data.
 // If it tells you code, it is in your interest most times to review and update.
+
+// SDL2 and OpenGL beyond here.
 
 // And this code was written from my game.ini
 Game::GameConfig loadConfig(const std::string& filename) {

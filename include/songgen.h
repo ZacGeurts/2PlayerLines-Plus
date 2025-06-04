@@ -20,7 +20,7 @@
 // You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.
 // Do not restrict emergency communications or damage heart pace makers, etc.
 // Always put hearing safety first. It does not grow back.
-// Be kind to pets.
+// Be kind to pets. Sensitive ears.
 
 #ifndef SONGGEN_H
 #define SONGGEN_H
@@ -36,6 +36,8 @@ const int MAX_INSTRUMENTS = 8; // do not exceed your instrument files.
 // 'static thread_local AudioUtils::RandomGenerator rng;'
 // static thread_local is not required if you want a global rng.
 // I have yet to performance the current rng so for now I thread the generation.
+
+// MusicGenerator is the brains of songgen.
 
 #include "instruments.h"
 #include <vector>
@@ -105,7 +107,9 @@ namespace SongGen {
 // Music Generator is the brains of songgen.
 // ---
 	class MusicGenerator {
-    public:
+    public: // for songgen.cpp if it needs to know a truth
+	const std::map<Genre, std::string> SongGen::MusicGenerator::genreNames; 
+	
 	std::vector<SongGen::Part> parts;
 	static std::map<std::string, Instruments::InstrumentFactory>& getInstrumentRegistry();
 	
@@ -262,7 +266,7 @@ namespace SongGen {
     	auto it = genrePlans.find(g);
     	return it != genrePlans.end() ? it->second : commonPop;
 	}
-	// generateSong does all the lifting.
+	
 	// ---
 	using InstrumentFactory = std::function<std::unique_ptr<Instruments::Instrument>()>; // get the instruments that instrument.h scanned
 
@@ -449,21 +453,21 @@ namespace SongGen {
                 std::string name = (g == Genre::JAZZ || g == Genre::BLUES) ? "Head" + std::to_string(++verseCount) : 
                                   (g == Genre::METAL || g == Genre::PUNK) ? "Riff" + std::to_string(++verseCount) : 
                                   "Verse" + std::to_string(++verseCount);
-                extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.6f + i * 0.1f});
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.6L + i * 0.1L});
             } else if (prob < 0.8L) {
                 std::string name = (g == Genre::EDM || g == Genre::TECHNO) ? "Drop" + std::to_string(++chorusCount) : 
                                   (g == Genre::HIPHOP || g == Genre::RAP) ? "Hook" + std::to_string(++chorusCount) : 
                                   "Chorus" + std::to_string(++chorusCount);
-                extendedPlan.insert(extendedPlan.end() - 1, {name, "Chorus", 0.8f + i * 0.1f});
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Chorus", 0.8L + i * 0.1L});
             } else if (prob < 0.9L && bridgeCount < 1) {
                 std::string name = (g == Genre::EDM || g == Genre::TECHNO) ? "Break" + std::to_string(++bridgeCount) : 
                                   (g == Genre::GOSPEL || g == Genre::SOUL) ? "CallResponse" : 
                                   "Bridge" + std::to_string(++bridgeCount);
-                extendedPlan.insert(extendedPlan.end() - 1, {name, "Bridge", 0.85f + i * 0.1f});
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Bridge", 0.85L + i * 0.1L});
             } else {
                 std::string name = (g == Genre::JAZZ || g == Genre::BLUES || g == Genre::METAL || g == Genre::ROCK) ? "Solo" + std::to_string(++soloCount) : 
                                   "Verse" + std::to_string(++verseCount);
-                extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.7f + i * 0.1f});
+                extendedPlan.insert(extendedPlan.end() - 1, {name, "Verse", 0.7L + i * 0.1L});
             }
         }
     }
@@ -708,60 +712,60 @@ for (const auto& section : sections) {
     return {title, parts, sections};
 }
 
-void saveToFile(const std::string& title, const std::string& genres, long double bpm, const std::string& scale, long double rootFrequency, long double duration, const std::vector<Part>& parts, const std::vector<Section>& sections, const std::string& filename) {
-    ::SDL_Log("Saving song '%s' to file %s", title.c_str(), filename.c_str());
-    std::ofstream out(filename);
-    if (!out.is_open()) {
-        ::SDL_Log("Failed to open file %s for writing", filename.c_str());
-        return;
-    }
+	void saveToFile(const std::string& title, const std::string& genres, long double bpm, const std::string& scale, long double rootFrequency, long double duration, const std::vector<Part>& parts, const std::vector<Section>& sections, const std::string& filename) {
+    	::SDL_Log("Saving song '%s' to file %s", title.c_str(), filename.c_str());
+    	std::ofstream out(filename);
+    	if (!out.is_open()) {
+        	::SDL_Log("Failed to open file %s for writing", filename.c_str());
+        	return;
+    	}
 
-    out << "Song: " << title << "\n";
-    out << "Genre: " << genres << "\n";
-    out << "BPM: " << bpm << "\n";
-    out << "Scale: " << scale << "\n";
-    out << "RootFrequency: " << rootFrequency << "\n";
-    out << "Duration: " << duration << "\n";
+    	out << "Song: " << title << "\n";
+    	out << "Genre: " << genres << "\n";
+    	out << "BPM: " << bpm << "\n";
+    	out << "Scale: " << scale << "\n";
+    	out << "RootFrequency: " << rootFrequency << "\n";
+    	out << "Duration: " << duration << "\n";
 
-    out << "Sections: " << sections.size() << "\n";
-    for (const auto& section : sections) {
-        out << "Section: " << section.name << " " << section.startTime << " " << section.endTime
-            << " Progress: " << section.progress << " Template: " << section.templateName << "\n";
-    }
-    out << "Parts: " << parts.size() << "\n";
-    for (const auto& part : parts) {
-        out << "Part: " << part.sectionName << "\n";
-        out << "Instrument: " << part.instrument << "\n";
-        out << "Pan: " << part.pan << "\n";
-        out << "ReverbMix: " << part.reverbMix << "\n";
-        out << "UseReverb: " << (part.useReverb ? "true" : "false") << "\n";
-        out << "ReverbDelay: " << part.reverbDelay << "\n";
-        out << "ReverbDecay: " << part.reverbDecay << "\n";
-        out << "UseDistortion: " << (part.useDistortion ? "true" : "false") << "\n";
-        out << "DistortionDrive: " << part.distortionDrive << "\n";
-        out << "DistortionThreshold: " << part.distortionThreshold << "\n";
-        out << "Notes: " << part.notes.size() << "\n";
-        for (const auto& note : part.notes) {
-            out << "Note: " << note.freq << " " << note.duration << " " << note.startTime
-                << " Phoneme: " << note.phoneme << " Open: " << (note.open ? "true" : "false")
-                << " Volume: " << note.volume << " Velocity: " << note.velocity << "\n";
-        }
-        out << "PanAutomation: " << part.panAutomation.size() << "\n";
-        for (const auto& [time, value] : part.panAutomation) {
-            out << "PanPoint: " << time << " " << value << "\n";
-        }
-        out << "VolumeAutomation: " << part.volumeAutomation.size() << "\n";
-        for (const auto& [time, value] : part.volumeAutomation) {
-            out << "VolumePoint: " << time << " " << value << "\n";
-        }
-        out << "ReverbMixAutomation: " << part.reverbMixAutomation.size() << "\n";
-        for (const auto& [time, value] : part.reverbMixAutomation) {
-            out << "ReverbMixPoint: " << time << " " << value << "\n";
-        }
-    }
-    out.close();
-    ::SDL_Log("Song saved successfully to %s", filename.c_str());
-}
+    	out << "Sections: " << sections.size() << "\n";
+    	for (const auto& section : sections) {
+        	out << "Section: " << section.name << " " << section.startTime << " " << section.endTime
+            	<< " Progress: " << section.progress << " Template: " << section.templateName << "\n";
+    	}
+    	out << "Parts: " << parts.size() << "\n";
+    	for (const auto& part : parts) {
+        	out << "Part: " << part.sectionName << "\n";
+        	out << "Instrument: " << part.instrument << "\n";
+        	out << "Pan: " << part.pan << "\n";
+        	out << "ReverbMix: " << part.reverbMix << "\n";
+        	out << "UseReverb: " << (part.useReverb ? "true" : "false") << "\n";
+        	out << "ReverbDelay: " << part.reverbDelay << "\n";
+        	out << "ReverbDecay: " << part.reverbDecay << "\n";
+        	out << "UseDistortion: " << (part.useDistortion ? "true" : "false") << "\n";
+        	out << "DistortionDrive: " << part.distortionDrive << "\n";
+        	out << "DistortionThreshold: " << part.distortionThreshold << "\n";
+        	out << "Notes: " << part.notes.size() << "\n";
+        	for (const auto& note : part.notes) {
+            	out << "Note: " << note.freq << " " << note.duration << " " << note.startTime
+                	<< " Phoneme: " << note.phoneme << " Open: " << (note.open ? "true" : "false")
+                	<< " Volume: " << note.volume << " Velocity: " << note.velocity << "\n";
+        	}
+        	out << "PanAutomation: " << part.panAutomation.size() << "\n";
+        	for (const auto& [time, value] : part.panAutomation) {
+            	out << "PanPoint: " << time << " " << value << "\n";
+        	}
+        	out << "VolumeAutomation: " << part.volumeAutomation.size() << "\n";
+        	for (const auto& [time, value] : part.volumeAutomation) {
+            	out << "VolumePoint: " << time << " " << value << "\n";
+        	}
+        	out << "ReverbMixAutomation: " << part.reverbMixAutomation.size() << "\n";
+        	for (const auto& [time, value] : part.reverbMixAutomation) {
+            	out << "ReverbMixPoint: " << time << " " << value << "\n";
+        	}
+    	}
+    	out.close();
+    	::SDL_Log("Song saved successfully to %s", filename.c_str());
+	}
 
 private: // songgen.h handles it.
     const long double sampleRate = 44100.0L; // max SDL2 supports
@@ -821,7 +825,7 @@ private: // songgen.h handles it.
 	};
 	
 	// Map of genres to scale selection weights, replacing switch case
-std::map<Genre, std::vector<double>> genreScaleWeights = {
+	std::map<Genre, std::vector<double>> genreScaleWeights = {
     	{AMBIENT, {0.30, 0.30, 0.20, 0.20}}, // minor, dorian, major, whole_tone
     	{BLUEGRASS, {0.50, 0.30, 0.20}}, // major, pentatonic_major, pentatonic_minor
     	{BLUES, {0.70, 0.30}}, // blues, pentatonic_minor
@@ -854,7 +858,8 @@ std::map<Genre, std::vector<double>> genreScaleWeights = {
     	{WORLD, {0.40, 0.30, 0.20, 0.10}} // major, minor, dorian, harmonic_minor
 	};
 
-    // Dynamic instrument scanning
+    // Dynamic instrument scanning - ../instruments/ .h files
+	// They still need to be included at the bottom of instruments.h
     std::vector<std::string> getAvailableInstruments() {
         std::vector<std::string> instruments;
         for (const auto& entry : std::filesystem::directory_iterator("../instrument/")) {
@@ -1114,7 +1119,7 @@ std::map<Genre, std::vector<double>> genreScaleWeights = {
     	{NEW_AGE, {50.0L, 90.0L}}
 	};
 
-	const std::map<Genre, std::string> genreNames = {
+	inline const std::map<Genre, std::string> genreNames = {
     	{CLASSICAL, "Classical"}, {JAZZ, "Jazz"}, {POP, "Pop"}, {ROCK, "Rock"}, {TECHNO, "Techno"},
     	{RAP, "Rap"}, {BLUES, "Blues"}, {COUNTRY, "Country"}, {FOLK, "Folk"}, {REGGAE, "Reggae"},
     	{METAL, "Metal"}, {PUNK, "Punk"}, {DISCO, "Disco"}, {FUNK, "Funk"}, {SOUL, "Soul"},

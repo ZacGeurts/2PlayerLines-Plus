@@ -20,7 +20,7 @@
 // You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.
 // Do not restrict emergency communications or damage heart pace makers, etc.
 // Always put hearing safety first. It does not grow back.
-// Be kind to pets.
+// Be kind to pets. Sensitive ears.
 
 
 // This system requries some skill level to fully enjoy all the features.

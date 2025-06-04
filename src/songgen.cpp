@@ -1,6 +1,8 @@
 // songgen.cpp - plays songgen.h .song files with instruments.h sound generation.
 // Binds the two files together and is the command ./songgen
 
+// Registering your instrument is at the bottom of instruments.h
+
 // This is not free software and requires royalties for commercial use.
 // Royalties are required for songgen.cpp songgen.h instruments.h and instrument files
 // Interested parties can find my contact information at https://github.com/ZacGeurts
@@ -15,14 +17,52 @@
 /* 	
 	Far out of this scope. I cap to 20hz and less than 44100hz (SDL2 maximum and exceeds human hearing).
  	We can go below 20hz down to 0hz, but top of the line car stereos might hit 8hz-12hz with expensive equipment.
- 	It requires too much voltage to go lower and you would not hear a difference.
- 	20hz-80hz should be top quality for a subwoofer and it does not try blowing out pc speakers.
+ 	It requires too much voltage for energy push lower and you would not hear a difference.
+ 	20hz-80hz (20hz-120hz also common) should be top quality for a subwoofer and it does not try blowing out pc speakers.
 */
-// You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.
+// You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.Or sound is WiFi that you can.
 // Do not restrict emergency communications or damage heart pace makers, etc.
 // Always put hearing safety first. It does not grow back.
-// Be kind to pets.
+// Be kind to pets. - Dana White
 
+// SongGen is songen.h
+// AudioUtils and rng is in instruments.h
+// songen.cpp does not use a namespace.
+// songgen.cpp uses songen.h for song files and instruments.h for playback.
+// Neither talk to songgen.cpp.
+// instruments.h talks to nobody but the ../instruments/ folder.
+// songgen.h talks to instruments.h to get the instrument availability registry.
+// this does not yet mean that it will add your new instruments to songs.
+// instrument files would need a bit more depth, but because I want fun things to be user modifiable I kept it simplier to start.
+
+// you would need note range, and what genres it plays with, tempo, and pretty much every map from songgen in there and
+// then guhhhh, just do not if you have not been modifiing this code for a month.
+
+// ---
+// oh yeah, did I meantion yet that this is a project you can have fun with AI.
+// See if you can make a new instrument in the instrument folder with the files you downloaded.
+
+// Copy the entire code from a file and paste it into AI and tell it what fantastic instrument you would like to hear. Maybe a twinkle.
+// The bottom part tells the AI about all the AudioUtils audio tools available, so it can create your instrument.
+// From there it should be able to create every hearable sound. RandomGenerator is for audio noise.
+// Use an existing instrument and save it to a new file with the name you want, without spaces. (kazoo or your favorite)
+// Come back and I will show you how to register it.
+
+// Other than song1.song do not modify other .song files. You were warned to avoid my liability.
+
+// You can replace the instrument name in song1.song with your newly named instrument.
+// I do not recommend modifiing songgen.cpp, songgen.h, instruments.h, other then registering your new instrument.
+
+// Registering your instrument is at the bottom of instruments.h
+// Save your work. Backup anything that works that you cannot afford to lose.
+// If you break something then you have to download the file again.
+
+// run make clean before every update.
+// run make
+// hopefully it worked. If not, copy and paste the error back at the AI.
+// ./songgen song1.song
+
+// standard c++ code follows. SDL2 runs the show. 8 channel 0-44100hz - tops out beyond hearing.
 #include "songgen.h"
 #include "instruments.h"
 #include <iostream>
@@ -62,7 +102,7 @@ void printHelp() {
 	std::cout << "\n";
     std::cerr << "Available Genres: ";
     bool first = true;
-    for (const auto& [genre, name] : genreNames) {
+    for (const auto& [genre, name] : SongGen::MusicGenerator::genreNames) {
         std::string lowerName = name;
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
         std::cerr << (first ? "" : ", ") << lowerName;
@@ -104,11 +144,11 @@ SongData parseSongFile(const std::string& filename) {
     }
 
     SongData song; // temporary settings - updates when song is loaded
-    song.bpm = 120.0f;
-    song.rootFreq = 440.0f;
+    song.bpm = 120.0L;
+    song.rootFreq = 440.0L;
     song.scaleName = "major";
-    song.duration = 180.0f;
-    song.channels = 8;
+    song.duration = 180.0L;
+    song.channels = 8; // 7.1 surround
     song.parts.reserve(20);
     song.sections.reserve(20);
 
@@ -417,15 +457,15 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 auto& active = state->activeNotes[partIdx];
 
                 long double pan = Instruments::interpolateAutomation(t, part.panAutomation, part.pan);
-                long double volume = Instruments::interpolateAutomation(t, part.volumeAutomation, 0.5f);
+                long double volume = Instruments::interpolateAutomation(t, part.volumeAutomation, 0.5L);
                 long double reverbMix = Instruments::interpolateAutomation(t, part.reverbMixAutomation, part.reverbMix);
 
                 long double leftGain = (pan <= 0.0f) ? 1.0f : 1.0f - pan;
                 long double rightGain = (pan >= 0.0f) ? 1.0f : 1.0f + pan;
                 long double surroundGain = 0.5f * (leftGain + rightGain);
                 long double centerWeight = (part.instrument == "vocal") ? 0.8f : 0.3f;
-                long double lfeWeight = (part.instrument == "subbass" || part.instrument == "kick") ? 0.5f : 0.1f;
-                long double sideWeight = (part.instrument == "guitar" || part.instrument == "syntharp") ? 0.6f : 0.4f;
+                long double lfeWeight = (part.instrument == "subbass" || part.instrument == "kick") ? 0.5L : 0.1L;
+                long double sideWeight = (part.instrument == "guitar" || part.instrument == "syntharp") ? 0.6L : 0.4L;
 
                 while (nextIdx < part.notes.size() && part.notes[nextIdx].startTime <= t && active.size() < 16) {
                     const auto& note = part.notes[nextIdx];
@@ -625,7 +665,7 @@ void playSong(const std::string& filename, bool forceStereo) {
 void logGenres() {
     std::string genreList = "Loaded genres: ";
     bool first = true;
-    for (const auto& [genre, name] : SongGen::genreNames) {
+    for (const auto& [genre, name] : SongGen::MusicGenerator::genreNames) {
         std::string lowerName = name;
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
         genreList += (first ? "" : ", ") + lowerName;
@@ -647,7 +687,7 @@ int main(int argc, char* argv[]) {
 
     // Create reverse genre map for string-to-Genre lookup from songgen.h
     std::map<std::string, SongGen::Genre> genreLookup;
-    for (const auto& [genre, name] : SongGen::genreNames) {
+    for (const auto& [genre, name] : SongGen::MusicGenerator::genreNames) {
         std::string lowerName = name;
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
         genreLookup[lowerName] = genre;
@@ -700,7 +740,7 @@ int main(int argc, char* argv[]) {
                 [](const auto& a, const auto& b) { return a.endTime < b.endTime; })->endTime;
         }
 
-        std::string genreStr = SongGen::genreNames.at(genres[0]);
+        std::string genreStr = SongGen::MusicGenerator::genreNames.at(genres[0]);
         std::string genreStrUpper = genreStr;
         std::transform(genreStrUpper.begin(), genreStrUpper.end(), genreStrUpper.begin(), ::toupper);
         generator.saveToFile(title, genreStrUpper, bpm, scale, rootFrequency, duration, parts, sections, filename);
@@ -713,6 +753,7 @@ int main(int argc, char* argv[]) {
         }
         checkFile.close();
         std::cout << "Generated song: " << filename << std::endl;
+		SDL_Log("*** Generated song file %s ***", filename.c_str();
     } catch (const std::exception& e) {
         SDL_Log("Error generating song: %s", e.what());
         std::cerr << "Error generating song: " << e.what() << std::endl;
