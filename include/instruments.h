@@ -111,7 +111,6 @@
 #include <cstdint>
 #include <stdexcept>
 #include <limits>
-#include "songgen.h"
 #include <SDL2/SDL.h>
 // #include <random> // nope
 
@@ -1181,6 +1180,47 @@ public:
 // ---
 // -----------------------------
 namespace Instruments {
+	// duplicate Note Part and Section from songgen.h
+	// we cannot include songgen.h because it includes instruments.h for the rng and we cannot be circular.
+    struct Note {        	
+		long double freq, duration, startTime;
+		int phoneme; // used for vocal notes  
+		bool open; // open and not closed hihat and maybe other uses
+		long double volume, velocity;
+		
+		Note(long double freq = 440.0L, long double d = 0.0625L, long double s = 0.0L, int p = -1, bool o = false, long double v = 0.5L, long double vel = 0.8L)
+            : freq(freq), duration(d), startTime(s), phoneme(p), open(o), volume(v), velocity(vel) {}
+    };
+
+	struct Part {
+    	std::string instrument;
+    	std::vector<Note> notes;		
+    	bool useReverb;
+    	long double reverbAirMix, reverbDelay, reverbDecay;
+    	bool useDistortion;
+    	long double pan, reverbMix;
+    	std::string sectionName;
+    	long double distortionDrive, distortionThreshold;
+    	std::vector<std::pair<long double, long double>> panAutomation, volumeAutomation, reverbMixAutomation;
+        
+    	Part() : instrument(""), notes(), useReverb(false), reverbAirMix(0.2L), reverbDelay(0.1L),
+            	 reverbDecay(0.5L), useDistortion(false), pan(0.0L), reverbMix(0.2L), sectionName(""),
+        	     distortionDrive(1.5L), distortionThreshold(0.7L), panAutomation(), volumeAutomation(),
+    	         reverbMixAutomation() {}
+	};
+
+	struct Section {
+    	std::string name, templateName;
+    	long double startTime, endTime, progress;
+
+    	// Default constructor
+    	Section() : name(""), templateName(""), startTime(0.0L), endTime(0.0L), progress(0.0L) {}
+
+    	// Existing constructor
+    	Section(std::string n, std::string t, long double start, long double end, long double prog = 0.0L)
+        	: name(n), templateName(t), startTime(start), endTime(end), progress(prog) {}
+	};
+	
     struct FormantFilter {
         float centerFreq, bandwidth;
         float b0, b1, b2, a1, a2;
@@ -1218,12 +1258,14 @@ namespace Instruments {
         WaveguideState() : delayLineSize(0), writePos(0), lastFreq(0.0f), pressure(0.0f) {}
     };
 // ----
-    struct Song {
-        float duration;
-        int channels;
-        std::vector<SongGen::Section> sections;
-        std::vector<SongGen::Part> parts;
-    };
+	struct Song {
+    	long double duration;
+    	int channels;
+    	std::vector<Section> sections;
+    	std::vector<Part> parts;
+
+    	Song() : duration(0.0L), channels(0), sections(), parts() {}
+	};
 
     struct ActiveNote {
         size_t noteIndex;

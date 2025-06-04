@@ -91,11 +91,15 @@ namespace SongGen {
 	};
 
 	struct Section {
-		std::string name, templateName;
-		long double startTime, endTime, progress;
-    
-		Section(std::string n, std::string t, long double start, long double end, long double prog = 0.0L)
-			: name(n), templateName(t), startTime(start), endTime(end), progress(prog) {}
+    	std::string name, templateName;
+    	long double startTime, endTime, progress;
+
+    	// Default constructor
+    	Section() : name(""), templateName(""), startTime(0.0L), endTime(0.0L), progress(0.0L) {}
+
+    	// Existing constructor
+    	Section(std::string n, std::string t, long double start, long double end, long double prog = 0.0L)
+    	    : name(n), templateName(t), startTime(start), endTime(end), progress(prog) {}
 	};
 
 // Music Generator is the brains of songgen.
@@ -308,7 +312,7 @@ namespace SongGen {
 		if (rng.dist(0, 1) < 0.2) {
     		int extraSections = static_cast<int>(rng.dist(1, 4));
     			for (int i = 0; i < extraSections; ++i) {
-        		long double prob = rng.dist(0, 1);
+        		long double prob = rng.random_L();
         		std::string name, templateName;
         		long double progress = 0.6 + i * 0.1;
         		if (prob < 0.4) {
@@ -733,7 +737,6 @@ void saveToFile(const std::string& title, const std::string& genres, long double
         out << "UseReverb: " << (part.useReverb ? "true" : "false") << "\n";
         out << "ReverbDelay: " << part.reverbDelay << "\n";
         out << "ReverbDecay: " << part.reverbDecay << "\n";
-        out << "ReverbMixFactor: " << part.reverbMix << "\n";
         out << "UseDistortion: " << (part.useDistortion ? "true" : "false") << "\n";
         out << "DistortionDrive: " << part.distortionDrive << "\n";
         out << "DistortionThreshold: " << part.distortionThreshold << "\n";
@@ -1044,7 +1047,7 @@ std::map<Genre, std::vector<double>> genreScaleWeights = {
             // Break if no instruments have high enough weights
             bool anySelected = false;
             for (const auto& [instrument, weight] : currentWeights) {
-                if (rng.dist(0,1) < weight) {
+                if (rng.random_L() < weight) {
                     selectedInstruments.push_back(instrument);
                     anySelected = true;
 
@@ -1397,8 +1400,7 @@ std::map<Genre, std::vector<double>> genreScaleWeights = {
 
 std::string generateTitle() {
     	::SDL_Log("Generating song title");
-		static thread_local AudioUtils::RandomGenerator rng;
-		// todo: genre affecting the names so they are not random.
+		static thread_local AudioUtils::RandomGenerator rng;		
 
     	// Word lists
     	std::vector<std::string> adjectives = {
@@ -1508,7 +1510,7 @@ std::string generateTitle() {
 
     	// Generate title
     	size_t index = static_cast<size_t>(rng.dist(0.0L, static_cast<long double>(titleTemplates.size() - 1)));
-    	std::string title = titleTemplates[index](rng.dist(0.0L, 1.0L));
+    	std::string title = titleTemplates[index](rng.random_L());
 
     	return title;
 	}
@@ -1551,84 +1553,84 @@ std::string generateTitle() {
     	return static_cast<long double>(std::max(minDur, duration));
 	}
 
-std::vector<std::vector<int>> getChordProgressions(const std::string& scaleName, Genre g) {
-    // Define base progressions for each scale
-    std::vector<std::vector<int>> baseProgs;
-    if (scaleName == "major") {
-        baseProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{1,2,5,4},{1,3,6,4},{2,5,1,4},{1,4,6,5},{1,5,4,6},{4,5,1,6},{1,2,4,5},{6,4,1,5},{1,3,4,5},{2,5,6,4},{1,4,2,5},{1,6,2,5}};
-    } else if (scaleName == "minor") {
-        baseProgs = {{6,4,1,5},{6,3,4,5},{6,7,1,4},{6,2,5,3},{6,1,4,7},{3,6,4,5},{6,4,7,1},{6,5,3,4},{4,6,7,1},{6,2,4,5},{1,6,4,5},{6,3,7,4},{2,5,6,1},{6,4,2,5}};
-    } else if (scaleName == "dorian") {
-        baseProgs = {{2,7,1,4},{2,5,6,7},{2,4,7,1},{2,1,4,5},{2,6,4,7},{4,2,7,1},{2,5,4,6},{2,7,4,1},{1,2,5,6},{2,4,1,7}};
-    } else if (scaleName == "mixolydian") {
-        baseProgs = {{5,1,4,7},{5,6,1,4},{5,3,6,7},{5,4,1,6},{1,5,4,6},{5,7,1,4},{4,5,6,1},{5,1,6,4},{5,4,7,1},{6,5,1,4}};
-    } else if (scaleName == "blues") {
-        baseProgs = {{1,4,1,5},{1,5,4,1},{1,4,5,1},{1,4,1,4},{4,1,5,4},{1,5,1,4},{4,5,1,1},{1,1,4,5},{5,4,1,1},{1,4,5,5}};
-    } else if (scaleName == "harmonic_minor") {
-        baseProgs = {{1,6,3,5},{1,4,6,7},{1,5,6,3},{1,7,3,6},{6,1,4,5},{1,3,7,6},{4,1,6,7},{1,6,5,3},{7,1,4,6},{1,4,7,3}};
-    } else if (scaleName == "whole_tone") {
-        baseProgs = {{1,3,5,1},{1,4,2,5},{1,5,3,4},{2,1,4,5},{1,2,5,3},{3,1,4,2}};
-    } else if (scaleName == "pentatonic_major") {
-        baseProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{1,2,5,4},{4,1,6,5},{1,4,2,5}};
-    } else if (scaleName == "pentatonic_minor") {
-        baseProgs = {{6,4,1,5},{6,1,4,5},{4,6,5,1},{6,5,4,1},{1,6,4,5},{6,4,5,1}};
-    } else {
-        baseProgs = {{1,4,5,4}}; // Default fallback
+    std::vector<std::vector<int>> getChordProgressions(const std::string& scaleName, Genre g) {
+            // Define base progressions for each scale
+            std::vector<std::vector<int>> baseProgs;
+            if (scaleName == "major") {
+                    baseProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{1,2,5,4},{1,3,6,4},{2,5,1,4},{1,4,6,5},{1,5,4,6},{4,5,1,6},{1,2,4,5},{6,4,1,5},{1,3,4,5},{2,5,6,4},{1,4,2,5},{1,6,2,5}};
+            } else if (scaleName == "minor") {
+                    baseProgs = {{6,4,1,5},{6,3,4,5},{6,7,1,4},{6,2,5,3},{6,1,4,7},{3,6,4,5},{6,4,7,1},{6,5,3,4},{4,6,7,1},{6,2,4,5},{1,6,4,5},{6,3,7,4},{2,5,6,1},{6,4,2,5}};
+            } else if (scaleName == "dorian") {
+                    baseProgs = {{2,7,1,4},{2,5,6,7},{2,4,7,1},{2,1,4,5},{2,6,4,7},{4,2,7,1},{2,5,4,6},{2,7,4,1},{1,2,5,6},{2,4,1,7}};
+            } else if (scaleName == "mixolydian") {
+                    baseProgs = {{5,1,4,7},{5,6,1,4},{5,3,6,7},{5,4,1,6},{1,5,4,6},{5,7,1,4},{4,5,6,1},{5,1,6,4},{5,4,7,1},{6,5,1,4}};
+            } else if (scaleName == "blues") {
+                    baseProgs = {{1,4,1,5},{1,5,4,1},{1,4,5,1},{1,4,1,4},{4,1,5,4},{1,5,1,4},{4,5,1,1},{1,1,4,5},{5,4,1,1},{1,4,5,5}};
+            } else if (scaleName == "harmonic_minor") {
+                    baseProgs = {{1,6,3,5},{1,4,6,7},{1,5,6,3},{1,7,3,6},{6,1,4,5},{1,3,7,6},{4,1,6,7},{1,6,5,3},{7,1,4,6},{1,4,7,3}};
+            } else if (scaleName == "whole_tone") {
+                    baseProgs = {{1,3,5,1},{1,4,2,5},{1,5,3,4},{2,1,4,5},{1,2,5,3},{3,1,4,2}};
+            } else if (scaleName == "pentatonic_major") {
+                    baseProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{1,2,5,4},{4,1,6,5},{1,4,2,5}};
+            } else if (scaleName == "pentatonic_minor") {
+                    baseProgs = {{6,4,1,5},{6,1,4,5},{4,6,5,1},{6,5,4,1},{1,6,4,5},{6,4,5,1}};
+            } else {
+                    baseProgs = {{1,4,5,4}}; // Default fallback
+            }
+
+            // Genre-specific progressions
+            std::vector<std::vector<int>> genreProgs;
+            switch (g) {
+                    case JAZZ: case BLUES:
+                            genreProgs = {{2,5,1,6},{2,5,1,4},{2,7,3,6},{1,6,2,5},{2,5,3,6},{1,4,2,5},{2,5,6,1},{3,6,2,5},{1,5,2,5}};
+                            break;
+                    case CLASSICAL:
+                            genreProgs = {{1,6,2,5},{1,4,6,5},{4,1,5,6},{1,3,4,5},{1,6,4,2},{2,5,1,6},{1,7,4,5},{1,3,6,2}};
+                            break;
+                    case POP: case ROCK: case COUNTRY:
+                            genreProgs = {{1,5,4,6},{4,5,1,6},{1,4,6,2},{1,6,5,4},{2,5,4,1},{1,2,6,5},{4,1,6,5},{1,5,6,2},{6,4,5,1}};
+                            break;
+                    case GOSPEL: case SOUL:
+                            genreProgs = {{1,4,6,5},{1,6,4,5},{4,1,5,6},{1,2,5,4},{6,5,1,4},{1,3,6,5},{2,5,6,1},{1,4,2,5}};
+                            break;
+                    case METAL:
+                            genreProgs = {{1,7,4,5},{1,4,7,1},{6,7,1,4},{1,5,4,7},{1,3,7,4},{7,1,4,6},{1,6,7,4},{4,7,1,5}};
+                            break;
+                    case LATIN:
+                            genreProgs = {{1,4,2,5},{1,6,4,5},{4,1,5,2},{2,5,1,4},{1,4,6,2},{6,4,1,5},{1,2,4,6},{4,5,2,1}};
+                            break;
+                    case EDM: case TECHNO:
+                            genreProgs = {{1,4,5,6},{4,5,1,6},{1,6,4,5},{6,4,1,5},{1,5,4,6},{4,1,6,5},{1,4,2,5},{2,5,1,4},{1,6,5,4},{4,6,1,5},{1,5,6,2},{6,5,4,1},{1,4,6,2},{2,6,4,1},{1,2,5,6},{4,5,6,1}};
+                            break;
+                    case REGGAE:
+                            genreProgs = {{1,4,5,1},{1,6,4,5},{4,1,6,5},{1,5,6,4},{2,5,1,4},{6,4,1,5},{1,4,2,5},{1,6,5,4},{4,5,1,6},{1,2,6,5},{6,5,4,1},{1,4,5,6},{4,6,1,5},{1,5,4,2}};
+                            break;
+                    case AMBIENT:
+                            genreProgs = {{1,3,5,4},{1,6,4,5},{4,1,5,6},{1,4,6,3},{6,4,1,5},{1,5,3,4},{2,6,4,1},{1,4,5,2},{1,6,5,4},{4,5,1,6},{1,3,4,6},{6,5,4,1},{1,4,2,6},{2,5,1,4},{1,6,3,5}};
+                            break;
+                    case HIPHOP: case RAP:
+                            genreProgs = {{6,4,1,5},{1,6,4,5},{4,1,6,5},{1,5,6,4},{6,5,4,1},{1,4,2,5},{2,5,1,4},{6,4,5,1},{1,6,5,4},{4,6,1,5},{1,2,6,5},{6,5,1,4},{1,4,5,6},{4,5,6,1}};
+                            break;
+                    case FOLK:
+                            genreProgs = {{1,4,5,1},{1,6,4,5},{4,1,5,6},{1,2,5,4},{1,3,4,5},{6,4,1,5},{1,4,2,5},{2,5,1,4}};
+                            break;
+                    case FUNK:
+                            genreProgs = {{1,5,4,1},{6,4,1,5},{1,7,4,5},{1,4,6,7},{2,5,1,4},{1,6,5,4},{4,1,6,5},{1,4,2,5}};
+                            break;
+                    case WORLD:
+                            genreProgs = {{1,4,6,5},{2,7,1,4},{6,4,1,5},{1,3,4,6},{4,1,5,2},{1,6,2,5},{2,5,6,1},{1,4,7,3}};
+                            break;
+                    default:
+                            genreProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{4,5,1,6},{1,4,2,5},{2,5,1,4},{6,4,1,5},{1,4,5,6}};
+                            break;
+            }
+
+            // Combine and deduplicate progressions
+            std::set<std::vector<int>> uniqueProgs(baseProgs.begin(), baseProgs.end());
+            uniqueProgs.insert(genreProgs.begin(), genreProgs.end());
+
+            return {uniqueProgs.begin(), uniqueProgs.end()};
     }
-
-    // Genre-specific progressions
-    std::vector<std::vector<int>> genreProgs;
-    switch (g) {
-        case JAZZ: case BLUES:
-            genreProgs = {{2,5,1,6},{2,5,1,4},{2,7,3,6},{1,6,2,5},{2,5,3,6},{1,4,2,5},{2,5,6,1},{3,6,2,5},{1,5,2,5}};
-            break;
-        case CLASSICAL:
-            genreProgs = {{1,6,2,5},{1,4,6,5},{4,1,5,6},{1,3,4,5},{1,6,4,2},{2,5,1,6},{1,7,4,5},{1,3,6,2}};
-            break;
-        case POP: case ROCK: case COUNTRY:
-            genreProgs = {{1,5,4,6},{4,5,1,6},{1,4,6,2},{1,6,5,4},{2,5,4,1},{1,2,6,5},{4,1,6,5},{1,5,6,2},{6,4,5,1}};
-            break;
-        case GOSPEL: case SOUL:
-            genreProgs = {{1,4,6,5},{1,6,4,5},{4,1,5,6},{1,2,5,4},{6,5,1,4},{1,3,6,5},{2,5,6,1},{1,4,2,5}};
-            break;
-        case METAL:
-            genreProgs = {{1,7,4,5},{1,4,7,1},{6,7,1,4},{1,5,4,7},{1,3,7,4},{7,1,4,6},{1,6,7,4},{4,7,1,5}};
-            break;
-        case LATIN:
-            genreProgs = {{1,4,2,5},{1,6,4,5},{4,1,5,2},{2,5,1,4},{1,4,6,2},{6,4,1,5},{1,2,4,6},{4,5,2,1}};
-            break;
-        case EDM: case TECHNO:
-            genreProgs = {{1,4,5,6},{4,5,1,6},{1,6,4,5},{6,4,1,5},{1,5,4,6},{4,1,6,5},{1,4,2,5},{2,5,1,4},{1,6,5,4},{4,6,1,5},{1,5,6,2},{6,5,4,1},{1,4,6,2},{2,6,4,1},{1,2,5,6},{4,5,6,1}};
-            break;
-        case REGGAE:
-            genreProgs = {{1,4,5,1},{1,6,4,5},{4,1,6,5},{1,5,6,4},{2,5,1,4},{6,4,1,5},{1,4,2,5},{1,6,5,4},{4,5,1,6},{1,2,6,5},{6,5,4,1},{1,4,5,6},{4,6,1,5},{1,5,4,2}};
-            break;
-        case AMBIENT:
-            genreProgs = {{1,3,5,4},{1,6,4,5},{4,1,5,6},{1,4,6,3},{6,4,1,5},{1,5,3,4},{2,6,4,1},{1,4,5,2},{1,6,5,4},{4,5,1,6},{1,3,4,6},{6,5,4,1},{1,4,2,6},{2,5,1,4},{1,6,3,5}};
-            break;
-        case HIPHOP: case RAP:
-            genreProgs = {{6,4,1,5},{1,6,4,5},{4,1,6,5},{1,5,6,4},{6,5,4,1},{1,4,2,5},{2,5,1,4},{6,4,5,1},{1,6,5,4},{4,6,1,5},{1,2,6,5},{6,5,1,4},{1,4,5,6},{4,5,6,1}};
-            break;
-        case FOLK:
-            genreProgs = {{1,4,5,1},{1,6,4,5},{4,1,5,6},{1,2,5,4},{1,3,4,5},{6,4,1,5},{1,4,2,5},{2,5,1,4}};
-            break;
-        case FUNK:
-            genreProgs = {{1,5,4,1},{6,4,1,5},{1,7,4,5},{1,4,6,7},{2,5,1,4},{1,6,5,4},{4,1,6,5},{1,4,2,5}};
-            break;
-        case WORLD:
-            genreProgs = {{1,4,6,5},{2,7,1,4},{6,4,1,5},{1,3,4,6},{4,1,5,2},{1,6,2,5},{2,5,6,1},{1,4,7,3}};
-            break;
-        default:
-            genreProgs = {{1,4,5,1},{1,5,6,4},{1,6,4,5},{4,5,1,6},{1,4,2,5},{2,5,1,4},{6,4,1,5},{1,4,5,6}};
-            break;
-    }
-
-    // Combine and deduplicate progressions
-    std::set<std::vector<int>> uniqueProgs(baseProgs.begin(), baseProgs.end());
-    uniqueProgs.insert(genreProgs.begin(), genreProgs.end());
-
-    return {uniqueProgs.begin(), uniqueProgs.end()};
-}
 
 	std::vector<long double> buildChord(long double degree, const std::string& scaleName, long double rootFreq, Genre g, long double inversion = 0) {
     	static thread_local AudioUtils::RandomGenerator rng;
@@ -2586,7 +2588,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
 
     Part generateSaxophone(Genre g, const std::string& scaleName, long double rootFreq, long double totalDur, const std::vector<Section>& sections, long double bpm) {
         static thread_local AudioUtils::RandomGenerator rng;
-        ::SDL_Log("Generating saxophone for genre %s, scale %s", genreNames[g].c_str(), scaleName.c_str());
+        ::SDL_Log("Generating saxophone for genre %s, scale %s", genreNames.at(g).c_str(), scaleName.c_str());
         
         Part saxophone;
         saxophone.instrument = (rng.random_L() < 0.2L) ? "saxophone_bright" :
@@ -2602,7 +2604,6 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                                g == NEW_AGE || g == LATIN || rng.random_L() < 0.5L);
         saxophone.reverbDelay = 0.12L;
         saxophone.reverbDecay = 0.6L;
-        saxophone.reverbMixFactor = saxophone.reverbMix;
         saxophone.useDistortion = (g == FUNK || g == ROCK || g == BLUES || rng.random_L() < 0.25L);
         saxophone.distortionDrive = saxophone.instrument == "saxophone_bright" ? 1.8L : 
                                     saxophone.instrument == "saxophone_muted" ? 1.4L : 1.6L;
@@ -2651,7 +2652,6 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
 
         const auto& intervals = scales.at(scaleName);
         size_t currentIdx = static_cast<size_t>(rng.random_L() * intervals.size());
-        long double currentFreq = getClosestFreq(rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L), saxFreqs);
 
         for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
             const auto& section = sections[sectionIdx];
@@ -2729,9 +2729,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                         ::SDL_Log("Invalid saxophone frequency at t=%.2Lf, using 110.0 Hz", t);
                         note.freq = 110.0L;
                         invalidFreqCount++;
-                    } else {
-                        currentFreq = note.freq;
-                    }
+					}
                     note.volume = 0.5L + 0.1L * section.progress;
                     note.velocity = saxophone.instrument == "saxophone_muted" ? 0.8L : 0.9L;
                     note.phoneme = -1;
@@ -2759,7 +2757,6 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                         while (targetFreq > 1500.0L) targetFreq /= 2.0L;
                         while (targetFreq < 110.0L) targetFreq *= 2.0L;
                         note.freq = getClosestFreq(targetFreq, saxFreqs);
-                        currentFreq = note.freq;
 
                         if (!std::isfinite(note.freq)) {
                             ::SDL_Log("Invalid saxophone frequency at t=%.2Lf, using 110.0 Hz", t);
@@ -2788,7 +2785,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                     long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
                     while (targetFreq > 1500.0L) targetFreq /= 2.0L;
                     while (targetFreq < 110.0L) targetFreq *= 2.0L;
-                    currentFreq = note.freq = getClosestFreq(targetFreq, saxFreqs);
+                    note.freq = getClosestFreq(targetFreq, saxFreqs);
 
                     if (!std::isfinite(note.freq)) {
                         ::SDL_Log("Invalid saxophone frequency at t=%.2Lf, using 110.0 Hz", t);
@@ -2868,7 +2865,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
 
     Part generatePiano(Genre g, const std::string& scaleName, long double rootFreq, long double totalDur, const std::vector<Section>& sections, long double bpm) {
         static thread_local AudioUtils::RandomGenerator rng;
-        ::SDL_Log("Generating piano for genre %s, scale %s", genreNames[g].c_str(), scaleName.c_str());
+        ::SDL_Log("Generating piano for genre %s, scale %s", genreNames.at(g).c_str(), scaleName.c_str());
         
         Part piano;
         piano.instrument = (rng.random_L() < 0.2L) ? "piano_bright" :
@@ -2934,7 +2931,6 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
 
         const auto& intervals = scales.at(scaleName);
         size_t currentIdx = static_cast<size_t>(rng.random_L() * intervals.size());
-        long double currentFreq = getClosestFreq(rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L), pianoFreqs);
 
         for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
             const auto& section = sections[sectionIdx];
@@ -3066,7 +3062,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                     long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
                     while (targetFreq > 4000.0L) targetFreq /= 2.0L;
                     while (targetFreq < 27.5L) targetFreq *= 2.0L;
-                    currentFreq = note.freq = getClosestFreq(targetFreq, pianoFreqs);
+                    note.freq = getClosestFreq(targetFreq, pianoFreqs);
 
                     if (!std::isfinite(note.freq)) {
                         ::SDL_Log("Invalid piano frequency at t=%.2Lf, using 27.5 Hz", t);
@@ -3093,7 +3089,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                     long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
                     while (targetFreq > 4000.0L) targetFreq /= 2.0L;
                     while (targetFreq < 27.5L) targetFreq *= 2.0L;
-                    currentFreq = note.freq = getClosestFreq(targetFreq, pianoFreqs);
+                    note.freq = getClosestFreq(targetFreq, pianoFreqs);
 
                     if (!std::isfinite(note.freq)) {
                         ::SDL_Log("Invalid piano frequency at t=%.2Lf, using 27.5 Hz", t);
@@ -3160,7 +3156,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
 
     Part generateGuitar(Genre g, const std::string& scaleName, long double rootFreq, long double totalDur, const std::vector<Section>& sections, long double bpm) {
         static thread_local AudioUtils::RandomGenerator rng;
-        ::SDL_Log("Generating guitar for genre %s, scale %s", genreNames[g].c_str(), scaleName.c_str());
+        ::SDL_Log("Generating guitar for genre %s, scale %s", genreNames.at(g).c_str(), scaleName.c_str());
         
         Part guitar;
         guitar.instrument = (rng.random_L() < 0.2L) ? "guitar_bright" :
@@ -3226,7 +3222,6 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
 
         const auto& intervals = scales.at(scaleName);
         size_t currentIdx = static_cast<size_t>(rng.random_L() * intervals.size());
-        long double currentFreq = getClosestFreq(rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L), guitarFreqs);
 
         for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
             const auto& section = sections[sectionIdx];
@@ -3358,7 +3353,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                     long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
                     while (targetFreq > 1300.0L) targetFreq /= 2.0L;
                     while (targetFreq < 82.0L) targetFreq *= 2.0L;
-                    currentFreq = note.freq = getClosestFreq(targetFreq, guitarFreqs);
+                    note.freq = getClosestFreq(targetFreq, guitarFreqs);
 
                     if (!std::isfinite(note.freq)) {
                         ::SDL_Log("Invalid guitar frequency at t=%.2Lf, using 82.0 Hz", t);
@@ -3385,7 +3380,7 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
                     long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
                     while (targetFreq > 1300.0L) targetFreq /= 2.0L;
                     while (targetFreq < 82.0L) targetFreq *= 2.0L;
-                    currentFreq = note.freq = getClosestFreq(targetFreq, guitarFreqs);
+                    note.freq = getClosestFreq(targetFreq, guitarFreqs);
 
                     if (!std::isfinite(note.freq)) {
                         ::SDL_Log("Invalid guitar frequency at t=%.2Lf, using 82.0 Hz", t);
@@ -3450,656 +3445,796 @@ Part generateRhythm(Genre g, long double totalDur, long double beat, long double
         return guitar;
     }
 
-Part generateBass(Genre g, const std::string& scaleName, float rootFreq, float totalDur, const std::vector<Section>& sections, float bpm) {
-    ::SDL_Log("Generating bass for genre %s, scale %s", genreNames[g].c_str(), scaleName.c_str());
-    Part bass;
-    bass.instrument = (g == ROCK || g == PUNK || g == METAL || g == FUNK || g == BLUES) ? "bass" : 
-                      (g == TECHNO || g == EDM || g == AMBIENT) ? "subbass" : "bass";
-    bass.pan = 0.0f; // Centered for low-end presence
-    bass.reverbMix = (g == AMBIENT || g == TECHNO || g == EDM) ? 0.25f : 0.15f;
-    bass.sectionName = "Bass";
-    bass.useReverb = (g == AMBIENT || g == TECHNO || g == EDM || rng() % 2);
-    bass.reverbDelay = 0.15f;
-    bass.reverbDecay = 0.5f;
-    bass.useDistortion = (g == ROCK || g == METAL || g == PUNK || rng() % 4 == 0);
-    bass.distortionDrive = 1.5f;
-    bass.distortionThreshold = 0.8f;
+    Part generateBass(Genre g, const std::string& scaleName, long double rootFreq, long double totalDur, const std::vector<Section>& sections, long double bpm) {
+        static thread_local AudioUtils::RandomGenerator rng;
+        ::SDL_Log("Generating bass for genre %s, scale %s", genreNames.at(g).c_str(), scaleName.c_str());
+        
+        Part bass;
+        bass.instrument = (rng.random_L() < 0.3L) ? "bass_finger" :
+                          (rng.random_L() < 0.6L) ? "bass_picked" : "bass_slap";
+        
+        // Set initial parameters
+        bass.pan = (rng.random_L() < 0.5L) ? 0.1L : -0.1L; // Bass is typically more centered
+        bass.reverbMix = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 0.3L :
+                         (g == ROCK || g == INDIE || g == BLUES || g == COUNTRY || g == FOLK || g == BLUEGRASS) ? 0.25L :
+                         (g == JAZZ || g == CLASSICAL_JAZZ_FUSION || g == LATIN || g == REGGAE || g == WORLD) ? 0.2L : 0.15L;
+        bass.sectionName = "Bass";
+        bass.useReverb = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL || g == JAZZ || g == CLASSICAL_JAZZ_FUSION ||
+                          g == LATIN || g == REGGAE || g == WORLD || rng.random_L() < 0.4L);
+        bass.reverbDelay = 0.35L; // Slightly shorter reverb for bass
+        bass.reverbDecay = 0.6L;  // Tighter decay for clarity
+        bass.useDistortion = (g == ROCK || g == METAL || g == FUNK || g == BLUES || rng.random_L() < 0.25L);
+        bass.distortionDrive = bass.instrument == "bass_slap" ? 1.9L :
+                               bass.instrument == "bass_picked" ? 1.5L : 1.7L;
+        bass.distortionThreshold = 0.85L; // Slightly lower threshold for bass
 
-    const float restProb = (g == JAZZ || g == BLUES) ? 0.4f : 0.3f;
-    const float walkingProb = (g == JAZZ || g == BLUES) ? 0.65f : (g == FUNK) ? 0.5f : 0.15f;
-    bass.notes.reserve(250);
-    bass.panAutomation.reserve(36);
-    bass.volumeAutomation.reserve(36);
-    bass.reverbMixAutomation.reserve(36);
+        // Probabilities for note types
+        const long double restProb = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 0.35L :
+                                     (g == JAZZ || g == BLUES || g == CLASSICAL_JAZZ_FUSION) ? 0.3L :
+                                     (g == ROCK || g == INDIE || g == COUNTRY || g == FOLK || g == BLUEGRASS) ? 0.2L :
+                                     (g == FUNK || g == RNB || g == SOUL || g == GOSPEL) ? 0.25L :
+                                     (g == LATIN || g == REGGAE || g == REGGAETON || g == WORLD) ? 0.22L : 0.25L;
+        const long double chordProb = (g == ROCK || g == COUNTRY || g == FOLK || g == BLUEGRASS || g == POP || g == INDIE) ? 0.5L :
+                                     (g == JAZZ || g == CLASSICAL_JAZZ_FUSION || g == BLUES) ? 0.35L :
+                                     (g == FUNK || g == RNB || g == SOUL || g == GOSPEL) ? 0.45L :
+                                     (g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 0.25L : 0.4L;
+        const long double arpeggioProb = (g == CLASSICAL || g == AMBIENT || g == NEW_AGE || g == FOLK || g == BLUEGRASS) ? 0.4L :
+                                        (g == JAZZ || g == CLASSICAL_JAZZ_FUSION || g == LATIN || g == WORLD) ? 0.25L :
+                                        (g == POP || g == INDIE || g == ROCK) ? 0.2L : 0.15L;
+        const long double melodyProb = (g == JAZZ || g == BLUES || g == CLASSICAL_JAZZ_FUSION || g == RNB || g == SOUL || g == GOSPEL) ? 0.5L :
+                                      (g == ROCK || g == INDIE || g == COUNTRY || g == FOLK || g == BLUEGRASS) ? 0.4L :
+                                      (g == CLASSICAL || g == AMBIENT || g == NEW_AGE || g == LATIN || g == REGGAE || g == WORLD) ? 0.35L : 0.3L;
 
-    size_t invalidFreqCount = 0;
-    const size_t maxInvalidFreqs = 100;
+        // Reserve space
+        bass.notes.reserve(400); // Fewer notes for bass
+        bass.panAutomation.reserve(36);
+        bass.volumeAutomation.reserve(36);
+        bass.reverbMixAutomation.reserve(36);
 
-    // Define bass-specific frequency pool (40–200 Hz, covering E1 to ~G3)
-    const std::vector<float> bassFreqs = {
-        41.20f, 43.65f, 46.25f, 49.00f, 51.91f, 55.00f, 58.27f, 61.74f, // E1 to B1
-        65.41f, 69.30f, 73.42f, 77.78f, 82.41f, 87.31f, 92.50f, 98.00f, // C2 to B2
-        103.83f, 110.00f, 116.54f, 123.47f, 130.81f, 138.59f, 146.83f, 155.56f, // C3 to G3
-        164.81f, 174.61f, 185.00f, 196.00f // G#3 to B3
-    };
+        size_t invalidFreqCount = 0;
+        const size_t maxInvalidFreqs = 100;
 
-    // Automation for smooth transitions
-    for (const auto& section : sections) {
-        float t = section.startTime;
-        float end = section.endTime;
-        float step = (end - t) / 4.0f;
-        for (int i = 0; i < 4 && t < end; ++i) {
-            float pan = std::max(-1.0f, std::min(1.0f, bass.pan + (rng() % 5 - 2.5f) / 100.0f));
-            float vol = std::max(0.45f, std::min(1.0f, 0.45f + (rng() % 10) / 100.0f));
-            float rev = std::max(0.0f, std::min(1.0f, bass.reverbMix + (rng() % 5) / 100.0f));
-            bass.panAutomation.emplace_back(t, pan);
-            bass.volumeAutomation.emplace_back(t, vol);
-            bass.reverbMixAutomation.emplace_back(t, rev);
-            t += step;
-        }
-    }
-
-    for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
-        const auto& section = sections[sectionIdx];
-        std::string templateName = section.templateName;
-
-        // Reuse templates for Verse/Chorus
-        if (sectionTemplates.find(templateName + "_Bass") != sectionTemplates.end() &&
-            (templateName == "Verse" || templateName == "Chorus")) {
-            long double intensity = (section.name == "Chorus2" || section.name == "Verse2") ? 1.15L : 1.0L;
-            Part varied = varyPart(sectionTemplates[templateName + "_Bass"], section.startTime, intensity);
-            bass.notes.insert(bass.notes.end(), varied.notes.begin(), varied.notes.end());
-            bass.panAutomation.insert(bass.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
-            bass.volumeAutomation.insert(bass.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
-            bass.reverbMixAutomation.insert(bass.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
-            ::SDL_Log("Reused bass template %s for section %s with %zu notes", templateName.c_str(), section.name.c_str(), varied.notes.size());
-            continue;
-        }
-
-        float t = section.startTime;
-        float sectionEnd = section.endTime;
-        float sectionDur = sectionEnd - t;
-        size_t maxNotes = static_cast<size_t>(sectionDur * (g == FUNK || g == JAZZ || g == BLUES ? 4.0f : 2.0f));
-        size_t sectionNoteCount = 0;
-        bool useWalking = (rng() / static_cast<float>(rng.max()) < walkingProb);
-
-        // Get chord progression
-        std::vector<int> prog;
-        if (chordProgressions.find(templateName) != chordProgressions.end()) {
-            prog = chordProgressions[templateName];
-        } else {
-            auto progs = getChordProgressions(scaleName, g);
-            prog = progs[rng() % progs.size()];
-            if (templateName == "Verse" || templateName == "Chorus") {
-                chordProgressions[templateName] = prog;
+        // Automation
+        for (const auto& section : sections) {
+            long double t = section.startTime;
+            long double end = section.endTime;
+            long double step = (end - t) / 4.0L;
+            for (int i = 0; i < 4 && t < end; ++i) {
+                long double pan = std::clamp(bass.pan + 0.05L * (rng.random_L() - 0.5L), -0.5L, 0.5L); // Tighter pan range
+                long double vol = std::clamp(0.5L + 0.1L * rng.random_L(), 0.5L, 1.0L); // Slightly higher base volume
+                long double rev = std::clamp(bass.reverbMix + 0.08L * rng.random_L(), 0.0L, 0.8L); // Lower max reverb
+                bass.panAutomation.emplace_back(t, pan);
+                bass.volumeAutomation.emplace_back(t, vol);
+                bass.reverbMixAutomation.emplace_back(t, rev);
+                t += step;
             }
         }
-        size_t chordIdx = 0;
 
-        while (t < sectionEnd && sectionNoteCount < maxNotes) {
-            if (invalidFreqCount >= maxInvalidFreqs) {
-                ::SDL_Log("Aborting bass generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
-                break;
-            }
-            if (rng() / static_cast<float>(rng.max()) < restProb && !useWalking) {
-                t += getRandomDuration(g, section.progress, bpm);
-                t = snapToBeatGrid(t, bpm);
+        const auto& intervals = scales.at(scaleName);
+        size_t currentIdx = static_cast<size_t>(rng.random_L() * intervals.size());
+
+        for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
+            const auto& section = sections[sectionIdx];
+            std::string templateName = section.templateName;
+
+            // Reuse templates
+            if (sectionTemplates.find(templateName + "_Bass_" + bass.instrument) != sectionTemplates.end() &&
+                (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro")) {
+                long double intensity = (section.name.find("Chorus") != std::string::npos || section.name.find("Bridge") != std::string::npos ||
+                                        section.name.find("2") != std::string::npos) ? 1.2L : 1.0L;
+                bool transpose = (section.name.find("Chorus2") != std::string::npos && rng.random_L() < 0.25L);
+                long double transposeSemitones = transpose ? 2.0L : 0.0L;
+                Part varied = varyPart(sectionTemplates[templateName + "_Bass_" + bass.instrument], section.startTime, g, intensity, transpose, transposeSemitones, scaleName);
+                bass.notes.insert(bass.notes.end(), varied.notes.begin(), varied.notes.end());
+                bass.panAutomation.insert(bass.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
+                bass.volumeAutomation.insert(bass.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
+                bass.reverbMixAutomation.insert(bass.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
+                ::SDL_Log("Reused bass template %s_%s for section %s with %zu notes", templateName.c_str(), bass.instrument.c_str(), section.name.c_str(), varied.notes.size());
                 continue;
             }
 
-            Note note;
-            note.startTime = snapToBeatGrid(t, bpm);
-            note.duration = useWalking ? 60.0f / (bpm * 4) : getRandomDuration(g, section.progress, bpm);
-            if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
-            if (!std::isfinite(note.duration) || note.duration <= 0.0f) {
-                note.duration = 0.0625f;
-            }
+            long double t = section.startTime;
+            long double sectionEnd = section.endTime;
+            long double sectionDur = sectionEnd - t;
+            size_t maxNotes = static_cast<size_t>(sectionDur * (
+                g == ROCK || g == INDIE || g == BLUES || g == FUNK || g == METAL ? 2.5L :
+                g == AMBIENT || g == NEW_AGE || g == CLASSICAL ? 1.5L :
+                g == JAZZ || g == CLASSICAL_JAZZ_FUSION || g == LATIN || g == REGGAE || g == WORLD ? 2.0L : 1.8L));
+            size_t sectionNoteCount = 0;
+            long double phraseDur = 4.0L * (60.0L / bpm);
+            long double phraseStart = t;
 
-            // Select frequency
-            if (useWalking) {
-                // Walking bass: step-wise motion within scale
-                const auto& intervals = scales.at(scaleName);
-                auto chord = buildChord(prog[chordIdx % prog.size()], scaleName, rootFreq, g, 0);
-                float rootNote = chord[0];
-                size_t currentIdx = 0;
-                for (size_t j = 0; j < intervals.size(); ++j) {
-                    float freq = rootFreq * std::pow(2.0f, intervals[j] / 12.0f);
-                    if (std::abs(rootNote - freq) < 1e-3) {
-                        currentIdx = j;
-                        break;
-                    }
-                }
-                int step = (rng() % 3) - 1; // -1, 0, or 1 for smooth transitions
-                currentIdx = (currentIdx + step + intervals.size()) % intervals.size();
-                float targetFreq = rootFreq * std::pow(2.0f, intervals[currentIdx] / 12.0f);
-                // Ensure frequency is in bass range
-                while (targetFreq > 200.0f) targetFreq /= 2.0f;
-                while (targetFreq < 40.0f) targetFreq *= 2.0f;
-                note.freq = getClosestFreq(targetFreq, bassFreqs);
+            // Get chord progression
+            std::vector<int> prog;
+            if (chordProgressions.find(templateName) != chordProgressions.end()) {
+                prog = chordProgressions[templateName];
             } else {
-                // Root note or chord tone, biased toward root
-                auto chord = buildChord(prog[chordIdx % prog.size()], scaleName, rootFreq, g, 0);
-                float targetFreq = chord[rng() % chord.size()];
-                // Prefer root note 70% of the time
-                if (rng() / static_cast<float>(rng.max()) < 0.7f) targetFreq = chord[0];
-                // Ensure frequency is in bass range
-                while (targetFreq > 200.0f) targetFreq /= 2.0f;
-                while (targetFreq < 40.0f) targetFreq *= 2.0f;
-                note.freq = getClosestFreq(targetFreq, bassFreqs);
-                // Emphasize downbeats in ROCK/EDM
-                if ((g == ROCK || g == EDM || g == METAL) && std::fmod(note.startTime, 4 * 60.0f / bpm) < 0.1f) {
-                    note.velocity = 0.95f;
-                    note.volume = 0.55f;
+                auto progs = getChordProgressions(scaleName, g);
+                prog = progs[static_cast<size_t>(rng.random_L() * progs.size())];
+                if (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro") {
+                    chordProgressions[templateName] = prog;
                 }
             }
+            size_t chordIdx = 0;
 
-            if (!std::isfinite(note.freq)) {
-                ::SDL_Log("Invalid bass frequency at t=%.2f, using 41.20 Hz", t);
-                note.freq = 41.20f; // Default to E1
-                invalidFreqCount++;
-            }
-            note.volume = (g == ROCK || g == METAL || g == EDM) ? 0.5f : 0.45f + 0.1f * section.progress;
-            note.velocity = 0.85f + 0.15f * (rng() % 100) / 100.0f;
-            note.phoneme = -1;
-            note.open = false;
-            bass.notes.push_back(note);
-            t += note.duration;
-            t = snapToBeatGrid(t, bpm);
-            sectionNoteCount++;
-            if (!useWalking && note.duration >= 0.25f) chordIdx++;
-        }
-        ::SDL_Log("Generated %zu notes for bass in section %s", sectionNoteCount, section.name.c_str());
-
-        // Store template for Verse/Chorus
-        if (templateName == "Verse" || templateName == "Chorus") {
-            Part templatePart = bass;
-            templatePart.notes.clear();
-            templatePart.panAutomation.clear();
-            templatePart.volumeAutomation.clear();
-            templatePart.reverbMixAutomation.clear();
-            for (const auto& note : bass.notes) {
-                if (note.startTime >= section.startTime && note.startTime < section.endTime) {
-                    Note templateNote = note;
-                    templateNote.startTime -= section.startTime;
-                    templatePart.notes.push_back(templateNote);
+            while (t < sectionEnd && sectionNoteCount < maxNotes) {
+                if (invalidFreqCount >= maxInvalidFreqs) {
+                    ::SDL_Log("Aborting bass generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
+                    break;
                 }
-            }
-            for (const auto& [time, value] : bass.panAutomation) {
-                if (time >= section.startTime && time < section.endTime) {
-                    templatePart.panAutomation.emplace_back(time - section.startTime, value);
-                }
-            }
-            for (const auto& [time, value] : bass.volumeAutomation) {
-                if (time >= section.startTime && time < section.endTime) {
-                    templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
-                }
-            }
-            for (const auto& [time, value] : bass.reverbMixAutomation) {
-                if (time >= section.startTime && time < section.endTime) {
-                    templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
-                }
-            }
-            sectionTemplates[templateName + "_Bass"] = templatePart;
-            ::SDL_Log("Stored bass template %s with %zu notes", templateName.c_str(), templatePart.notes.size());
-        }
-    }
-    ::SDL_Log("Generated bass with total %zu notes, %zu invalid frequencies encountered", bass.notes.size(), invalidFreqCount);
-    return bass;
-}
-
-        Part generateArpeggio(Genre g, const std::string& scaleName, float rootFreq, float totalDur, const std::vector<Section>& sections, float bpm) {
-            Part arp;
-            arp.instrument = (g == CLASSICAL) ? "piano" : (g == EDM || g == TECHNO) ? "syntharp" : "leadsynth";
-            arp.pan = (rng() % 2) ? 0.4f : -0.4f;
-            arp.reverbMix = (g == AMBIENT || g == EDM || g == TECHNO) ? 0.5f : 0.3f;
-            arp.sectionName = "Arpeggio";
-            arp.useReverb = true;
-            arp.reverbDelay = 0.1f;
-            arp.reverbDecay = 0.6f;
-            arp.reverbMixFactor = arp.reverbMix;
-            arp.useDistortion = (g == EDM || g == TECHNO || rng() % 4 == 0);
-            arp.distortionDrive = 1.3f;
-            arp.distortionThreshold = 0.8f;
-
-            const float restProb = 0.3f;
-            arp.notes.reserve(500);
-            arp.panAutomation.reserve(36);
-            arp.volumeAutomation.reserve(36);
-            arp.reverbMixAutomation.reserve(36);
-
-            size_t invalidFreqCount = 0;
-            const size_t maxInvalidFreqs = 100;
-
-            for (const auto& section : sections) {
-                float t = section.startTime;
-                float end = section.endTime;
-                float step = (end - t) / 4.0f;
-                for (int i = 0; i < 4 && t < end; ++i) {
-                    float pan = std::max(-1.0f, std::min(1.0f, arp.pan + (rng() % 10 - 5) / 100.0f));
-                    float vol = std::max(0.3f, std::min(1.0f, 0.3f + (rng() % 10) / 100.0f));
-                    float rev = std::max(0.0f, std::min(1.0f, arp.reverbMix + (rng() % 10) / 100.0f));
-                    arp.panAutomation.emplace_back(t, pan);
-                    arp.volumeAutomation.emplace_back(t, vol);
-                    arp.reverbMixAutomation.emplace_back(t, rev);
-                    t += step;
-                }
-            }
-
-            for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
-                const auto& section = sections[sectionIdx];
-                std::string templateName = section.templateName;
-
-                if (sectionTemplates.find(templateName + "_Arpeggio") != sectionTemplates.end() &&
-                    (templateName == "Verse" || templateName == "Chorus")) {
-                    float intensity = (section.name == "Chorus2" || section.name == "Verse2") ? 1.05f : 1.0f;
-                    Part varied = varyPart(sectionTemplates[templateName + "_Arpeggio"], section.startTime, intensity);
-                    arp.notes.insert(arp.notes.end(), varied.notes.begin(), varied.notes.end());
-                    arp.panAutomation.insert(arp.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
-                    arp.volumeAutomation.insert(arp.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
-                    arp.reverbMixAutomation.insert(arp.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
-                    ::SDL_Log("Reused arpeggio template %s for section %s with %zu notes", templateName.c_str(), section.name.c_str(), varied.notes.size());
+                if (rng.random_L() < restProb) {
+                    t += getRandomDuration(g, section.progress, bpm);
+                    t = snapToBeatGrid(t, bpm);
                     continue;
                 }
 
-                float t = section.startTime;
-                float sectionEnd = section.endTime;
-                size_t maxNotes = static_cast<size_t>((sectionEnd - t) * 4.0f);
-                size_t sectionNoteCount = 0;
+                bool useChord = rng.random_L() < chordProb;
+                bool useArpeggio = !useChord && rng.random_L() < arpeggioProb;
+                bool useMelody = !useChord && !useArpeggio && rng.random_L() < melodyProb;
 
-                std::vector<int> prog;
-                if (chordProgressions.find(templateName) != chordProgressions.end()) {
-                    prog = chordProgressions[templateName];
-                } else {
-                    auto progs = getChordProgressions(scaleName, g);
-                    prog = progs[rng() % progs.size()];
-                    if (templateName == "Verse" || templateName == "Chorus") {
-                        chordProgressions[templateName] = prog;
+                if (useChord) {
+                    auto chord = buildChord(prog[chordIdx % prog.size()], scaleName, rootFreq, g, 0);
+                    // Bass typically plays the root or lower notes
+                    for (size_t i = 0; i < 1 && sectionNoteCount < maxNotes; ++i) { // Only play one note (root)
+                        Note note;
+                        note.startTime = snapToBeatGrid(t, bpm);
+                        note.duration = getRandomDuration(g, section.progress, bpm) * (rng.random_L() < 0.3L ? 2.0L : 1.0L);
+                        if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
+                        if (!std::isfinite(note.duration) || note.duration <= 0.0L) note.duration = 0.125L;
+
+                        long double targetFreq = chord[0]; // Use root note
+                        while (targetFreq > 200.0L) targetFreq /= 2.0L; // Keep bass in lower range
+                        while (targetFreq < 40.0L) targetFreq *= 2.0L;
+                        note.freq = getClosestFreq(targetFreq, bassFreqs); // Assume bassFreqs is defined
+
+                        if (!std::isfinite(note.freq)) {
+                            ::SDL_Log("Invalid bass frequency at t=%.2Lf, using 40.0 Hz", t);
+                            note.freq = 40.0L;
+                            invalidFreqCount++;
+                        }
+                        note.volume = 0.6L + 0.1L * section.progress; // Higher volume for bass
+                        note.velocity = bass.instrument == "bass_slap" ? 0.85L + 0.1L * rng.random_L() : 0.75L + 0.15L * rng.random_L();
+                        note.phoneme = -1;
+                        note.open = false;
+                        bass.notes.push_back(note);
+                        sectionNoteCount++;
                     }
+                    t += getRandomDuration(g, section.progress, bpm);
+                    t = snapToBeatGrid(t, bpm);
+                    chordIdx++;
+                } else if (useArpeggio) {
+                    auto chord = buildChord(prog[chordIdx % prog.size()], scaleName, rootFreq, g, 0);
+                    long double noteDur = 60.0L / (bpm * (g == CLASSICAL || g == AMBIENT || g == NEW_AGE ? 1.5L : 3.0L));
+                    for (size_t i = 0; i < chord.size() && t < sectionEnd && sectionNoteCount < maxNotes; ++i) {
+                        Note note;
+                        note.startTime = snapToBeatGrid(t, bpm);
+                        note.duration = noteDur;
+                        if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
+                        if (!std::isfinite(note.duration) || note.duration <= 0.0L) note.duration = 0.125L;
+
+                        long double targetFreq = chord[i % chord.size()];
+                        while (targetFreq > 200.0L) targetFreq /= 2.0L;
+                        while (targetFreq < 40.0L) targetFreq *= 2.0L;
+                        note.freq = getClosestFreq(targetFreq, bassFreqs);
+
+                        if (!std::isfinite(note.freq)) {
+                            ::SDL_Log("Invalid bass frequency at t=%.2Lf, using 40.0 Hz", t);
+                            note.freq = 40.0L;
+                            invalidFreqCount++;
+                        }
+                        note.volume = 0.55L + 0.1L * section.progress;
+                        note.velocity = bass.instrument == "bass_slap" ? 0.8L + 0.1L * rng.random_L() : 0.7L + 0.15L * rng.random_L();
+                        note.phoneme = -1;
+                        note.open = false;
+                        bass.notes.push_back(note);
+                        t += note.duration;
+                        sectionNoteCount++;
+                    }
+                    t = snapToBeatGrid(t, bpm);
+                    chordIdx++;
+                } else if (useMelody) {
+                    Note note;
+                    note.startTime = snapToBeatGrid(t, bpm);
+                    note.duration = getRandomDuration(g, section.progress, bpm) * (rng.random_L() < 0.35L ? 1.5L : 1.0L);
+                    if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
+                    if (!std::isfinite(note.duration) || note.duration <= 0.0L) note.duration = 0.125L;
+
+                    int step = static_cast<int>(rng.random_L() * 3) - 1;
+                    currentIdx = (currentIdx + step + intervals.size()) % intervals.size();
+                    long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
+                    while (targetFreq > 200.0L) targetFreq /= 2.0L;
+                    while (targetFreq < 40.0L) targetFreq *= 2.0L;
+                    note.freq = getClosestFreq(targetFreq, bassFreqs);
+
+                    if (!std::isfinite(note.freq)) {
+                        ::SDL_Log("Invalid bass frequency at t=%.2Lf, using 40.0 Hz", t);
+                        note.freq = 40.0L;
+                        invalidFreqCount++;
+                    }
+                    note.volume = 0.6L + 0.1L * section.progress;
+                    note.velocity = bass.instrument == "bass_slap" ? 0.85L + 0.1L * rng.random_L() : 0.75L + 0.15L * rng.random_L();
+                    note.phoneme = -1;
+                    note.open = false;
+                    bass.notes.push_back(note);
+                    t += note.duration;
+                    t = snapToBeatGrid(t, bpm);
+                    sectionNoteCount++;
+                } else {
+                    Note note;
+                    note.startTime = snapToBeatGrid(t, bpm);
+                    note.duration = getRandomDuration(g, section.progress, bpm);
+                    if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
+                    if (!std::isfinite(note.duration) || note.duration <= 0.0L) note.duration = 0.125L;
+
+                    int step = static_cast<int>(rng.random_L() * 3) - 1;
+                    currentIdx = (currentIdx + step + intervals.size()) % intervals.size();
+                    long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
+                    while (targetFreq > 200.0L) targetFreq /= 2.0L;
+                    while (targetFreq < 40.0L) targetFreq *= 2.0L;
+                    note.freq = getClosestFreq(targetFreq, bassFreqs);
+
+                    if (!std::isfinite(note.freq)) {
+                        ::SDL_Log("Invalid bass frequency at t=%.2Lf, using 40.0 Hz", t);
+                        note.freq = 40.0L;
+                        invalidFreqCount++;
+                    }
+                    note.volume = 0.55L + 0.1L * section.progress;
+                    note.velocity = bass.instrument == "bass_slap" ? 0.8L + 0.1L * rng.random_L() : 0.7L + 0.15L * rng.random_L();
+                    note.phoneme = -1;
+                    note.open = false;
+                    bass.notes.push_back(note);
+                    t += note.duration;
+                    t = snapToBeatGrid(t, bpm);
+                    sectionNoteCount++;
                 }
 
-                float arpDur = (g == EDM || g == TECHNO) ? 60.0f / (bpm * 4) : 60.0f / (bpm * 2);
-                size_t chordIdx = 0;
-
-                while (t < sectionEnd && sectionNoteCount < maxNotes) {
-                    if (invalidFreqCount >= maxInvalidFreqs) {
-                        ::SDL_Log("Aborting arpeggio generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
-                        break;
-                    }
-                    if (rng() / static_cast<float>(rng.max()) < restProb) {
-                        t += arpDur;
+                if (t >= phraseStart + phraseDur) {
+                    phraseStart = t;
+                    if (rng.random_L() < 0.35L) {
+                        t += 60.0L / bpm;
                         t = snapToBeatGrid(t, bpm);
-                        continue;
                     }
+                    chordIdx++;
+                }
+            }
+            ::SDL_Log("Generated %zu notes for bass in section %s", sectionNoteCount, section.name.c_str());
 
-                    auto chord = buildChord(prog[chordIdx % prog.size()], scaleName, rootFreq, g, rng() % 2);
-                    if (chord.empty() || !std::all_of(chord.begin(), chord.end(), [](float f) { return std::isfinite(f); })) {
-                        ::SDL_Log("Invalid chord frequencies in arpeggio, skipping");
-                        t += arpDur;
+            // Store template
+            if (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro") {
+                Part templatePart = bass;
+                templatePart.notes.clear();
+                templatePart.panAutomation.clear();
+                templatePart.volumeAutomation.clear();
+                templatePart.reverbMixAutomation.clear();
+                for (const auto& note : bass.notes) {
+                    if (note.startTime >= section.startTime && note.startTime < section.endTime) {
+                        Note templateNote = note;
+                        templateNote.startTime -= section.startTime;
+                        templatePart.notes.push_back(templateNote);
+                    }
+                }
+                for (const auto& [time, value] : bass.panAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.panAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : bass.volumeAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : bass.reverbMixAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                sectionTemplates[templateName + "_Bass_" + bass.instrument] = templatePart;
+                ::SDL_Log("Stored bass template %s_%s with %zu notes", templateName.c_str(), bass.instrument.c_str(), templatePart.notes.size());
+            }
+        }
+        ::SDL_Log("Generated bass with total %zu notes, %zu invalid frequencies encountered", bass.notes.size(), invalidFreqCount);
+        return bass;
+    }
+
+    Part generateArpeggio(Genre g, const std::string& scaleName, long double rootFreq, long double totalDur, const std::vector<Section>& sections, long double bpm) {
+        static thread_local AudioUtils::RandomGenerator rng;
+        ::SDL_Log("Generating arpeggio for genre %s, scale %s", genreNames.at(g).c_str(), scaleName.c_str());
+
+        Part arp;
+        arp.instrument = (g == CLASSICAL || g == CLASSICAL_JAZZ_FUSION) ? "piano" :
+                         (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? "syntharp" :
+                         (g == AMBIENT || g == NEW_AGE) ? "pad" : "leadsynth";
+        arp.pan = (rng.random_L() < 0.5L) ? 0.4L : -0.4L;
+        arp.reverbMix = (g == AMBIENT || g == NEW_AGE || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.5L :
+                        (g == CLASSICAL || g == CLASSICAL_JAZZ_FUSION || g == JAZZ || g == LATIN || g == WORLD) ? 0.4L :
+                        (g == POP || g == INDIE || g == DISCO || g == RNB || g == SOUL) ? 0.35L : 0.3L;
+        arp.sectionName = "Arpeggio";
+        arp.useReverb = true;
+        arp.reverbDelay = (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.15L : 0.1L;
+        arp.reverbDecay = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 0.8L : 0.6L;
+        arp.useDistortion = (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA || g == METAL || g == PUNK || rng.random_L() < 0.25L);
+        arp.distortionDrive = (g == METAL || g == PUNK) ? 1.5L : 1.3L;
+        arp.distortionThreshold = 0.8L;
+
+        const long double restProb = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 0.35L :
+                                     (g == JAZZ || g == BLUES || g == CLASSICAL_JAZZ_FUSION || g == LATIN || g == WORLD) ? 0.3L :
+                                     (g == POP || g == INDIE || g == COUNTRY || g == FOLK || g == BLUEGRASS || g == REGGAE || g == REGGAETON) ? 0.25L :
+                                     (g == FUNK || g == DISCO || g == RNB || g == SOUL || g == GOSPEL || g == HIPHOP || g == RAP || g == TRAP) ? 0.2L : 0.3L;
+        arp.notes.reserve(500);
+        arp.panAutomation.reserve(36);
+        arp.volumeAutomation.reserve(36);
+        arp.reverbMixAutomation.reserve(36);
+
+        size_t invalidFreqCount = 0;
+        const size_t maxInvalidFreqs = 100;
+
+        for (const auto& section : sections) {
+            long double t = section.startTime;
+            long double end = section.endTime;
+            long double step = (end - t) / 4.0L;
+            for (int i = 0; i < 4 && t < end; ++i) {
+                long double pan = std::clamp(arp.pan + 0.05L * (rng.random_L() - 0.5L), -1.0L, 1.0L);
+                long double vol = std::clamp(0.3L + 0.1L * rng.random_L(), 0.3L, 1.0L);
+                long double rev = std::clamp(arp.reverbMix + 0.1L * rng.random_L(), 0.0L, 1.0L);
+                arp.panAutomation.emplace_back(t, pan);
+                arp.volumeAutomation.emplace_back(t, vol);
+                arp.reverbMixAutomation.emplace_back(t, rev);
+                t += step;
+            }
+        }
+
+        for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
+            const auto& section = sections[sectionIdx];
+            std::string templateName = section.templateName;
+
+            if (sectionTemplates.find(templateName + "_Arpeggio") != sectionTemplates.end() &&
+                (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro")) {
+                long double intensity = (section.name.find("Chorus") != std::string::npos || section.name.find("Bridge") != std::string::npos ||
+                                        section.name.find("2") != std::string::npos) ? 1.05L : 1.0L;
+                bool transpose = (section.name.find("Chorus2") != std::string::npos && rng.random_L() < 0.3L);
+                long double transposeSemitones = transpose ? 2.0L : 0.0L;
+                Part varied = varyPart(sectionTemplates[templateName + "_Arpeggio"], section.startTime, g, intensity, transpose, transposeSemitones, scaleName);
+                arp.notes.insert(arp.notes.end(), varied.notes.begin(), varied.notes.end());
+                arp.panAutomation.insert(arp.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
+                arp.volumeAutomation.insert(arp.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
+                arp.reverbMixAutomation.insert(arp.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
+                ::SDL_Log("Reused arpeggio template %s for section %s with %zu notes", templateName.c_str(), section.name.c_str(), varied.notes.size());
+                continue;
+            }
+
+            long double t = section.startTime;
+            long double sectionEnd = section.endTime;
+            size_t maxNotes = static_cast<size_t>((sectionEnd - t) * (
+                g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA ? 6.0L :
+                g == POP || g == DISCO || g == RNB || g == SOUL ? 5.0L :
+                g == JAZZ || g == CLASSICAL_JAZZ_FUSION || g == LATIN || g == REGGAE || g == REGGAETON || g == WORLD ? 4.5L : 4.0L));
+            size_t sectionNoteCount = 0;
+
+            std::vector<int> prog;
+            if (chordProgressions.find(templateName) != chordProgressions.end()) {
+                prog = chordProgressions[templateName];
+            } else {
+                auto progs = getChordProgressions(scaleName, g);
+                prog = progs[static_cast<size_t>(rng.random_L() * progs.size())];
+                if (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro") {
+                    chordProgressions[templateName] = prog;
+                }
+            }
+
+            long double arpDur = (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 60.0L / (bpm * 4.0L) :
+                                 (g == POP || g == DISCO || g == RNB || g == SOUL) ? 60.0L / (bpm * 3.0L) : 60.0L / (bpm * 2.0L);
+            size_t chordIdx = 0;
+
+            while (t < sectionEnd && sectionNoteCount < maxNotes) {
+                if (invalidFreqCount >= maxInvalidFreqs) {
+                    ::SDL_Log("Aborting arpeggio generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
+                    break;
+                }
+                if (rng.random_L() < restProb) {
+                    t += arpDur;
+                    t = snapToBeatGrid(t, bpm);
+                    continue;
+                }
+
+                auto chord = buildChord(prog[chordIdx % prog.size()], scaleName, rootFreq, g, static_cast<int>(rng.random_L() * 2));
+                if (chord.empty() || !std::all_of(chord.begin(), chord.end(), [](long double f) { return std::isfinite(f); })) {
+                    ::SDL_Log("Invalid chord frequencies in arpeggio, skipping");
+                    t += arpDur;
+                    invalidFreqCount++;
+                    continue;
+                }
+
+                std::vector<size_t> order(chord.size());
+                std::iota(order.begin(), order.end(), 0);
+                if (g != CLASSICAL && g != CLASSICAL_JAZZ_FUSION) std::shuffle(order.begin(), order.end(), rng);
+
+                for (size_t i : order) {
+                    if (t >= sectionEnd || sectionNoteCount >= maxNotes) break;
+                    Note note;
+                    note.startTime = snapToBeatGrid(t, bpm);
+                    note.duration = arpDur;
+                    if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
+                    if (!std::isfinite(note.duration) || note.duration <= 0.0L) {
+                        note.duration = 0.0625L;
+                    }
+                    note.freq = chord[i];
+                    while (note.freq > 2000.0L) note.freq /= 2.0L; // Keep arpeggio in mid-high range
+                    while (note.freq < 200.0L) note.freq *= 2.0L;
+                    note.volume = (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.4L + 0.1L * section.progress :
+                                  0.3L + 0.1L * section.progress;
+                    note.velocity = (g == POP || g == DISCO || g == RNB || g == SOUL) ? 0.75L + 0.15L * rng.random_L() :
+                                    0.7L + 0.2L * rng.random_L();
+                    note.phoneme = -1;
+                    note.open = false;
+                    arp.notes.push_back(note);
+                    t += note.duration;
+                    sectionNoteCount++;
+                }
+                chordIdx++;
+                t = snapToBeatGrid(t, bpm);
+            }
+            ::SDL_Log("Generated %zu notes for arpeggio in section %s", sectionNoteCount, section.name.c_str());
+
+            if (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro") {
+                Part templatePart = arp;
+                templatePart.notes.clear();
+                templatePart.panAutomation.clear();
+                templatePart.volumeAutomation.clear();
+                templatePart.reverbMixAutomation.clear();
+                for (const auto& note : arp.notes) {
+                    if (note.startTime >= section.startTime && note.startTime < section.endTime) {
+                        Note templateNote = note;
+                        templateNote.startTime -= section.startTime;
+                        templatePart.notes.push_back(templateNote);
+                    }
+                }
+                for (const auto& [time, value] : arp.panAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.panAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : arp.volumeAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : arp.reverbMixAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                sectionTemplates[templateName + "_Arpeggio"] = templatePart;
+                ::SDL_Log("Stored arpeggio template %s with %zu notes", templateName.c_str(), templatePart.notes.size());
+            }
+        }
+        ::SDL_Log("Generated arpeggio with total %zu notes, %zu invalid frequencies encountered", arp.notes.size(), invalidFreqCount);
+        return arp;
+    }
+
+    Part generateHarmony(Genre g, const std::string& scaleName, long double rootFreq, long double totalDur, const std::vector<Section>& sections, long double bpm) {
+        static thread_local AudioUtils::RandomGenerator rng;
+		::SDL_Log("Generating harmony for genre %s, scale %s", genreNames.at(g).c_str(), scaleName.c_str());
+        Part harmony;
+        harmony.sectionName = "Harmony";
+        harmony.instrument = (g == CLASSICAL || g == CLASSICAL_JAZZ_FUSION) ? "strings" :
+                             (g == AMBIENT || g == NEW_AGE) ? "pad" :
+                             (g == GOSPEL || g == SOUL || g == RNB) ? "organ" :
+                             (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? "synthpad" : "choir";
+        harmony.pan = 0.0L;
+        harmony.reverbMix = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL || g == CLASSICAL_JAZZ_FUSION) ? 0.5L :
+                            (g == GOSPEL || g == SOUL || g == RNB || g == JAZZ || g == LATIN || g == WORLD) ? 0.4L :
+                            (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.35L : 0.2L;
+        harmony.useReverb = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL || g == CLASSICAL_JAZZ_FUSION || g == GOSPEL || g == SOUL || g == RNB ||
+                             g == JAZZ || g == LATIN || g == WORLD || g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA);
+        harmony.reverbDelay = (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.15L : 0.1L;
+        harmony.reverbDecay = (g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 1.0L : 0.9L;
+        harmony.useDistortion = (g == ROCK || g == METAL || g == PUNK || g == DUBSTEP || g == TRAP || rng.random_L() < 0.2L);
+        harmony.distortionDrive = (g == METAL || g == PUNK || g == DUBSTEP || g == TRAP) ? 2.2L : 2.0L;
+        harmony.distortionThreshold = 0.3L;
+
+        harmony.notes.reserve(1000);
+        harmony.panAutomation.reserve(200);
+        harmony.volumeAutomation.reserve(200);
+        harmony.reverbMixAutomation.reserve(200);
+
+        size_t invalidFreqCount = 0;
+        const size_t maxInvalidFreqs = 100;
+        long double beat = 60.0L / bpm;
+
+        for (const auto& section : sections) {
+            std::string templateName = section.templateName;
+            auto it = sectionTemplates.find(templateName + "_Harmony");
+            if (it != sectionTemplates.end() && (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro")) {
+                ::SDL_Log("Using template %s for section %s", (templateName + "_Harmony").c_str(), section.name.c_str());
+                Part varied = varyPart(it->second, section.startTime, g, 1.0L, false, 0.0L, scaleName);
+                harmony.notes.insert(harmony.notes.end(), varied.notes.begin(), varied.notes.end());
+                harmony.panAutomation.insert(harmony.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
+                harmony.volumeAutomation.insert(harmony.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
+                harmony.reverbMixAutomation.insert(harmony.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
+                continue;
+            }
+
+            long double t = section.startTime;
+            long double sectionDur = section.endTime - section.startTime;
+            size_t sectionNoteCount = 0;
+            size_t maxNotes = static_cast<size_t>(sectionDur * (
+                g == AMBIENT || g == NEW_AGE || g == CLASSICAL ? 0.4L :
+                g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA ? 0.6L : 0.5L));
+            maxNotes = std::min(maxNotes, harmony.notes.capacity() - harmony.notes.size());
+
+            std::vector<int> prog;
+            if (chordProgressions.find(templateName) != chordProgressions.end()) {
+                prog = chordProgressions[templateName];
+            } else {
+                auto progs = getChordProgressions(scaleName, g);
+                prog = progs[static_cast<size_t>(rng.random_L() * progs.size())];
+                if (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro") {
+                    chordProgressions[templateName] = prog;
+                }
+            }
+
+            long double chordDur = beat * (g == AMBIENT || g == NEW_AGE || g == CLASSICAL ? 8.0L : 4.0L);
+            size_t chordIdx = 0;
+
+            while (t < section.endTime && sectionNoteCount < maxNotes && harmony.notes.size() < harmony.notes.capacity()) {
+                if (invalidFreqCount >= maxInvalidFreqs) {
+                    ::SDL_Log("Aborting harmony generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
+                    break;
+                }
+                int degree = prog[chordIdx % prog.size()];
+                int inversion = chordIdx % 3;
+                std::vector<long double> chord = buildChord(degree, scaleName, rootFreq, g, inversion);
+
+                for (long double freq : chord) {
+                    if (!std::isfinite(freq)) {
+                        ::SDL_Log("Invalid chord frequency %.2Lf at t=%.2Lf, skipping", freq, t);
                         invalidFreqCount++;
                         continue;
                     }
+                    Note note(freq, chordDur, t);
+                    note.volume = (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.45L + 0.1L * section.progress :
+                                  0.4L + 0.1L * section.progress;
+                    note.velocity = (g == GOSPEL || g == SOUL || g == RNB) ? 0.65L + 0.15L * rng.random_L() :
+                                    0.6L + 0.2L * rng.random_L();
+                    harmony.notes.push_back(note);
+                    sectionNoteCount++;
+                }
 
-                    std::vector<size_t> order(chord.size());
-                    std::iota(order.begin(), order.end(), 0);
-                    if (g != CLASSICAL) std::shuffle(order.begin(), order.end(), rng);
+                long double pan = (g == CLASSICAL || g == AMBIENT || g == NEW_AGE) ? 0.0L :
+                                  (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? (rng.random_L() < 0.5L ? -0.3L : 0.3L) :
+                                  (rng.random_L() < 0.5L ? -0.2L : 0.2L);
+                if (harmony.panAutomation.size() < harmony.panAutomation.capacity()) {
+                    harmony.panAutomation.emplace_back(t, pan);
+                }
+                if (harmony.volumeAutomation.size() < harmony.volumeAutomation.capacity()) {
+                    harmony.volumeAutomation.emplace_back(t, 0.4L + 0.1L * section.progress);
+                }
+                if (harmony.reverbMixAutomation.size() < harmony.reverbMixAutomation.capacity()) {
+                    harmony.reverbMixAutomation.emplace_back(t, harmony.reverbMix);
+                }
 
-                    for (size_t i : order) {
-                        if (t >= sectionEnd || sectionNoteCount >= maxNotes) break;
-                        Note note;
-                        note.startTime = snapToBeatGrid(t, bpm);
-                        note.duration = arpDur;
-                        if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
-                        if (!std::isfinite(note.duration) || note.duration <= 0.0f) {
-                            note.duration = 0.0625f;
-                        }
-                        note.freq = chord[i];
-                        note.volume = 0.3f + 0.1f * section.progress;
-                        note.velocity = 0.7f + 0.2f * (rng() % 100) / 100.0f;
-                        note.phoneme = -1;
-                        note.open = false;
-                        arp.notes.push_back(note);
-                        t += note.duration;
-                        sectionNoteCount++;
+                t += chordDur;
+                chordIdx++;
+            }
+
+            if (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro") {
+                Part templatePart;
+                templatePart.instrument = harmony.instrument;
+                templatePart.pan = harmony.pan;
+                templatePart.reverbMix = harmony.reverbMix;
+                templatePart.useReverb = harmony.useReverb;
+                templatePart.reverbDelay = harmony.reverbDelay;
+                templatePart.reverbDecay = harmony.reverbDecay;
+                templatePart.useDistortion = harmony.useDistortion;
+                templatePart.distortionDrive = harmony.distortionDrive;
+                templatePart.distortionThreshold = harmony.distortionThreshold;
+
+                for (const auto& note : harmony.notes) {
+                    if (note.startTime >= section.startTime && note.startTime < section.endTime) {
+                        Note templateNote = note;
+                        templateNote.startTime -= section.startTime;
+                        templatePart.notes.push_back(templateNote);
                     }
-                    chordIdx++;
+                }
+                for (const auto& [time, value] : harmony.panAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.panAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : harmony.volumeAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : harmony.reverbMixAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                sectionTemplates[templateName + "_Harmony"] = templatePart;
+                ::SDL_Log("Stored harmony template %s with %zu notes", (templateName + "_Harmony").c_str(), templatePart.notes.size());
+            }
+        }
+
+        ::SDL_Log("Generated harmony with total %zu notes, %zu invalid frequencies encountered", harmony.notes.size(), invalidFreqCount);
+        return harmony;
+    }
+	
+    Part generateVocal(Genre g, const std::string& scaleName, long double rootFreq, long double totalDur, const std::vector<Section>& sections, long double bpm) {
+        static thread_local AudioUtils::RandomGenerator rng;
+        ::SDL_Log("Generating vocal for genre %s, scale %s", genreNames.at(g).c_str(), scaleName.c_str());
+
+        Part vocal;
+        vocal.instrument = (g == GOSPEL || g == SOUL || g == RNB) ? "vocal_soul" :
+                           (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? "vocal_pop" :
+                           (g == RAP || g == HIPHOP || g == TRAP) ? "vocal_rap" :
+                           (g == CLASSICAL || g == CLASSICAL_JAZZ_FUSION || g == JAZZ) ? "vocal_classical" :
+                           (rng.random_L() < 0.5L) ? "vocal_0" : "vocal_1";
+        vocal.pan = (rng.random_L() < 0.5L) ? 0.2L : -0.2L;
+        vocal.reverbMix = (g == GOSPEL || g == SOUL || g == RNB || g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 0.4L :
+                          (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA || g == JAZZ || g == CLASSICAL_JAZZ_FUSION) ? 0.35L :
+                          (g == RAP || g == HIPHOP || g == TRAP) ? 0.3L : 0.25L;
+        vocal.sectionName = "Vocal";
+        vocal.useReverb = true;
+        vocal.reverbDelay = (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.2L : 0.15L;
+        vocal.reverbDecay = (g == GOSPEL || g == SOUL || g == RNB || g == AMBIENT || g == NEW_AGE || g == CLASSICAL) ? 0.7L : 0.6L;
+        vocal.useDistortion = (g == RAP || g == HIPHOP || g == TRAP || g == DUBSTEP || rng.random_L() < 0.15L);
+        vocal.distortionDrive = 1.2L;
+        vocal.distortionThreshold = 0.7L;
+
+        const long double restProb = (g == RAP || g == HIPHOP || g == TRAP) ? 0.5L :
+                                     (g == AMBIENT || g == NEW_AGE || g == CLASSICAL || g == JAZZ || g == CLASSICAL_JAZZ_FUSION) ? 0.45L :
+                                     (g == GOSPEL || g == SOUL || g == RNB || g == POP || g == DISCO) ? 0.35L :
+                                     (g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA || g == REGGAE || g == REGGAETON || g == LATIN || g == WORLD) ? 0.3L : 0.4L;
+        const long double phraseProb = (g == GOSPEL || g == SOUL || g == RNB || g == JAZZ || g == CLASSICAL_JAZZ_FUSION) ? 0.7L :
+                                      (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.6L :
+                                      (g == RAP || g == HIPHOP || g == TRAP) ? 0.4L : 0.5L;
+        vocal.notes.reserve(300);
+        vocal.panAutomation.reserve(36);
+        vocal.volumeAutomation.reserve(36);
+        vocal.reverbMixAutomation.reserve(36);
+
+        size_t invalidFreqCount = 0;
+        const size_t maxInvalidFreqs = 100;
+
+        for (const auto& section : sections) {
+            long double t = section.startTime;
+            long double end = section.endTime;
+            long double step = (end - t) / 4.0L;
+            for (int i = 0; i < 4 && t < end; ++i) {
+                long double pan = std::clamp(vocal.pan + 0.05L * (rng.random_L() - 0.5L), -1.0L, 1.0L);
+                long double vol = std::clamp(0.5L + 0.1L * rng.random_L(), 0.5L, 1.0L);
+                long double rev = std::clamp(vocal.reverbMix + 0.1L * rng.random_L(), 0.0L, 1.0L);
+                vocal.panAutomation.emplace_back(t, pan);
+                vocal.volumeAutomation.emplace_back(t, vol);
+                vocal.reverbMixAutomation.emplace_back(t, rev);
+                t += step;
+            }
+        }
+
+        const auto& intervals = scales.at(scaleName);
+        size_t currentIdx = static_cast<size_t>(rng.random_L() * intervals.size());
+
+        for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
+            const auto& section = sections[sectionIdx];
+            std::string templateName = section.templateName;
+
+            if (sectionTemplates.find(templateName + "_Vocal") != sectionTemplates.end() &&
+                (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro")) {
+                long double intensity = (section.name.find("Chorus") != std::string::npos || section.name.find("2") != std::string::npos) ? 1.1L : 1.0L;
+                bool transpose = (section.name.find("Chorus2") != std::string::npos && rng.random_L() < 0.5L);
+                long double transposeSemitones = transpose ? 2.0L : 0.0L;
+                Part varied = varyPart(sectionTemplates[templateName + "_Vocal"], section.startTime, g, intensity, transpose, transposeSemitones, scaleName);
+                vocal.notes.insert(vocal.notes.end(), varied.notes.begin(), varied.notes.end());
+                vocal.panAutomation.insert(vocal.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
+                vocal.volumeAutomation.insert(vocal.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
+                vocal.reverbMixAutomation.insert(vocal.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
+                ::SDL_Log("Reused vocal template %s for section %s with %zu notes", templateName.c_str(), section.name.c_str(), varied.notes.size());
+                continue;
+            }
+
+            long double t = section.startTime;
+            long double sectionEnd = section.endTime;
+            size_t maxNotes = static_cast<size_t>((sectionEnd - t) * (
+                g == RAP || g == HIPHOP || g == TRAP ? 4.0L :
+                g == GOSPEL || g == SOUL || g == RNB || g == JAZZ || g == CLASSICAL_JAZZ_FUSION ? 3.5L :
+                g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA ? 3.2L : 3.0L));
+            size_t sectionNoteCount = 0;
+            long double phraseDur = 4.0L * 60.0L / bpm;
+            long double phraseStart = t;
+
+            while (t < sectionEnd && sectionNoteCount < maxNotes) {
+                if (invalidFreqCount >= maxInvalidFreqs) {
+                    ::SDL_Log("Aborting vocal generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
+                    break;
+                }
+                if (rng.random_L() < restProb) {
+                    t += getRandomDuration(g, section.progress, bpm);
                     t = snapToBeatGrid(t, bpm);
-                }
-                ::SDL_Log("Generated %zu notes for arpeggio in section %s", sectionNoteCount, section.name.c_str());
-
-                if (templateName == "Verse" || templateName == "Chorus") {
-                    Part templatePart = arp;
-                    templatePart.notes.clear();
-                    templatePart.panAutomation.clear();
-                    templatePart.volumeAutomation.clear();
-                    templatePart.reverbMixAutomation.clear();
-                    for (const auto& note : arp.notes) {
-                        if (note.startTime >= section.startTime && note.startTime < section.endTime) {
-                            Note templateNote = note;
-                            templateNote.startTime -= section.startTime;
-                            templatePart.notes.push_back(templateNote);
-                        }
-                    }
-                    for (const auto& [time, value] : arp.panAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.panAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    for (const auto& [time, value] : arp.volumeAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    for (const auto& [time, value] : arp.reverbMixAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    sectionTemplates[templateName + "_Arpeggio"] = templatePart;
-                    ::SDL_Log("Stored arpeggio template %s with %zu notes", templateName.c_str(), templatePart.notes.size());
-                }
-            }
-            ::SDL_Log("Generated arpeggio with total %zu notes, %zu invalid frequencies encountered", arp.notes.size(), invalidFreqCount);
-            return arp;
-        }
-
-        Part generateHarmony(Genre g, const std::string& scaleName, float rootFreq, float totalDur,
-                             const std::vector<Section>& sections, float bpm) {
-            ::SDL_Log("Generating harmony for genre %s, scale %s", genreNames[g].c_str(), scaleName.c_str());
-            Part harmony;
-            harmony.sectionName = "Harmony";
-            harmony.instrument = (g == CLASSICAL) ? "strings" : (g == AMBIENT) ? "pad" : "organ";
-            harmony.pan = 0.0f;
-            harmony.reverbMix = (g == AMBIENT || g == CLASSICAL) ? 0.5f : 0.2f;
-            harmony.useReverb = (g == AMBIENT || g == CLASSICAL || g == GOSPEL);
-            harmony.reverbDelay = 0.1f;
-            harmony.reverbDecay = 0.9f;
-            harmony.reverbMixFactor = 0.5f;
-            harmony.useDistortion = (g == ROCK && rng() % 2);
-            harmony.distortionDrive = 2.0f;
-            harmony.distortionThreshold = 0.3f;
-
-            harmony.notes.reserve(1000);
-            harmony.panAutomation.reserve(200);
-            harmony.volumeAutomation.reserve(200);
-            harmony.reverbMixAutomation.reserve(200);
-
-            size_t invalidFreqCount = 0;
-            const size_t maxInvalidFreqs = 100;
-            float beat = 60.0f / bpm;
-
-            for (const auto& section : sections) {
-                std::string templateName = section.templateName;
-                auto it = sectionTemplates.find(templateName + "_Harmony");
-                if (it != sectionTemplates.end() && (templateName == "Verse" || templateName == "Chorus")) {
-                    ::SDL_Log("Using template %s for section %s", (templateName + "_Harmony").c_str(), section.name.c_str());
-                    Part varied = varyPart(it->second, section.startTime, 1.0L);
-                    harmony.notes.insert(harmony.notes.end(), varied.notes.begin(), varied.notes.end());
-                    harmony.panAutomation.insert(harmony.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
-                    harmony.volumeAutomation.insert(harmony.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
-                    harmony.reverbMixAutomation.insert(harmony.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
                     continue;
                 }
 
-                float t = section.startTime;
-                float sectionDur = section.endTime - section.startTime;
-                size_t sectionNoteCount = 0;
-                size_t maxNotes = static_cast<size_t>(sectionDur * 0.5f);
-                maxNotes = std::min(maxNotes, harmony.notes.capacity() - harmony.notes.size());
+                bool usePhrase = rng.random_L() < phraseProb;
+                int numNotes = usePhrase ? 3 + static_cast<int>(rng.random_L() * 3) : 1;
 
-                std::vector<int> prog;
-                if (chordProgressions.find(templateName) != chordProgressions.end()) {
-                    prog = chordProgressions[templateName];
-                } else {
-                    auto progs = getChordProgressions(scaleName, g);
-                    prog = progs[rng() % progs.size()];
-                    if (templateName == "Verse" || templateName == "Chorus") {
-                        chordProgressions[templateName] = prog;
+                for (int i = 0; i < numNotes && t < sectionEnd && sectionNoteCount < maxNotes; ++i) {
+                    Note note;
+                    note.startTime = snapToBeatGrid(t, bpm);
+                    note.duration = getRandomDuration(g, section.progress, bpm);
+                    if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
+                    if (!std::isfinite(note.duration) || note.duration <= 0.0L) {
+                        note.duration = 0.0625L;
                     }
+                    note.volume = (g == GOSPEL || g == SOUL || g == RNB) ? 0.55L + 0.1L * section.progress :
+                                  (g == RAP || g == HIPHOP || g == TRAP) ? 0.6L + 0.1L * section.progress :
+                                  0.5L + 0.1L * section.progress;
+                    note.velocity = (g == POP || g == DISCO || g == EDM || g == TECHNO || g == DUBSTEP || g == ELECTRONICA) ? 0.85L + 0.15L * rng.random_L() :
+                                    0.8L + 0.2L * rng.random_L();
+                    note.phoneme = rng.random_L() < 0.7L ? static_cast<int>(rng.random_L() * 7) : -1;
+                    note.open = false;
+
+                    int step = (rng.random_L() < 0.5L) ? 1 : -1;
+                    currentIdx = (currentIdx + step + intervals.size()) % intervals.size();
+                    long double targetFreq = rootFreq * std::pow(2.0L, intervals[currentIdx] / 12.0L);
+                    while (targetFreq > 1000.0L) targetFreq /= 2.0L; // Keep vocals in typical range
+                    while (targetFreq < 200.0L) targetFreq *= 2.0L;
+                    note.freq = getClosestFreq(targetFreq, vocalFreqs); // Assume vocalFreqs is defined
+
+                    if (!std::isfinite(note.freq)) {
+                        ::SDL_Log("Invalid vocal frequency at t=%.2Lf, using 440.0 Hz", t);
+                        note.freq = 440.0L;
+                        invalidFreqCount++;
+                    }
+                    vocal.notes.push_back(note);
+                    t += note.duration;
+                    sectionNoteCount++;
                 }
-
-                float chordDur = beat * 4.0f;
-                if (g == CLASSICAL || g == AMBIENT) chordDur *= 2.0f;
-                size_t chordIdx = 0;
-
-                while (t < section.endTime && sectionNoteCount < maxNotes && harmony.notes.size() < harmony.notes.capacity()) {
-                    if (invalidFreqCount >= maxInvalidFreqs) {
-                        ::SDL_Log("Aborting harmony generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
-                        break;
-                    }
-                    int degree = prog[chordIdx % prog.size()];
-                    int inversion = chordIdx % 3; // Cycle through inversions for variety
-                    std::vector<float> chord = buildChord(degree, scaleName, rootFreq, g, inversion);
-
-                    for (float freq : chord) {
-                        if (!std::isfinite(freq)) {
-                            ::SDL_Log("Invalid chord frequency %.2f at t=%.2f, skipping", freq, t);
-                            invalidFreqCount++;
-                            continue;
-                        }
-                        Note note(freq, chordDur, t);
-                        note.volume = 0.4f + 0.1f * section.progress;
-                        note.velocity = 0.6f + 0.2f * (rng() % 100) / 100.0f;
-                        harmony.notes.push_back(note);
-                        sectionNoteCount++;
-                    }
-
-                    float pan = (g == CLASSICAL || g == AMBIENT) ? 0.0f : (rng() % 2 ? -0.2f : 0.2f);
-                    if (harmony.panAutomation.size() < harmony.panAutomation.capacity()) {
-                        harmony.panAutomation.emplace_back(t, pan);
-                    }
-                    if (harmony.volumeAutomation.size() < harmony.volumeAutomation.capacity()) {
-                        harmony.volumeAutomation.emplace_back(t, 0.4f + 0.1f * section.progress);
-                    }
-                    if (harmony.reverbMixAutomation.size() < harmony.reverbMixAutomation.capacity()) {
-                        harmony.reverbMixAutomation.emplace_back(t, harmony.reverbMix);
-                    }
-
-                    t += chordDur;
-                    chordIdx++;
-                }
-
-                if (templateName == "Verse" || templateName == "Chorus") {
-                    Part templatePart;
-                    templatePart.instrument = harmony.instrument;
-                    templatePart.pan = harmony.pan;
-                    templatePart.reverbMix = harmony.reverbMix;
-                    templatePart.useReverb = harmony.useReverb;
-                    templatePart.reverbDelay = harmony.reverbDelay;
-                    templatePart.reverbDecay = harmony.reverbDecay;
-                    templatePart.reverbMixFactor = harmony.reverbMixFactor;
-                    templatePart.useDistortion = harmony.useDistortion;
-                    templatePart.distortionDrive = harmony.distortionDrive;
-                    templatePart.distortionThreshold = harmony.distortionThreshold;
-
-                    for (const auto& note : harmony.notes) {
-                        if (note.startTime >= section.startTime && note.startTime < section.endTime) {
-                            Note templateNote = note;
-                            templateNote.startTime -= section.startTime;
-                            templatePart.notes.push_back(templateNote);
-                        }
-                    }
-                    for (const auto& [time, value] : harmony.panAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.panAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    for (const auto& [time, value] : harmony.volumeAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    for (const auto& [time, value] : harmony.reverbMixAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    sectionTemplates[templateName + "_Harmony"] = templatePart;
-                    ::SDL_Log("Stored harmony template %s with %zu notes", (templateName + "_Harmony").c_str(), templatePart.notes.size());
-                }
-            }
-
-            ::SDL_Log("Generated harmony with total %zu notes, %zu invalid frequencies encountered", harmony.notes.size(), invalidFreqCount);
-            return harmony;
-        }
-
-        Part generateVocal(Genre g, const std::string& scaleName, float rootFreq, float totalDur, const std::vector<Section>& sections, float bpm) {
-            Part vocal;
-            vocal.instrument = (rng() % 2) ? "vocal_0" : "vocal_1";
-            vocal.pan = (rng() % 2) ? 0.2f : -0.2f;
-            vocal.reverbMix = (g == GOSPEL || g == SOUL) ? 0.4f : 0.3f;
-            vocal.sectionName = "Vocal";
-            vocal.useReverb = true;
-            vocal.reverbDelay = 0.15f;
-            vocal.reverbDecay = 0.6f;
-            vocal.reverbMixFactor = vocal.reverbMix;
-            vocal.useDistortion = false;
-
-            const float restProb = (g == RAP || g == HIPHOP) ? 0.5f : 0.4f;
-            const float phraseProb = (g == GOSPEL || g == SOUL) ? 0.7f : 0.5f;
-            vocal.notes.reserve(300);
-            vocal.panAutomation.reserve(36);
-            vocal.volumeAutomation.reserve(36);
-            vocal.reverbMixAutomation.reserve(36);
-
-            size_t invalidFreqCount = 0;
-            const size_t maxInvalidFreqs = 100;
-
-            for (const auto& section : sections) {
-                float t = section.startTime;
-                float end = section.endTime;
-                float step = (end - t) / 4.0f;
-                for (int i = 0; i < 4 && t < end; ++i) {
-                    float pan = std::max(-1.0f, std::min(1.0f, vocal.pan + (rng() % 10 - 5) / 100.0f));
-                    float vol = std::max(0.5f, std::min(1.0f, 0.5f + (rng() % 10) / 100.0f));
-                    float rev = std::max(0.0f, std::min(1.0f, vocal.reverbMix + (rng() % 10) / 100.0f));
-                    vocal.panAutomation.emplace_back(t, pan);
-                    vocal.volumeAutomation.emplace_back(t, vol);
-                    vocal.reverbMixAutomation.emplace_back(t, rev);
-                    t += step;
-                }
-            }
-
-            const auto& intervals = scales.at(scaleName);
-            float currentFreq = getClosestFreq(rootFreq * std::pow(2.0f, intervals[rng() % intervals.size()] / 12.0f));
-
-            for (size_t sectionIdx = 0; sectionIdx < sections.size(); ++sectionIdx) {
-                const auto& section = sections[sectionIdx];
-                std::string templateName = section.templateName;
-
-                if (sectionTemplates.find(templateName + "_Vocal") != sectionTemplates.end() &&
-                    (templateName == "Verse" || templateName == "Chorus")) {
-                    float intensity = (section.name == "Chorus2" || section.name == "Verse2") ? 1.1f : 1.0f;
-                    bool transpose = (section.name == "Chorus2" && rng() % 2);
-                    float transposeSemitones = transpose ? 2.0f : 0.0f;
-                    Part varied = varyPart(sectionTemplates[templateName + "_Vocal"], section.startTime, intensity, transpose, transposeSemitones);
-                    vocal.notes.insert(vocal.notes.end(), varied.notes.begin(), varied.notes.end());
-                    vocal.panAutomation.insert(vocal.panAutomation.end(), varied.panAutomation.begin(), varied.panAutomation.end());
-                    vocal.volumeAutomation.insert(vocal.volumeAutomation.end(), varied.volumeAutomation.begin(), varied.volumeAutomation.end());
-                    vocal.reverbMixAutomation.insert(vocal.reverbMixAutomation.end(), varied.reverbMixAutomation.begin(), varied.reverbMixAutomation.end());
-                    ::SDL_Log("Reused vocal template %s for section %s with %zu notes", templateName.c_str(), section.name.c_str(), varied.notes.size());
-                    continue;
-                }
-
-                float t = section.startTime;
-                float sectionEnd = section.endTime;
-                size_t maxNotes = static_cast<size_t>((sectionEnd - t) * 3.0f);
-                size_t sectionNoteCount = 0;
-                float phraseDur = 4.0f * 60.0f / bpm;
-                float phraseStart = t;
-
-                while (t < sectionEnd && sectionNoteCount < maxNotes) {
-                    if (invalidFreqCount >= maxInvalidFreqs) {
-                        ::SDL_Log("Aborting vocal generation for section %s: too many invalid frequencies (%zu)", section.name.c_str(), invalidFreqCount);
-                        break;
-                    }
-                    if (rng() / static_cast<float>(rng.max()) < restProb) {
-                        t += getRandomDuration(g, section.progress, bpm);
+                t = snapToBeatGrid(t, bpm);
+                if (t >= phraseStart + phraseDur) {
+                    phraseStart = t;
+                    if (rng.random_L() < 0.5L) {
+                        t += 60.0L / bpm;
                         t = snapToBeatGrid(t, bpm);
-                        continue;
                     }
-
-                    bool usePhrase = rng() / static_cast<float>(rng.max()) < phraseProb;
-                    int numNotes = usePhrase ? 3 + (rng() % 3) : 1;
-
-                    for (int i = 0; i < numNotes && t < sectionEnd && sectionNoteCount < maxNotes; ++i) {
-                        Note note;
-                        note.startTime = snapToBeatGrid(t, bpm);
-                        note.duration = getRandomDuration(g, section.progress, bpm);
-                        if (note.startTime + note.duration > sectionEnd) note.duration = sectionEnd - note.startTime;
-                        if (!std::isfinite(note.duration) || note.duration <= 0.0f) {
-                            note.duration = 0.0625f;
-                        }
-                        note.volume = 0.5f + 0.1f * section.progress;
-                        note.velocity = 0.8f + 0.2f * (rng() % 100) / 100.0f;
-                        note.phoneme = rng() % 7;
-                        note.open = false;
-
-                        size_t currentIdx = 0;
-                        for (size_t j = 0; j < intervals.size(); ++j) {
-                            float freq = rootFreq * std::pow(2.0f, intervals[j] / 12.0f);
-                            if (std::abs(currentFreq - freq) < 1e-3) {
-                                currentIdx = j;
-                                break;
-                            }
-                        }
-                        int step = (rng() % 2) ? 1 : -1;
-                        currentIdx = (currentIdx + step + intervals.size()) % intervals.size();
-                        currentFreq = getClosestFreq(rootFreq * std::pow(2.0f, intervals[currentIdx] / 12.0f));
-                        note.freq = currentFreq;
-                        if (!std::isfinite(note.freq)) {
-                            note.freq = 440.0f;
-                            invalidFreqCount++;
-                        }
-                        vocal.notes.push_back(note);
-                        t += note.duration;
-                        sectionNoteCount++;
-                    }
-                    t = snapToBeatGrid(t, bpm);
-                    if (t >= phraseStart + phraseDur) {
-                        phraseStart = t;
-                        if (rng() % 2) {
-                            t += 60.0f / bpm;
-                            t = snapToBeatGrid(t, bpm);
-                        }
-                    }
-                }
-                ::SDL_Log("Generated %zu notes for vocal in section %s", sectionNoteCount, section.name.c_str());
-
-                if (templateName == "Verse" || templateName == "Chorus") {
-                    Part templatePart = vocal;
-                    templatePart.notes.clear();
-                    templatePart.panAutomation.clear();
-                    templatePart.volumeAutomation.clear();
-                    templatePart.reverbMixAutomation.clear();
-                    for (const auto& note : vocal.notes) {
-                        if (note.startTime >= section.startTime && note.startTime < section.endTime) {
-                            Note templateNote = note;
-                            templateNote.startTime -= section.startTime;
-                            templatePart.notes.push_back(templateNote);
-                        }
-                    }
-                    for (const auto& [time, value] : vocal.panAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.panAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    for (const auto& [time, value] : vocal.volumeAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    for (const auto& [time, value] : vocal.reverbMixAutomation) {
-                        if (time >= section.startTime && time < section.endTime) {
-                            templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
-                        }
-                    }
-                    sectionTemplates[templateName + "_Vocal"] = templatePart;
-                    ::SDL_Log("Stored vocal template %s with %zu notes", templateName.c_str(), templatePart.notes.size());
                 }
             }
-            ::SDL_Log("Generated vocal with total %zu notes, %zu invalid frequencies encountered", vocal.notes.size(), invalidFreqCount);
-            return vocal;
+            ::SDL_Log("Generated %zu notes for vocal in section %s", sectionNoteCount, section.name.c_str());
+
+            if (templateName == "Verse" || templateName == "Chorus" || templateName == "Bridge" || templateName == "Intro" || templateName == "Outro") {
+                Part templatePart = vocal;
+                templatePart.notes.clear();
+                templatePart.panAutomation.clear();
+                templatePart.volumeAutomation.clear();
+                templatePart.reverbMixAutomation.clear();
+                for (const auto& note : vocal.notes) {
+                    if (note.startTime >= section.startTime && note.startTime < section.endTime) {
+                        Note templateNote = note;
+                        templateNote.startTime -= section.startTime;
+                        templatePart.notes.push_back(templateNote);
+                    }
+                }
+                for (const auto& [time, value] : vocal.panAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.panAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : vocal.volumeAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.volumeAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                for (const auto& [time, value] : vocal.reverbMixAutomation) {
+                    if (time >= section.startTime && time < section.endTime) {
+                        templatePart.reverbMixAutomation.emplace_back(time - section.startTime, value);
+                    }
+                }
+                sectionTemplates[templateName + "_Vocal"] = templatePart;
+                ::SDL_Log("Stored vocal template %s with %zu notes", templateName.c_str(), templatePart.notes.size());
+            }
         }
+        ::SDL_Log("Generated vocal with total %zu notes, %zu invalid frequencies encountered", vocal.notes.size(), invalidFreqCount);
+        return vocal;
+    }
     };
 }
 #endif // SONGGEN_H
