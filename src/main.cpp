@@ -36,7 +36,7 @@
 // My process is to get code from AI, rewrite it, and resubmit it if there are bugs. Sometimes just to have it add comments.
 // The code I am adjusting is my own. Formatting issues are sometimes ignored until I run uncrustify. Sometimes I have it insert tabs.
 // Most code blocks are copied directly from AI, but it is modifying my code with usually a compiler error fix.
-// If formatting looks like I copied and pasted directly from AI, I probably did because I proofread most of it but I do not bother remembering too much of it until I need it. Like the time I coded the RNG, I had no idea at the time that the AudioManager was such a big deal. I cranked AudioUtils up to 11.
+      // If formatting looks like I copied and pasted directly from AI, I probably did because I proofread most of it but I do not bother remembering too much of it until I need it. Like the time I coded the RNG, I had no idea at the time that the AudioManager was such a big deal. I cranked AudioUtils up to 11 in include/instruments.h.
 // What I usually copy is my code back with the one or two adjustments AI does to tweak a code block faster than me.
 // like "alphabetize this".
 // The code is prompted and curated how I choose to be the designer of this and other software.

@@ -29,12 +29,14 @@ const int MAX_INSTRUMENTS = 8; // do not exceed your instrument files.
 // number of instruments permitted per song.
 // 31 Instruments and 30 Genres at time of writing.
 
-// The recommended method to add a song genre is to search this file for every instance of indie and Indie and INDIE, and modify it.
 // Leave the genre name as indie to avoid issues if you miss changing a setting.
+// The recommended method to add a song genre is to search this file for every instance of indie and Indie and INDIE and making changes.
 
 // initalize rng in your function before using it with 
 // 'static thread_local AudioUtils::RandomGenerator rng;'
-// static thread_local is not required if you want a global rng.
+// #include instruments.h
+// AudioUtils::RandomGenerator rng; // non thread local
+
 // I have yet to performance the current rng so for now I thread the generation.
 
 // MusicGenerator is the brains of songgen.

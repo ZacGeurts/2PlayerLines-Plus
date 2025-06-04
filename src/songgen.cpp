@@ -2,28 +2,29 @@
 // Binds the two files together and is the command ./songgen
 
 // Registering your instrument is at the bottom of instruments.h
+// you can include instruments.h in your programs but be clear it is not free software.
 
-// This is not free software and requires royalties for commercial use.
+// This is not free software and requires royalties for use for profit.
 // Royalties are required for songgen.cpp songgen.h instruments.h and instrument files
 // Interested parties can find my contact information at https://github.com/ZacGeurts
-// If you make commercial gain, you can do the math and update my Patreon.
+// If you can make profit financially, you can do the math and update my Patreon.
+// https://patreon/ZacharyGeurts
 
 // Follow the local law.
 // FCC in the USA restricts what frequencies you can broadcast.
 // Most, if not all countries restrict frequencies.
 // Audible frequencies in the USA are a First Amendment Right. 
 // There are some nefarious limitations, like faking a policeman phone call, but making sound is a human right.
-// Maybe there is a usage for frequencies exceeding this many 31415926535897932384626433832795029L
 /* 	
 	Far out of this scope. I cap to 20hz and less than 44100hz (SDL2 maximum and exceeds human hearing).
  	We can go below 20hz down to 0hz, but top of the line car stereos might hit 8hz-12hz with expensive equipment.
- 	It requires too much voltage for energy push lower and you would not hear a difference.
  	20hz-80hz (20hz-120hz also common) should be top quality for a subwoofer and it does not try blowing out pc speakers.
 */
 // You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.Or sound is WiFi that you can.
 // Do not restrict emergency communications or damage heart pace makers, etc.
 // Always put hearing safety first. It does not grow back.
 // Be kind to pets. - Dana White
+// They have sensitive ears.
 
 // SongGen is songen.h
 // AudioUtils and rng is in instruments.h
@@ -35,8 +36,11 @@
 // this does not yet mean that it will add your new instruments to songs.
 // instrument files would need a bit more depth, but because I want fun things to be user modifiable I kept it simplier to start.
 
+// skip this part to avoid coder headache.
 // you would need note range, and what genres it plays with, tempo, and pretty much every map from songgen in there and
 // then guhhhh, just do not if you have not been modifiing this code for a month.
+// you would need to include songgen.h and every instrument would need to be updated or it would be down again until then
+// I would rather leave the code out and leave something a band student can read.
 
 // ---
 // oh yeah, did I meantion yet that this is a project you can have fun with AI.
@@ -62,7 +66,7 @@
 // hopefully it worked. If not, copy and paste the error back at the AI.
 // ./songgen song1.song
 
-// standard c++ code follows. SDL2 runs the show. 8 channel 0-44100hz - tops out beyond hearing.
+// standard c++ code follows. SDL2 runs the show. 8 channel 0-44100hz - tops out beyond hearing and speakers able to tweeter it.
 #include "songgen.h"
 #include "instruments.h"
 #include <iostream>
@@ -102,6 +106,8 @@ void printHelp() {
 	std::cout << "\n";
     std::cerr << "Available Genres: ";
     bool first = true;
+	
+	// ask songgen.h for all of the current genres.
     for (const auto& [genre, name] : SongGen::MusicGenerator::genreNames) {
         std::string lowerName = name;
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
@@ -149,8 +155,8 @@ SongData parseSongFile(const std::string& filename) {
     song.scaleName = "major";
     song.duration = 180.0L;
     song.channels = 8; // 7.1 surround
-    song.parts.reserve(20);
-    song.sections.reserve(20);
+    song.parts.reserve(20000);
+    song.sections.reserve(20000);
 
     std::string line;
     SongGen::Part currentPart;
@@ -338,6 +344,7 @@ SongData parseSongFile(const std::string& filename) {
     }
     if (!instrumentList.empty()) instrumentList = instrumentList.substr(0, instrumentList.length() - 2);
 
+// ---
     SDL_Log("Loaded song: %s", filename.c_str());
     SDL_Log("Metadata:");
     SDL_Log("  Title: %s", song.title.c_str());
@@ -353,11 +360,13 @@ SongData parseSongFile(const std::string& filename) {
     return song;
 }
 
+// ---
 struct PlaybackState {
     SongData song;
     long double currentTime;
     bool playing;
     std::vector<size_t> nextNoteIndices;
+	// AudioUtils means instruments.h
     std::vector<AudioUtils::Reverb> reverbs;
     std::vector<AudioUtils::Distortion> distortions;
     size_t currentSectionIdx;
@@ -417,10 +426,10 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     float* output = reinterpret_cast<float*>(stream);
     bool isStereo = state->song.channels == 2;
     int numChannels = isStereo ? 2 : 8;
-    int numSamples = len / sizeof(float) / numChannels;    
+    int numSamples = len / sizeof(float) / numChannels;
 
     long double fullDuration = state->song.sections.empty() ? state->song.duration : state->song.sections.back().endTime;
-    fullDuration += 5.0L; // Add 5 seconds to the end of the song for notes to finish and for reverb/decay
+    fullDuration += 5.0L; // 5s for reverb/decay
 
     if (!state->playing || state->currentTime > fullDuration || !running) {
         state->playing = false;
@@ -429,19 +438,24 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
         return;
     }
 
-    std::fill(output, output + numSamples * numChannels, 0.0L);
+    // Pre-allocated per-thread output buffers
+    thread_local static std::vector<long double> localOutput;
+    localOutput.resize(static_cast<size_t>(numSamples) * numChannels, 0.0L);
 
-    unsigned int numThreads = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(state->song.parts.size()));
+    // Initialize thread pool once
+    static unsigned int numThreads = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(state->song.parts.size()));
     if (numThreads == 0) numThreads = 1;
-    std::vector<std::vector<float>> threadOutputs(numThreads, std::vector<float>(static_cast<size_t>(numSamples) * numChannels, 0.0f));
-    std::mutex outputMutex;
+    std::call_once(pool_init_flag, [&]() {
+        thread_pool.reserve(numThreads);
+    });
 
-    auto processParts = [&](size_t startIdx, size_t endIdx, size_t threadIdx, long double startTime) {
-        std::vector<long double> localOutput(static_cast<size_t>(numSamples) * numChannels, 0.0L);
+    std::mutex outputMutex;
+    auto processParts = [&](size_t startIdx, size_t endIdx, long double startTime) {
         size_t activeNoteCount = 0;
+        std::fill(localOutput.begin(), localOutput.end(), 0.0L);
 
         for (size_t i = 0; i < static_cast<size_t>(numSamples); ++i) {
-            long double t = startTime + i / AudioUtils::DEFAULT_SAMPLE_RATE;
+            long double t = startTime + i / static_cast<long double>(AudioUtils::DEFAULT_SAMPLE_RATE);
             long double L = 0.0L, R = 0.0L, C = 0.0L, LFE = 0.0L, Ls = 0.0L, Rs = 0.0L, Lsb = 0.0L, Rsb = 0.0L;
 
             long double fadeGain = 1.0L;
@@ -460,10 +474,10 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 long double volume = Instruments::interpolateAutomation(t, part.volumeAutomation, 0.5L);
                 long double reverbMix = Instruments::interpolateAutomation(t, part.reverbMixAutomation, part.reverbMix);
 
-                long double leftGain = (pan <= 0.0f) ? 1.0f : 1.0f - pan;
-                long double rightGain = (pan >= 0.0f) ? 1.0f : 1.0f + pan;
-                long double surroundGain = 0.5f * (leftGain + rightGain);
-                long double centerWeight = (part.instrument == "vocal") ? 0.8f : 0.3f;
+                long double leftGain = (pan <= 0.0L) ? 1.0L : 1.0L - pan;
+                long double rightGain = (pan >= 0.0L) ? 1.0L : 1.0L + pan;
+                long double surroundGain = 0.5L * (leftGain + rightGain);
+                long double centerWeight = (part.instrument == "vocal") ? 0.8L : 0.3L;
                 long double lfeWeight = (part.instrument == "subbass" || part.instrument == "kick") ? 0.5L : 0.1L;
                 long double sideWeight = (part.instrument == "guitar" || part.instrument == "syntharp") ? 0.6L : 0.4L;
 
@@ -474,49 +488,44 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                 }
 
                 for (auto it = active.begin(); it != active.end();) {
-        			const auto& note = part.notes[it->noteIndex];
-        			if (t <= it->endTime) {
-            			float noteTime = t - note.startTime;
-            			float sample;
-            			if (part.instrument == "vocal_0" || part.instrument == "vocal_1") {
-                			sample = Instruments::generateInstrumentWave(
-                    		part.instrument, noteTime, note.freq, note.duration, AudioUtils::DEFAULT_SAMPLE_RATE);
-                			sample *= (note.open ? 1.0f : 0.8f);
-            			} else {
-                			std::vector<float> samples(static_cast<size_t>(AudioUtils::DEFAULT_SAMPLE_RATE * note.duration));
-                			for (size_t i = 0; i < samples.size(); ++i) {
-                    			float t = i / AudioUtils::DEFAULT_SAMPLE_RATE;
-                    			samples[i] = Instruments::generateInstrumentWave(part.instrument, t, note.freq, note.duration, 1) * note.volume;
-                			}
-                			size_t sampleIndex = static_cast<size_t>(noteTime * AudioUtils::DEFAULT_SAMPLE_RATE);
-                			sample = (sampleIndex < samples.size()) ? samples[sampleIndex] : 0.0f;
-                			if (samples.empty()) {
-                    			SDL_Log("Warning: Empty sample for instrument %s at note %zu", part.instrument.c_str(), it->noteIndex);
-                			}
-            			}
-            			sample *= note.volume * note.velocity * volume * fadeGain;
-            			if (part.useDistortion) {
-                			sample = state->distortions[partIdx].process(sample);
-            			}
-            			if (part.useReverb) {
-                			sample = state->reverbs[partIdx].process(sample * (1.0f - reverbMix)) + sample * reverbMix;
-           			 	}
-// --- speakers - instead of raw numbers we specify positions for audio samples.
-            L += sample * leftGain * sideWeight;
-            R += sample * rightGain * sideWeight;
-            C += sample * centerWeight;
-            LFE += sample * lfeWeight;
-            Ls += sample * surroundGain * sideWeight;
-            Rs += sample * surroundGain * sideWeight;
-            Lsb += sample * surroundGain * sideWeight;
-            Rsb += sample * surroundGain * sideWeight;
+                    const auto& note = part.notes[it->noteIndex];
+                    if (t <= it->endTime) {
+                        long double noteTime = t - note.startTime;
+                        long double sample;
+                        if (part.instrument == "vocal_0" || part.instrument == "vocal_1") {
+                            sample = Instruments::generateInstrumentWave(
+                                part.instrument, noteTime, note.freq, note.duration, AudioUtils::DEFAULT_SAMPLE_RATE);
+                            sample *= (note.open ? 1.0L : 0.8L);
+                        } else {
+                            // Incremental waveform generation using long double buffer
+                            if (buffer_pos >= BUFFER_SIZE) {
+                                fill_buffer();
+                            }
+                            sample = buffer[buffer_pos++]; // Use precomputed waveform or noise
+                            sample *= note.volume * note.velocity * volume * fadeGain;
+                        }
+                        if (part.useDistortion) {
+                            sample = state->distortions[partIdx].process(sample);
+                        }
+                        if (part.useReverb) {
+                            sample = state->reverbs[partIdx].process(sample * (1.0L - reverbMix)) + sample * reverbMix;
+                        }
 
-            			++activeNoteCount;
-            			++it;
-        			} else {
-            			it = active.erase(it);
-        			}
-    			}
+                        L += sample * leftGain * sideWeight;
+                        R += sample * rightGain * sideWeight;
+                        C += sample * centerWeight;
+                        LFE += sample * lfeWeight;
+                        Ls += sample * surroundGain * sideWeight;
+                        Rs += sample * surroundGain * sideWeight;
+                        Lsb += sample * surroundGain * sideWeight;
+                        Rsb += sample * surroundGain * sideWeight;
+
+                        ++activeNoteCount;
+                        ++it;
+                    } else {
+                        it = active.erase(it);
+                    }
+                }
             }
 
 			// Stereo speakers combine 7.1 channels into two with standard downmix coefficients
@@ -588,7 +597,7 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     state->currentTime += numSamples / AudioUtils::DEFAULT_SAMPLE_RATE;
 
     // Debug output to check if samples are being generated
-    long double maxSample = 0.0f;
+    long double maxSample = 0.0L;
     for (int i = 0; i < numSamples * numChannels; ++i) {
         maxSample = std::max(maxSample, std::abs(output[i]));
     }
@@ -597,7 +606,8 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
     }
 }
 
-void playSong(const std::string& filename, bool forceStereo) {
+// ---
+void playSong(const std::string& filename) {
     SongData song;
     try {
         song = parseSongFile(filename);
@@ -616,10 +626,10 @@ void playSong(const std::string& filename, bool forceStereo) {
 
     SDL_AudioSpec want, have;
     SDL_zero(want);
-    want.freq = AudioUtils::DEFAULT_SAMPLE_RATE;
-    want.format = AUDIO_F32;
-    want.channels = forceStereo ? 2 : 8; // Try 8 channel (7.1), fallback to stereo
-    want.samples = 1024;
+    want.freq = AudioUtils::DEFAULT_SAMPLE_RATE; // 41200 Hz
+    want.format = AUDIO_F32; // 32-bit float samples
+    want.channels = forceStereo ? 2 : 8; // Try 8 channels, fallback to stereo
+    want.samples = 2048; // Larger buffer to reduce callback frequency
     want.callback = audioCallback;
 
     song.channels = want.channels;
@@ -628,7 +638,7 @@ void playSong(const std::string& filename, bool forceStereo) {
 
     SDL_AudioDeviceID device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
     if (device == 0 && !forceStereo) {
-        SDL_Log("Failed to open 7.1 audio device: %s, attempting stereo", SDL_GetError());
+        SDL_Log("Failed 7.1 audio: %s, trying stereo", SDL_GetError());
         want.channels = 2;
         song.channels = 2;
         device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
@@ -639,23 +649,32 @@ void playSong(const std::string& filename, bool forceStereo) {
         return;
     }
 
+    // Pre-fill long double buffer if used in audioCallback
+    try {
+        fill_buffer(); // From previous code, ensure buffer is ready
+    } catch (const std::runtime_error& e) {
+        SDL_Log("Failed to pre-fill buffer: %s", e.what());
+        SDL_CloseAudioDevice(device);
+        SDL_Quit();
+        return;
+    }
+
     SDL_Log("Playing song %s with %d channels", filename.c_str(), have.channels);
     SDL_PauseAudioDevice(device, 0);
 
-    const Uint32 timeout = SDL_GetTicks() + static_cast<Uint32>(song.duration * 1000.0f + 10000); // 10s buffer
+    const Uint32 timeout = SDL_GetTicks() + static_cast<Uint32>(song.duration * 1000.0L + 5000); // 5s buffer
     SDL_Event event;
     while (state.playing && running && SDL_GetTicks() < timeout) {
-        SDL_PumpEvents(); // Ensure signals are processed
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
                 running = false;
                 SDL_Log("User requested exit");
             }
         }
-        SDL_Delay(10); // Prevent CPU hogging
+        // No SDL_Delay; audio callback drives timing
     }
 
-    state.playing = false; // Ensure playback stops
+    state.playing = false;
     SDL_PauseAudioDevice(device, 1);
     SDL_CloseAudioDevice(device);
     SDL_Quit();

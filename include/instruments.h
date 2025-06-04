@@ -5,6 +5,8 @@
 // Interested parties can find my contact information at https://github.com/ZacGeurts
 // If you make commercial gain, you can do the math and update my Patreon.
 
+// If you want to distribute changes to this file then open a github fork.
+
 // Follow the local law.
 // FCC in the USA restricts what frequencies you can broadcast.
 // Most, if not all countries restrict frequencies.
@@ -19,6 +21,7 @@
 */
 // You would need more than a speaker. Fun fact: WiFi is frequencies. Sound you cannot hear.
 // Do not restrict emergency communications or damage heart pace makers, etc.
+// ---
 // Always put hearing safety first. It does not grow back.
 // Be kind to pets. Sensitive ears.
 
@@ -81,6 +84,7 @@
 //       generateWave(t, freq, phoneme, dur, variant), variant 0 is male (vocal_0), variant 1 is female (vocal_1).
 //       Both vocal_0 and vocal_1 are registered separately but use the same Vocal class with different variant parameters.
 //
+// ---
 // AudioUtils takes the waves and does filtering, distortion, noise, and gives the AI what it needs to update sound.
 // It can sound and look like a heart monitor with a heartbeat.
 // It can turn the wave into a laser beam wider than every sound you can hear at once.
@@ -142,111 +146,131 @@ namespace AudioUtils {
 // Inspired by MixMax's matrix transformations.
 class RandomGenerator {
 private:
-    // Custom 262,144-bit PRNG with 64-bit output
+	// Custom 262,144-bit PRNG with long double state for high-precision waveform data
     struct MegaMixMaxLite {
-        static constexpr size_t STATE_SIZE = 4096;	// 4096 * 64 bits = 262,144 bits
-        uint64_t state[STATE_SIZE];					// Massive state array for high entropy
-        uint64_t counter;							// Additional counter for state mixing
-        uint64_t checksum;							// Integrity check to detect tampering
+        static constexpr size_t STATE_SIZE = 4096; // 4096 elements for state array
+        long double state[STATE_SIZE];            // Long double state for precision
+        long double counter;                      // Counter for state mixing
+        long double checksum;                     // Checksum for tampering detection
 
         // Initialize with robust, clock-free seed
         MegaMixMaxLite() {
-            // Use stack address, thread-local, and global counters for entropy
-            static uint64_t global_counter = 0xCAFEBABEDEADBEEFULL; // Global seed initializer
-            thread_local static uint64_t thread_counter = 0xFEEDFACE12345678ULL; // Thread-specific counter
+            static long double global_counter = 0xCAFEBABEDEADBEEFULL; // Global seed
+            thread_local static long double thread_counter = 0xFEEDFACE12345678ULL; // Thread-specific
             int stack_entropy;
-            uint64_t seed = reinterpret_cast<uintptr_t>(&stack_entropy) ^ thread_counter++ ^ global_counter++;
-            seed = hash_seed(seed); // Spread seed for diversity
+            long double seed = static_cast<long double>(reinterpret_cast<uintptr_t>(&stack_entropy))
+                             + thread_counter++ + global_counter++; // Use + instead of ^
+            seed = hash_seed(seed); // Spread seed
 
-            // Initialize state array with seeded values
+            // Initialize state array
             for (size_t i = 0; i < STATE_SIZE; ++i) {
-                state[i] = seed ^ (seed >> 32) ^ (static_cast<uint64_t>(i) * 0xDEADBEEFC0FFEE00ULL);
-                seed = hash_seed(seed + i); // Update seed for each element
+                state[i] = seed
+                         + (seed / static_cast<long double>(1ULL << 32)) // Use + instead of ^
+                         + (static_cast<long double>(i) * 0xDEADBEEFC0FFEE00ULL);
+                seed = hash_seed(seed + static_cast<long double>(i));
             }
-            counter = seed & 0xFFFF; // Initialize counter from seed
-            // Perform initial mixing to stabilize state
-            for (int i = 0; i < 8; ++i) { next(); }
-            update_checksum(); // Compute initial checksum
+            counter = seed;
+            for (int i = 0; i < 8; ++i) { next(); } // Initial mixing
+            update_checksum();
 
-            // Ensure state is non-zero to avoid degenerate cases
+            // Ensure non-zero state
             if (is_all_zero()) {
                 for (size_t i = 0; i < STATE_SIZE; ++i) {
-                    state[i] = 0xBADC0DE123456789ULL ^ (i * 0xFEEDFACE98765432ULL);
+                    state[i] = static_cast<long double>(0xBADC0DE123456789ULL)
+                             + (static_cast<long double>(i) * 0xFEEDFACE98765432ULL); // Use +
                 }
-                counter = 0xCAFE; // Reset counter
-                update_checksum(); // Recompute checksum
+                counter = 0xCAFE;
+                update_checksum();
             }
         }
 
-        // Custom hash for seed spreading (MurmurHash-inspired)
-        uint64_t hash_seed(uint64_t x) {
-            x ^= x >> 33;
-            x *= 0xFF51AFD7ED558CCDULL;
-            x ^= x >> 33;
-            x *= 0xC4CEB9FE1A85EC53ULL;
-            x ^= x >> 33;
+        // MurmurHash-inspired seed spreading
+        long double hash_seed(long double x) {
+            x = x * static_cast<long double>(0xFF51AFD7ED558CCDULL);
+            x = x * static_cast<long double>(0xC4CEB9FE1A85EC53ULL);
             return x;
         }
 
-        // Check if state is all zeros to prevent degenerate output
+        // Check for all-zero state
         bool is_all_zero() {
             for (size_t i = 0; i < STATE_SIZE; ++i) {
-                if (state[i] != 0) return false;
+                if (state[i] != 0.0L) return false;
             }
             return true;
         }
 
-        // Update checksum for tampering detection
+        // Update checksum
         void update_checksum() {
-            checksum = 0;
+            checksum = 0.0L;
             for (size_t i = 0; i < STATE_SIZE; ++i) {
-                checksum ^= state[i]; // XOR-based checksum
+                checksum += state[i];
             }
         }
 
-        // Generate 64-bit random number
-        uint64_t next() {
-            // Verify checksum to detect tampering
-            uint64_t old_checksum = checksum;
+        // Generate long double random number
+        long double next() {
+            long double old_checksum = checksum;
             update_checksum();
             if (old_checksum != checksum) {
-                // Tampering detected; reseed entire state
-                *this = MegaMixMaxLite();
+                *this = MegaMixMaxLite(); // Reseed
             }
-            // Update state using LCG with staggered multipliers
             for (size_t i = 0; i < STATE_SIZE; ++i) {
-                state[i] = state[i] * (6364136223846793005ULL + (i * 123456789ULL)) + counter;
+                state[i] = state[i] * (static_cast<long double>(6364136223846793005ULL)
+                                + (static_cast<long double>(i) * 123456789.0L))
+                         + counter;
             }
-            counter++; // Increment counter for next iteration
-            // Mix state: combine elements with non-linear transformation
-            uint64_t mix = state[0] ^ state[STATE_SIZE - 1];
+            counter += 1.0L;
+            long double mix = state[0] + state[STATE_SIZE - 1];
             for (size_t i = 1; i < STATE_SIZE; ++i) {
-                mix ^= state[i] ^ (state[i - 1] >> 23);
+                mix += state[i] + (state[i - 1] / static_cast<long double>(1ULL << 23));
             }
-            // Apply chaotic transformation using long double for additional entropy
-            long double temp = static_cast<long double>(mix) / static_cast<long double>(1ULL << 32);
-            temp = temp * temp * M_PI; // Non-linear scaling with M_PI (long double precision)
-            mix ^= static_cast<uint64_t>(temp * static_cast<long double>(1ULL << 32));
+            // Chaotic transformation
+            long double temp = mix / static_cast<long double>(1ULL << 32);
+            temp = temp * temp * static_cast<long double>(M_PI);
+            mix += temp * static_cast<long double>(1ULL << 32);
             return mix;
         }
     };
 
-    // Thread-local instance for thread safety
-    thread_local static std::vector<uint8_t> buffer; // Buffer for random bytes
-    thread_local static size_t buffer_pos;          // Current position in buffer
-    static constexpr size_t BUFFER_SIZE = 1024;     // Buffer size in bytes
+// Thread-local buffer for waveform data
+static constexpr size_t BUFFER_SIZE = 1ULL << 32; // 2^32 elements (~4 GB) for ~22,369s at 48 kHz stereo
+thread_local static std::vector<long double> buffer; // Buffer for long double waveforms, initialized in fill_buffer
+thread_local static size_t buffer_pos;              // Current buffer position
 
-    // Fills buffer with random bytes from MegaMixMaxLite
-    void fill_buffer() {
-        buffer.resize(BUFFER_SIZE);
-        buffer_pos = 0;
-        // Generate 64-bit random numbers and split into bytes
-        for (size_t i = 0; i < BUFFER_SIZE; i += 8) {
-            uint64_t val = random_uint64();
-            for (size_t j = 0; j < 8 && i + j < BUFFER_SIZE; ++j) {
-                buffer[i + j] = static_cast<uint8_t>(val >> (j * 8));
+	// Thread-local PRNG instance
+	thread_local static MegaMixMaxLite prng;
+
+        // Fills buffer with random long double values
+        void fill_buffer(long double min = -1.0L, long double max = 1.0L) {
+            try {
+                buffer.resize(BUFFER_SIZE); // Resize to 4 GB
+                buffer_pos = 0;
+                for (size_t i = 0; i < BUFFER_SIZE; i += 8) {
+                    long double val = prng.next();
+                    for (size_t j = 0; j < 8 && i + j < BUFFER_SIZE; ++j) {
+                        long double raw = val / 255.0L; // [0,1]
+                        buffer[i + j] = min + (max - min) * raw; // Scale
+                    }
+                }
+            } catch (const std::bad_alloc& e) {
+                throw std::runtime_error("Failed to allocate 4 GB buffer: " + std::string(e.what()));
+            } catch (...) {
+                throw std::runtime_error("Unknown error in fill_buffer");
             }
         }
+	
+    // Generates a random long double in the range [0, 1)
+    long double get_random_long_double() {
+        if (buffer_pos + 8 > buffer.size()) {
+            fill_buffer(); // Refill buffer if insufficient bytes remain
+        }
+        long double result = 0.0L;
+        // Combine 8 bytes into a long double by treating each byte as a fraction
+        for (int i = 0; i < 8; ++i) {
+            result = result * 256.0L + static_cast<long double>(buffer[buffer_pos++]);
+        }
+        // Normalize to [0, 1) by dividing by 2^64 (since we used 8 bytes, each contributing 8 bits)
+        return result / 18446744073709551616.0L; // 2^64
     }
 
     // Generates a random 64-bit integer from the buffer
@@ -263,6 +287,7 @@ private:
 
 public:
 // -----------------
+// long double can vary per system, for example, on x86 architectures, it is typically 80 bits (10 bytes) of extended precision, while on some systems, it may be implemented as 128 bits (16 bytes) for quadruple precision
     // Constructor: Initializes random generator and fills buffer
     RandomGenerator(long double min = 0.0L, long double max = 1.0L) {
         fill_buffer(); // Pre-fill buffer with random bytes
@@ -271,13 +296,13 @@ public:
 	template<typename T, typename U>
 	long double dist(T min, U max) {
 		static_assert(std::is_arithmetic_v<T> && std::is_arithmetic_v<U>, "Inputs must be numeric");
-		long double min_val = static_cast<long double>(min);
+		long double min_val = static_cast<long double>(min); // long double can vary per system.
 		long double max_val = static_cast<long double>(max);
-		if (min_val > max_val) { std::swap(min_val, max_val); }
+		if (min_val > max_val) { std::swap(min_val, max_val); } // order
 		min_val = std::max(min_val, -std::numeric_limits<long double>::max() / 2);
 		max_val = std::min(max_val, std::numeric_limits<long double>::max() / 2);
-		uint64_t raw = get_random_uint64();
-		return min_val + (max_val - min_val) * (static_cast<long double>(raw) / std::numeric_limits<uint64_t>::max());
+		long double raw = get_random_L();
+		return min_val + (max_val - min_val) * (static_cast<long double>(raw) / std::numeric_limits<long double>::max());
 	}
 	
 	// ---
@@ -291,16 +316,16 @@ public:
     	if (min_val > max_val) { std::swap(min_val, max_val); }
 
     	// Box-Muller transform for normal distribution
-    	uint64_t raw1 = get_random_uint64();
-    	uint64_t raw2 = get_random_uint64();
-    	long double u1 = (static_cast<long double>(raw1) + 1) / (std::numeric_limits<uint64_t>::max() + 1.0L); // [0,1] -> (0,1]
-    	long double u2 = (static_cast<long double>(raw2) + 1) / (std::numeric_limits<uint64_t>::max() + 1.0L);
+    	long double raw1 = get_random_long_double();
+    	long double raw2 = get_random_long_double();
+    	long double u1 = (static_cast<long double>(raw1) + 1) / (std::numeric_limits<long double>::max() + 1.0L); // [0,1] -> (0,1] so it says.
+    	long double u2 = (static_cast<long double>(raw2) + 1) / (std::numeric_limits<long double>::max() + 1.0L);
     	long double z = std::sqrt(-2.0L * std::log(u1)) * std::cos(2.0L * M_PI * u2); // Standard normal
 
     	// Scale and shift to desired mean and stddev
     	long double result = mean_val + stddev_val * z;
 
-    	// Clamp to [min, max]
+    	// Clamp to [min, max] - back to what long double can handle.
     	return std::max(min_val, std::min(max_val, result));
 	}
 
@@ -356,7 +381,7 @@ public:
         return static_cast<signed int>(std::floor(min_val + norm * (max_val - min_val + 1.0L)));
     }
 
-// ----------------------------- see above for how roll_dice works.
+// ----------------------------- see above for how the trick works.
 // Bonus - Dice Roller. 2d10 joke was written by Grok3 with prompting.
     // Simulates flipping a coin (0 or 1)
     signed int flip_coin() { return roll_dice(0, 1); }
