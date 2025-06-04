@@ -1,0 +1,166 @@
+/*
+ * AudioUtils Namespace Overview
+ * ============================
+ * All utilities operate at maximum DEFAULT_SAMPLE_RATE (44100.0f)
+ * 8 channel audio is supported and handles stereo conversion elsewhere.
+ *
+ * Existing Utilities
+ * -----------------
+ * 1. RandomGenerator
+ *    - Purpose: Generates high-quality random numbers for white noise, pink noise,
+ *      and uniform distributions, used for velocity variation, string noise, or
+ *      stochastic effects. Uses a 262,144-bit state (MegaMixMaxLite) for superior
+ *      statistical quality.
+ *    - Features:
+ *      - Thread-safe with clock-free entropy seeding.
+ *    - Call Example:
+ *      static thread_local AudioUtils::RandomGenerator rng;	// Initialize random generator
+ *      int diceroll = rng.roll_d20();							// Roll a 20-sided die
+ *      int diceroll = rng.roll_2d10();							// Roll a percentage 00-99
+ *      int diceroll = rng.roll_dice(min, max);					// Specify range to random
+ *		long double bigL = rng.random_L();						// random long double
+ *		long double bigL = rng.dist(1,11)						// pick a long double 1-11;
+ *
+ * 2. HighPassFilter
+ *    - Purpose: Removes low frequencies below a cutoff, used for DC blocking or
+ *      emphasizing high-end in bass synthesis.
+ *    - Features:
+ *      - Biquad filter with dynamic cutoff and Q-factor.
+ *      - Precomputed coefficients for efficiency.
+ *      - Dynamic parameter updates and state reset.
+ *    - Call Example:
+ *      HighPassFilter hpf(100.0, 0.707);			// 100Hz cutoff, Q=0.707
+ *      double output = hpf.process(input);			// Process input signal
+ *      hpf.setCutoff(150.0);						// Update cutoff
+ *
+ * 3. LowPassFilter
+ *    - Purpose: Removes high frequencies above a cutoff, used for warming bass tones.
+ *    - Features:
+ *      - First-order filter with dynamic cutoff.
+ *      - Precomputed smoothing factor for efficiency.
+ *      - State reset for stability.
+ *    - Call Example:
+ *      LowPassFilter lpf(250.0);					// 250Hz cutoff
+ *      double output = lpf.process(input);			// Process input signal
+ *      lpf.setCutoff(300.0);						// Update cutoff
+ *
+ * 4. BandPassFilter
+ *    - Purpose: Isolates a frequency band, used for resonant bass effects or formant-like tones.
+ *    - Features:
+ *      - Biquad filter with dynamic center frequency and bandwidth.
+ *      - Precomputed coefficients for efficiency.
+ *      - Dynamic updates and state reset.
+ *    - Call Example:
+ *      BandPassFilter bpf(1000.0, 0.5);			// 1kHz center, Q=0.5
+ *      double output = bpf.process(input);			// Process input signal
+ *      bpf.setCenterFreq(1200.0);					// Update center frequency
+ *
+ * 5. Reverb
+ *    - Purpose: Adds spatial ambiance, simulating room reflections.
+ *    - Features:
+ *      - Delay-based reverb with modulated feedback for richer sound.
+ *      - Adjustable delay time, decay factor, wet/dry mix, and feedback modulation.
+ *      - Automatic buffer resizing and state reset for stability.
+ *    - Call Example:
+ *      Reverb reverb(0.2, 0.6, 0.4, 0.1);			// 200ms delay, 60% decay, 40% mix, 10% mod
+ *      double output = reverb.process(input);		// Process input signal
+ *      reverb.setParameters(0.3, 0.5, 0.3, 0.05);	// Update parameters
+ *
+ * 6. Distortion
+ *    - Purpose: Adds harmonic grit, emulating bass amp overdrive or string distortion.
+ *    - Features:
+ *      - Soft clipping with tanh for natural distortion.
+ *      - Dynamic drive, threshold, and softness.
+ *      - Output clamping for stability.
+ *    - Call Example:
+ *      Distortion dist(1.8, 0.75, 2.0);			// Drive=1.8, threshold=0.75, soft=2.0
+ *      double output = dist.process(input);		// Process input signal
+ *      dist.setDrive(2.0);							// Update drive
+ *
+ * 7. AudioProtector
+ *    - Purpose: Ensures clean audio output by removing DC offset, applying fade-out,
+ *      soft clipping, and gain limiting.
+ *    - Features:
+ *      - Integrates HighPassFilter for DC blocking.
+ *      - Dynamic fade-out and gain limit.
+ *      - State reset for stability.
+ *    - Call Example:
+ *      AudioProtector protector(0.01, 0.85);		// 10ms fade-out, 85% max gain
+ *      double output = protector.process(input, 0.1, 1.0);	// Process with t=0.1s, dur=1s
+ *      protector.setMaxGain(0.9);					// Update max gain
+ *
+ * 8. WhiteNoise
+ *     - Purpose: Generates white noise for velocity variation
+ *       or stochastic effects in instrument synthesis.
+ *     - Features:
+ *       - Uses RandomGenerator for high-quality randomness.
+ *       - Configurable range [min, max].
+ *       - Output clamping for stability.
+ *     - Call Example:
+ *       WhiteNoise white(-1.0L, 1.0L);				// range
+ *       double output = white.process();			// Generate white noise
+ *
+ * 9. BrownNoise
+ *    - Purpose: Generates brown (1/f²) noise for deep, rumbly textures like amp hum
+ *      or room ambiance, enhancing bass guitar realism.
+ *    - Features:
+ *      - Integrates RandomGenerator’s white noise for Brownian motion.
+ *      - Adjustable amplitude scale.
+ *      - State reset to prevent drift.
+ *    - Call Example:
+ *      BrownNoise brown(0.03);						// 3% amplitude scale
+ *      double output = brown.process();			// Generate brown noise
+ *		brown.reset();								// Reset state
+ *
+ * 10. Chorus
+ *    - Purpose: Thickens sound with modulated delay, simulating doubled tracks
+ *      or detuning for a richer tone.
+ *    - Features:
+ *      - Variable delay (5-10ms) with dynamic depth, rate, and mix.
+ *      - Linear interpolation for smooth modulation.
+ *      - Buffer management and state reset.
+ *    - Call Example:
+ *      Chorus chorus(0.4, 0.3, 0.25);				// Depth=0.4, rate=0.3Hz, mix=25%
+ *      double output = chorus.process(input);		// Process input signal
+ *      chorus.reset();								// Reset state
+ *
+ * 11. Tremolo
+ *     - Purpose: Adds amplitude pulsing for dynamic bass effects, emulating expressive
+ *       playing or amp tremolo.
+ *     - Features:
+ *       - Sinusoidal amplitude modulation with dynamic rate and depth.
+ *       - Lightweight and efficient.
+ *     - Call Example:
+ *       Tremolo tremolo(3.0, 0.3);					// Rate=3Hz, depth=30%
+ *       double output = tremolo.process(input, 0.1); // Process with t=0.1s
+ *
+ * 12. EnvelopeFollower
+ *     - Purpose: Tracks signal amplitude to dynamically control effects (e.g., filter
+ *       cutoff), adding responsiveness to bass dynamics.
+ *     - Features:
+ *       - Adjustable attack and release times for responsive envelope tracking.
+ *       - Smooth envelope tracking with stateful smoothing and reset capability.
+ *     - Call Example:
+ *       EnvelopeFollower envFollow(0.005, 0.05);	// 5ms attack, 50ms release
+ *       double env = envFollow.process(input);		// Track amplitude with smoothing
+ *       envFollow.reset();							// Reset state to 0
+ *
+ * 13. PinkNoise
+ *     - Purpose: Generates pink (1/f) noise for natural string buzz or ambient texture,
+ *       enhancing instrument realism.
+ *     - Features:
+ *       - Three-stage filter on white noise for 1/f spectrum.
+ *       - Adjustable amplitude scale.
+ *       - State reset for filter stability.
+ *     - Call Example:
+ *       PinkNoise pink(0.05);						// 5% amplitude
+ *       double output = pink.process();			// Generate pink noise
+ *
+ * Notes
+ * -----
+ * - All utilities use DEFAULT_SAMPLE_RATE (44100.0f) for SDL2 maximum available.
+ * - Utilities are thread-safe where applicable and include validation and clamping for robustness.
+ * - Designed with real-time audio in mind.
+ * - Enhances synthesis by adding noise textures, dynamic effects, and
+ *   with professional polish.
+ */

@@ -111,6 +111,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <limits>
+#include "songgen.h"
 #include <SDL2/SDL.h>
 // #include <random> // nope
 
@@ -1217,35 +1218,11 @@ namespace Instruments {
         WaveguideState() : delayLineSize(0), writePos(0), lastFreq(0.0f), pressure(0.0f) {}
     };
 // ----
-    struct Note {
-        float startTime, duration, freq, volume, velocity;
-        int phoneme;
-        bool open;
-    };
-
-    struct Section {
-        std::string name;
-        float startTime, endTime;
-        float progress;
-        std::string templateName;
-    };
-
-    struct Part {
-        std::string instrument;
-        std::string sectionName;
-        std::vector<Note> notes;
-        std::vector<std::pair<float, float>> panAutomation, volumeAutomation, reverbMixAirAutomation;
-        float pan, reverbMix;
-        bool useDistortion, useReverb;
-        float reverbDelay, reverbDecay, reverbMixFactor;
-        float distortionDrive, distortionThreshold;
-    };
-
     struct Song {
         float duration;
         int channels;
-        std::vector<Section> sections;
-        std::vector<Part> parts;
+        std::vector<SongGen::Section> sections;
+        std::vector<SongGen::Part> parts;
     };
 
     struct ActiveNote {
