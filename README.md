@@ -22,10 +22,11 @@ We are working with 0-44100hz https://www.szynalski.com/tone-generator<BR />
 Linux. Or if you beat me to porting, feel free to submit code.<BR />
 sudo apt only run once if needed.<BR />
 `sudo apt install build-essential libsdl2-dev libsdl2-image-dev libgl1-mesa-dev libpthread-stubs0-dev`<BR />
-Highly recommended - allows full processor cores simply. `make clean` and `make -j$(nproc)` once and use the up arrow.<BR />
+<BR />
+Recommended is nproc - allows full processor cores simply with `make -j$(nproc)` once and use the up arrow.<BR />
 `sudo apt install nproc`<BR />
 `nproc` spits out the number of cpu cores we can compile with<BR />
-<BR />
+Or just run nproc once and if it says 16, then `make -j16` is the same as $ one.<BR />
 <BR />
 Type `make` to build `./linesplus` and `./songgen`. Needs OpenGL (Mesa) and SDL2.<BR />
 <BR />
