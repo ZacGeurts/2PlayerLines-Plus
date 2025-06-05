@@ -13,12 +13,13 @@ Releases are prebuilt and likely to be behind the build process while branches c
 If a branch is better, I will put it back into main. Always get main.<BR />
 Assume the branches are always closed, I left them in for posterity.<BR />
 Songgen creates and plays music .song files.<BR />
-Do not be mean to pets. Protect your hearing.<BR />
-We are working with 0-44100hz https://www.szynalski.com/tone-generator<BR />
+<BR />
+Always put hearing safety first. It does not grow back.<BR />
 Be kind to pets. Sensitive ears.<BR />
-Protect your hearing.<BR />
+We are working with 0-44100hz https://www.szynalski.com/tone-generator<BR />
 <BR />
 # Requirements
+Linux. Or if you beat me to porting, feel free to submit code.<BR />
 sudo apt only run once if needed.<BR />
 `sudo apt install build-essential libsdl2-dev libsdl2-image-dev libgl1-mesa-dev libpthread-stubs0-dev`<BR />
 Highly recommended - allows full processor cores simply. `make clean` and `make -j$(nproc)` once and use the up arrow.<BR />
