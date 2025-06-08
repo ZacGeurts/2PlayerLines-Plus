@@ -1,11 +1,6 @@
 # # means comment and is not pseudo code #
-# none of this is code
-# it was too long is no excuse.
-# Ultimate Tone Generator for 8-Channel SDL Audio, Threaded Song Generation
-# no AI/MIDI, 12 instruments, genre-specific, SDL optimized - 12?
-# vocal_0 vocal_1 and ten more.
-# f_s=44.1kHz, 16-bit, 8 channels (4 stereo/8 mono), buffer=32-256 samples, latency=0.7-5.8ms
-# Threading: 8 threads, fixed-point 16.16, SIMD, ring buffers, genre support: classical, jazz, rock, blues, latin, techno, and others.
+# no quiz.
+# I worked with some code for a while to get AI in the mood, and then asked it to write these musical notes.
 
 ## 1. Pitch and Frequency
 f(n)=440*2^(n/12), n=semitones, e.g., C4(n=-9): f=440*2^(-9/12)≈261.63Hz
