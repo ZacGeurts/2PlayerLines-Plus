@@ -24,7 +24,6 @@ sudo apt only run once if needed.<BR />
 `sudo apt install build-essential libsdl2-dev libsdl2-image-dev libgl1-mesa-dev libpthread-stubs0-dev`<BR />
 <BR />
 Recommended is nproc - allows full processor cores simply with `make -j$(nproc)` once and use the up arrow.<BR />
-`sudo apt install nproc`<BR />
 `nproc` spits out the number of cpu cores we can compile with<BR />
 Or just run nproc once and if it says 16, then `make -j16` is the same as $ one.<BR />
 <BR />
