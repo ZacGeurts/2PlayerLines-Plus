@@ -1,9 +1,7 @@
 #include "game.h"
-#include "types.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <fstream>
-#include <sstream>
 #include <string>
 
 // This is for linesplus for 2 player and is free.
@@ -20,34 +18,22 @@
 
 // linesplus and songgen are 2 different programs.
 // songgen.h songgen.cpp instruments.h and instrument files are not free distribution.
-// Personal use only. Or it costs a portion of the profit.
+
 // linesplus is free to delete or sell or whatever.
 // songgen is free to delete.
 // linesplus is MIT license which I think basically means you own it too.
-// songgen is not free to do with as you please, unless non-profit personal use.
+// songgen is not free to do with as you please, unless not-profit personal use.
 
-// Feel free to branch a fork on github of my project. Make it make money.
+// Feel free to fork the project on github.
 // A fork will make a backup of my current progress and allow you to have your own backup and space to make changes.
 // I accept issue tickets and will weigh code submissions for acceptance into my main branch.
-// Issues do not to be detailed as long as I can understand the issue.
+// Issues do not need to be detailed as long as I can understand the issue.
 // If you make money off songgen, contact me and we can discuss.
 
-// Next to none of the code in these files is AI written. It is AI written, written, AI rewriten, writen, AI rewriten.....
+// Next to none of the code in these files is AI written. It is AI written, I write, AI rewriten, written, AI rewriten.....
 // My process is to get code from AI, rewrite it, and resubmit it if there are bugs. Sometimes just to have it add comments.
-// The code I am adjusting is my own. Formatting issues are sometimes ignored until I run uncrustify. Sometimes I have it insert tabs.
-// Most code blocks are copied directly from AI, but it is modifying my code with usually a compiler error fix.
-      // If formatting looks like I copied and pasted directly from AI, I probably did because I proofread most of it but I do not bother remembering too much of it until I need it. Like the time I coded the RNG, I had no idea at the time that the AudioManager was such a big deal. I cranked AudioUtils up to 11 in include/instruments.h.
-// What I usually copy is my code back with the one or two adjustments AI does to tweak a code block faster than me.
-// like "alphabetize this".
-// The code is prompted and curated how I choose to be the designer of this and other software.
-// That being said, there still a few areas I have yet to go over and rewrite, but probably all were at least cursory reviewed.
-// AI is dumb and will never see truly what it is you are working on and would like to accomplish.
-// Maybe pasting fixed and slightly broken code helps the AI training data.
-// If it tells you code, it is in your interest most times to review and update.
+// The code I am adjusting is my own rewritten code.
 
-// SDL2 and OpenGL beyond here.
-
-// And this code was written from my game.ini
 Game::GameConfig loadConfig(const std::string& filename) {
     Game::GameConfig config;
     std::ifstream file(filename);
@@ -61,14 +47,13 @@ Game::GameConfig loadConfig(const std::string& filename) {
     while (std::getline(file, line)) {
         if (line.empty() || line[0] == '#') continue;
 
-        std::istringstream iss(line);
         std::string key;
         float value;
-
+        std::istringstream iss(line);
         if (std::getline(iss, key, '=') && iss >> value) {
             key.erase(0, key.find_first_not_of(" \t"));
             key.erase(key.find_last_not_of(" \t") + 1);
-		// The lines with 'key' are reading the game.ini
+
             if (key == "WIDTH") config.WIDTH = static_cast<int>(value);
             else if (key == "HEIGHT") config.HEIGHT = static_cast<int>(value);
             else if (key == "PLAYER_SPEED") config.PLAYER_SPEED = value;
@@ -97,7 +82,6 @@ Game::GameConfig loadConfig(const std::string& filename) {
         }
     }
 
-    file.close();
     return config;
 }
 
@@ -115,7 +99,7 @@ int main(int argc, char* argv[]) {
 
     Game::GameConfig config = loadConfig("game.ini");
     try {
-        Game::Game game(config); // Only config is passed
+        Game::Game game(config);
         game.run();
     } catch (const std::exception& e) {
         SDL_Log("Game error: %s", e.what());
