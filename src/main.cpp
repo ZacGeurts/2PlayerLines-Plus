@@ -28,11 +28,6 @@
 // A fork will make a backup of my current progress and allow you to have your own backup and space to make changes.
 // I accept issue tickets and will weigh code submissions for acceptance into my main branch.
 // Issues do not need to be detailed as long as I can understand the issue.
-// If you make money off songgen, contact me and we can discuss.
-
-// Next to none of the code in these files is AI written. It is AI written, I write, AI rewriten, written, AI rewriten.....
-// My process is to get code from AI, rewrite it, and resubmit it if there are bugs. Sometimes just to have it add comments.
-// The code I am adjusting is my own rewritten code.
 
 Game::GameConfig loadConfig(const std::string& filename) {
     Game::GameConfig config;
