@@ -498,8 +498,8 @@ void audioCallback(void* userdata, Uint8* stream, int len) {
                             sample *= (note.open ? 1.0L : 0.8L);
                         } else {
                             // Incremental waveform generation using long double buffer
-                            if (buffer_pos >= BUFFER_SIZE) {
-                                fill_buffer();
+                            if (buffer_pos >= AudioUtils::BUFFER_SIZE) {
+                                AudioUtils::RandomGenerator::fill_buffer();
                             }
                             sample = buffer[buffer_pos++]; // Use precomputed waveform or noise
                             sample *= note.volume * note.velocity * volume * fadeGain;
@@ -750,7 +750,7 @@ int main(int argc, char* argv[]) {
             !generator.getGenreScales().at(genres[0]).empty()) {
             AudioUtils::RandomGenerator rng;
             std::uniform_int_distribution<size_t> dist(0, generator.getGenreScales().at(genres[0]).size() - 1);
-            scale = generator.getGenreScales().at(genres[0])[rng.random_L()];
+            scale = generator.getGenreScales().at(genres[0])[rng.random_fixed_point()];
         }
         long double rootFrequency = 440.0L;
         long double duration = 180.0L;

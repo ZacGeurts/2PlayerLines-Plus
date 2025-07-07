@@ -65,6 +65,11 @@ struct Vec2 {
         return std::abs(x - other.x) < EPSILON && std::abs(y - other.y) < EPSILON;
     }
     Vec2& operator+=(const Vec2& other) { x += other.x; y += other.y; return *this; }
+    // Comparison operator for std::set
+    bool operator<(const Vec2& other) const {
+        if (x != other.x) return x < other.x;
+        return y < other.y;
+    }
 };
 
 struct ExplosionParticle {
@@ -104,6 +109,15 @@ struct Player {
     float spawnInvincibilityTimer{0.0f};
     std::unique_ptr<Flash> endFlash;
     bool hitOpponentHead{false};
+    float leftTrigger{0.0f};  // 0.0f to 1.0f
+    float rightTrigger{0.0f}; // 0.0f to 1.0f
+    void activateFlash() {
+        if (canUseNoCollision && !isInvincible) {
+            isInvincible = true;
+            noCollisionTimer = 2.0f; // INVINCIBILITY_DURATION from game.ini
+            canUseNoCollision = false;
+        }
+    }
 };
 
 struct Circle {
@@ -115,7 +129,6 @@ struct Circle {
     float magentaTimer{0.0f};
     bool isYellow{false};
 
-    // Constructor to match usage in game.cpp
     Circle() = default;
     Circle(Vec2 pos, Vec2 vel, Vec2 prevPos, float radius, SDL_Color color, float spawnTime, bool isColliding)
         : pos(pos), vel(vel), prevPos(prevPos), radius(radius), color(color), magentaTimer(spawnTime), isYellow(isColliding) {}
@@ -125,7 +138,7 @@ struct Collectible {
     Vec2 pos{0.0f, 0.0f};
     float size{0.0f};
     bool active{false};
-    SDL_Color color{0, 255, 0, 255}; // Added: green for the square
+    SDL_Color color{0, 255, 0, 255}; // Green for the square
 };
 
 } // namespace Game

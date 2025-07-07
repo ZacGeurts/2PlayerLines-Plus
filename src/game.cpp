@@ -18,7 +18,7 @@ Game::Game(const GameConfig& config)
       explosionColor{255, 255, 0, 255}, // yellow
       window(nullptr),
       glContext(nullptr),
-      ai(std::make_unique<AI>(config)),
+      ai(std::make_unique<AI>(config, *this)),
       splashTexture(0),
       isSplashScreen(true),
       paused(false),

@@ -249,6 +249,6 @@ static InstrumentRegistrar<Cello> regCelloPizzicato("cello_pizzicato");
  *     - Features: Three-stage filtered white noise, adjustable amplitude, state reset.
  *     - Usage:
  *       PinkNoise pink(0.05L);                  // 5% amplitude
- *       long double out = pink.process();       // Generate noise
+ *       long double out = pink.process();        // Generate noise
  *       pink.reset();                           // Reset state
  */
